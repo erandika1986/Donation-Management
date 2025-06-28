@@ -1,7 +1,8 @@
 ﻿namespace ViharaFund.Domain.Enums
 {
-    public enum TaskStatus
+    public enum JobCardStatus
     {
+
         Pending = 1,
         OnGoing = 2,
         OnHold = 3,

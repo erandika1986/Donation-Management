@@ -1,8 +1,9 @@
-﻿namespace ViharaFund.Domain.Tenant
+﻿using ViharaFund.Domain.Entities.Common;
+
+namespace ViharaFund.Domain.Entities.Tenant
 {
-    public class User
+    public class User : BaseEntity
     {
-        public int Id { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
@@ -10,5 +11,7 @@
         public string Password { get; set; }
         public DateTime? LastLoggedIn { get; set; }
         public bool IsActive { get; set; }
+
+        public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
     }
 }

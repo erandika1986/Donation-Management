@@ -1,4 +1,4 @@
-﻿namespace ViharaFund.Domain.Master
+﻿namespace ViharaFund.Domain.Entities.Master
 {
     public class Organization
     {

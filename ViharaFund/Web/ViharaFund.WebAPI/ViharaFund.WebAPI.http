@@ -1,0 +1,6 @@
+@ViharaFund.WebAPI_HostAddress = http://localhost:5079
+
+GET {{ViharaFund.WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

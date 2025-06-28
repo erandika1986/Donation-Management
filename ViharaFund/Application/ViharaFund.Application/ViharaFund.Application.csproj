@@ -7,8 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MediatR" Version="12.5.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.6" />
+    <Folder Include="DTOs\Donation\" />
+    <Folder Include="DTOs\JobCard\" />
+    <Folder Include="DTOs\Common\" />
+    <Folder Include="Extensions\" />
+    <Folder Include="Helpers\" />
+    <Folder Include="Constants\" />
   </ItemGroup>
 
 </Project>

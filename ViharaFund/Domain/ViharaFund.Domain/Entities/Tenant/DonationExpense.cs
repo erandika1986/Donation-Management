@@ -1,6 +1,8 @@
-﻿namespace ViharaFund.Domain.Tenant
+﻿using ViharaFund.Domain.Entities.Common;
+
+namespace ViharaFund.Domain.Entities.Tenant
 {
-    public class DonationExpense
+    public class DonationExpense : BaseAuditableEntity
     {
         public int Id { get; set; }
         public string ExpenseType { get; set; }
@@ -8,6 +10,6 @@
         public decimal Amount { get; set; }
         public string Note { get; set; }
 
-        public JobCardTaskPayment TaskPayment { get; set; }
+        public virtual JobCardTaskPayment TaskPayment { get; set; }
     }
 }

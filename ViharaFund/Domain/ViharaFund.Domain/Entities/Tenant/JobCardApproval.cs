@@ -1,8 +1,9 @@
-﻿namespace ViharaFund.Domain.Tenant
+﻿using ViharaFund.Domain.Entities.Common;
+
+namespace ViharaFund.Domain.Entities.Tenant
 {
-    public class JobCardApproval
+    public class JobCardApproval : BaseAuditableEntity
     {
-        public int Id { get; set; }
         public int JobCardId { get; set; }
         public int ApprovalLevel { get; set; }
         public int ApproverUserId { get; set; }
@@ -10,6 +11,6 @@
         public string Status { get; set; }
         public string Remarks { get; set; }
 
-        public JobCard JobCard { get; set; }
+        public virtual JobCard JobCard { get; set; }
     }
 }
