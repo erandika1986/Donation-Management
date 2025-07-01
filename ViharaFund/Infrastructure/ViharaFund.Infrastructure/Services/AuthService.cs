@@ -1,0 +1,102 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using ViharaFund.Application.Contracts;
+using ViharaFund.Application.DTOs.User;
+using ViharaFund.Application.Services;
+using ViharaFund.Domain.Entities.Master;
+using ViharaFund.Domain.Entities.Tenant;
+using ViharaFund.Infrastructure.Data;
+
+namespace ViharaFund.Infrastructure.Services
+{
+    public class AuthService : IAuthService
+    {
+        private readonly ITenantService _tenantService;
+        private readonly IConfiguration _configuration;
+
+        public AuthService(ITenantService tenantService, IConfiguration configuration)
+        {
+            _tenantService = tenantService;
+            _configuration = configuration;
+        }
+
+        public async Task<LoginResponse?> AuthenticateAsync(LoginDTO request)
+        {
+            // Get tenant by organization ID
+            var tenant = await _tenantService.GetTenantByOrganizationIdAsync(request.OrganizationId);
+            if (tenant == null)
+            {
+                return null;
+            }
+
+            // Create tenant-specific database context
+            var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+            optionsBuilder.UseSqlServer(tenant.ConnectionString);
+
+            using var tenantDbContext = new TenantDbContext(optionsBuilder.Options, _tenantService);
+
+            // Validate user credentials
+            var user = await tenantDbContext.Users
+                .FirstOrDefaultAsync(u => u.Username == request.Username && u.IsActive);
+
+            if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
+            {
+                return null;
+            }
+
+            // Generate JWT token
+            var token = GenerateJwtToken(user, tenant);
+            var jwtSettings = _configuration.GetSection("JwtSettings");
+            var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"]);
+
+            return new LoginResponse
+            {
+                Token = token,
+                Username = user.Username,
+                OrganizationId = tenant.OrganizationId,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes)
+            };
+        }
+
+
+        private string GenerateJwtToken(User user, Tenant tenant)
+        {
+            var jwtSettings = _configuration.GetSection("JwtSettings");
+            var secretKey = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"]);
+            var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"]);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("TenantId", tenant.OrganizationId),
+                new Claim("TenantName", tenant.Name)
+            };
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(expiryMinutes),
+                Issuer = jwtSettings["Issuer"],
+                Audience = jwtSettings["Audience"],
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secretKey),
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        private bool VerifyPassword(string password, string passwordHash)
+        {
+            // Simple password verification - in production, use proper hashing like BCrypt
+            return BCrypt.Net.BCrypt.Verify(password, passwordHash);
+        }
+    }
+}
