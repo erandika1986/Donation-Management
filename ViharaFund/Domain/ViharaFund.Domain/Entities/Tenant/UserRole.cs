@@ -1,6 +1,8 @@
-﻿namespace ViharaFund.Domain.Entities.Tenant
+﻿using ViharaFund.Domain.Entities.Common;
+
+namespace ViharaFund.Domain.Entities.Tenant
 {
-    public class UserRole
+    public class UserRole : BaseEntity
     {
         public int UserId { get; set; }
         public int RoleId { get; set; }

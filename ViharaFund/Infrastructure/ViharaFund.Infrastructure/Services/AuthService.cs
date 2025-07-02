@@ -10,6 +10,7 @@ using ViharaFund.Application.Services;
 using ViharaFund.Domain.Entities.Master;
 using ViharaFund.Domain.Entities.Tenant;
 using ViharaFund.Infrastructure.Data;
+using ViharaFund.Infrastructure.Interceptors;
 
 namespace ViharaFund.Infrastructure.Services
 {
@@ -17,11 +18,20 @@ namespace ViharaFund.Infrastructure.Services
     {
         private readonly ITenantService _tenantService;
         private readonly IConfiguration _configuration;
+        private readonly AuditableEntitySaveChangesInterceptor _auditableEntitySaveChangesInterceptor;
+        private readonly TenantDbContext _tenantDbContext;
 
-        public AuthService(ITenantService tenantService, IConfiguration configuration)
+
+        public AuthService(
+            ITenantService tenantService,
+            IConfiguration configuration,
+            AuditableEntitySaveChangesInterceptor auditableEntitySaveChangesInterceptor,
+            TenantDbContext tenantDbContext)
         {
             _tenantService = tenantService;
             _configuration = configuration;
+            _auditableEntitySaveChangesInterceptor = auditableEntitySaveChangesInterceptor;
+            _tenantDbContext = tenantDbContext;
         }
 
         public async Task<LoginResponse?> AuthenticateAsync(LoginDTO request)
@@ -33,14 +43,8 @@ namespace ViharaFund.Infrastructure.Services
                 return null;
             }
 
-            // Create tenant-specific database context
-            var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
-            optionsBuilder.UseSqlServer(tenant.ConnectionString);
-
-            using var tenantDbContext = new TenantDbContext(optionsBuilder.Options, _tenantService);
-
             // Validate user credentials
-            var user = await tenantDbContext.Users
+            var user = await _tenantDbContext.Users
                 .FirstOrDefaultAsync(u => u.Username == request.Username && u.IsActive);
 
             if (user == null || !VerifyPassword(request.Password, user.PasswordHash))

@@ -1,16 +1,21 @@
-using Microsoft.EntityFrameworkCore;
 using ViharaFund.Infrastructure.Data;
+using ViharaFund.WebAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddDomainService();
+builder.Services.AddApplicationService(builder.Configuration);
+builder.Services.AddFVihraAPIServices(builder.Configuration);
+builder.Services.AddInfrastructureService(builder.Configuration);
+
 
 builder.Services.AddControllers();
 
 // Configure Entity Framework
 // Add Master Database Context (for tenant management)
-builder.Services.AddDbContext<MasterDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("MasterDatabase")));
+//builder.Services.AddDbContext<MasterDbContext>(options =>
+//    options.UseSqlServer(builder.Configuration.GetConnectionString("MasterDatabase")));
 
 // Add Tenant Service
 //builder.Services.AddDbContext<TenantDbContext>(options =>
@@ -23,6 +28,13 @@ builder.Services.AddDbContext<MasterDbContext>(options =>
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var initializer = scope.ServiceProvider.GetRequiredService<TenantDbContextInitializer>();
+    await initializer.InitializeAsync();
+    await initializer.SeedAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -39,7 +51,7 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 
 // Add tenant middleware before authentication
-
+app.UseMiddleware<TenantSelectionMiddleware>();
 
 app.UseAuthorization();
 app.UseAuthorization();

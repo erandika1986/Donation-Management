@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
-namespace ViharaFund.Application
+namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceContainer
     {

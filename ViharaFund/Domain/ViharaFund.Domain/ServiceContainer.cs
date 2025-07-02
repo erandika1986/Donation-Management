@@ -2,7 +2,7 @@
 {
     public static class ServiceContainer
     {
-        public static IServiceCollection AddApplicationService(this IServiceCollection services)
+        public static IServiceCollection AddDomainService(this IServiceCollection services)
         {
             return services;
         }

@@ -10,7 +10,7 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ConfigureServices
     {
-        public static IServiceCollection AddFOFWebAPIServices(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddFVihraAPIServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddHttpContextAccessor();
             services.AddSingleton<ICurrentUserService, CurrentUserService>();

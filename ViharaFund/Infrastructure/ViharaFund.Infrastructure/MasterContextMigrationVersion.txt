@@ -1,0 +1,8 @@
+﻿
+Script-Migration -Context MasterDbContext -Project ViharaFund.Infrastructure -StartUp ViharaFund.WebAPI -Verbose
+
+Add-Migration ViharaFund_00001 -Context MasterDbContext -OutputDir Migrations/Master -Project ViharaFund.Infrastructure -StartupProject ViharaFund.WebAPI -Verbose
+
+Update-Database -Project ViharaFund.Infrastructure -Context MasterDbContext -StartUp ViharaFund.WebAPI -Verbose
+
+Script-Migration -From Initial_Frs -Context MasterDbContext -Project ViharaFund.Infrastructure -StartUp ViharaFund.WebAPI -Verbose

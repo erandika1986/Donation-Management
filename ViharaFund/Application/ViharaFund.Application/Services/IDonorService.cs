@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ViharaFund.Application.DTOs.Common;
+using ViharaFund.Application.DTOs.Donor;
 
 namespace ViharaFund.Application.Services
 {
-    internal interface IDonorService
+    public interface IDonorService
     {
+        Task<PaginatedResultDTO<DonorDTO>> GetAllDonorsAsync(DonorFilterDTO filter);
     }
 }

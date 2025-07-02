@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using ViharaFund.Application.Contracts;
 using ViharaFund.Application.Services;
 using ViharaFund.Infrastructure.Data;
 using ViharaFund.Infrastructure.Interceptors;
@@ -18,7 +19,10 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddDbContext<MasterDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("MasterDatabase")));
 
+            services.AddDbContext<TenantDbContext>(options =>
+                options.UseSqlServer(configuration.GetConnectionString("TenantDatabase")));
 
+            services.AddTransient<TenantDbContextInitializer>();
             //Register all custom build services
             // var InterfaceAssembly = typeof(IUserService).Assembly;
             //var classAssembly = typeof(UserService).Assembly;
@@ -39,7 +43,9 @@ namespace Microsoft.Extensions.DependencyInjection
             //    }
             //}
 
+            services.AddScoped<IDonorService, DonorService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddTransient<IDateTime, DateTimeService>();
 
             return services;
         }
