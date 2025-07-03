@@ -14,6 +14,10 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
 
             builder.Property(p => p.Id).ValueGeneratedOnAdd();
 
+            builder.Property(b => b.RequestedAsUnknownDonor)
+                   .IsRequired()
+                   .HasDefaultValue(false);
+
             builder.HasOne<User>(a => a.CreatedByUser)
                    .WithMany(u => u.CreatedDonors)
                    .HasForeignKey(a => a.CreatedByUserId)

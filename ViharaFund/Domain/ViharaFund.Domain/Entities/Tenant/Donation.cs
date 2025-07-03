@@ -4,7 +4,6 @@ namespace ViharaFund.Domain.Entities.Tenant
 {
     public class Donation : BaseAuditableEntity
     {
-        public int Id { get; set; }
         public int DonorId { get; set; }
         public int PurposeId { get; set; }
         public decimal Amount { get; set; }
