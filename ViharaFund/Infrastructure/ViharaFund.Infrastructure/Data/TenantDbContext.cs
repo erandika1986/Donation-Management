@@ -24,12 +24,14 @@ namespace ViharaFund.Infrastructure.Data
         public DbSet<Donor> Donors { get; set; }
         public DbSet<DonorPurpose> DonorPurposes { get; set; }
         public DbSet<JobCard> JobCards { get; set; }
+        public DbSet<JobCardHistory> JobCardHistories { get; set; }
         public DbSet<JobCardApproval> JobCardApprovals { get; set; }
         public DbSet<JobCardFundRequest> JobCardFundRequests { get; set; }
         public DbSet<JobCardFundRequestApproval> JobCardFundRequestApprovals { get; set; }
         public DbSet<JobCardTask> JobCardTasks { get; set; }
-        public DbSet<JobCardTaskAttachment> JobCardTaskAttachements { get; set; }
+        public DbSet<JobCardTaskAttachment> JobCardTaskAttachments { get; set; }
         public DbSet<JobCardTaskPayment> JobCardTaskPayments { get; set; }
+        public DbSet<JobCardApprovalLevel> JobCardApprovalLevels { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

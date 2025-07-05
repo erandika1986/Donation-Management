@@ -5,10 +5,10 @@ namespace ViharaFund.Application.Services
 {
     public interface IDonorService
     {
-        Task<ResultDto> SaveDonorAsync(DonorDTO donor);
-        Task<List<DropDownDto>> SearchDonorAsync(string searchText);
-        Task<ResultDto> DeleteDonorAsync(int donorId);
-        Task<DonorDTO> GetDonorByIdAsync(int donorId);
-        Task<PaginatedResultDTO<DonorDTO>> GetAllDonorsAsync(DonorFilterDTO filter);
+        Task<ResultDto> saveAsync(DonorDTO donor);
+        Task<List<DropDownDto>> SearchAsync(string searchText);
+        Task<ResultDto> DeleteAsync(int donorId);
+        Task<DonorDTO> GetByIdAsync(int donorId);
+        Task<PaginatedResultDTO<DonorDTO>> GetAllAsync(DonorFilterDTO filter);
     }
 }

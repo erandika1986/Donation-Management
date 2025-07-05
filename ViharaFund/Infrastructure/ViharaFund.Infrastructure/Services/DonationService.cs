@@ -8,9 +8,9 @@ using ViharaFund.Infrastructure.Data;
 
 namespace ViharaFund.Infrastructure.Services
 {
-    public class DonationService(TenantDbContext tenantDbContext) : IDonationService
+    public class DonationService(TenantDbContext tenantDbContext, IDonorService donorService) : IDonationService
     {
-        public async Task<ResultDto> DeleteDonationAsync(int donationId)
+        public async Task<ResultDto> DeleteAsync(int donationId)
         {
             var donation = await tenantDbContext.Donations.FindAsync(donationId);
             if (donation == null)
@@ -25,7 +25,7 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Donation deleted successfully", donationId);
         }
 
-        public async Task<PaginatedResultDTO<DonationSummaryDTO>> GetAllDonationAsync(DonationFilterDTO filter)
+        public async Task<PaginatedResultDTO<DonationSummaryDTO>> GetAllAsync(DonationFilterDTO filter)
         {
             var query = tenantDbContext.Donations
                 .Include(d => d.Donor)
@@ -63,7 +63,7 @@ namespace ViharaFund.Infrastructure.Services
             };
         }
 
-        public async Task<DonationDTO> GetDonationByIdAsync(int donationId)
+        public async Task<DonationDTO> GetByIdAsync(int donationId)
         {
             var donation = await tenantDbContext.Donations.AsNoTracking().FirstOrDefaultAsync(d => d.Id == donationId);
             if (donation == null)
@@ -80,7 +80,7 @@ namespace ViharaFund.Infrastructure.Services
             };
         }
 
-        public async Task<List<DonationSummaryDTO>> GetRecentDonationsAsync(int numberOfRecords)
+        public async Task<List<DonationSummaryDTO>> GetRecentRecordsAsync(int numberOfRecords)
         {
             var donations = await tenantDbContext.Donations
                 .Include(d => d.Donor)
@@ -101,9 +101,16 @@ namespace ViharaFund.Infrastructure.Services
             return donations;
         }
 
-        public async Task<ResultDto> SaveDonationAsync(DonationDTO donation)
+        public async Task<ResultDto> SaveAsync(DonationDTO donation)
         {
-            Donation entity;
+            Donation? entity; // Use nullable type to handle potential null values
+
+            var result = await donorService.saveAsync(donation.Donor);
+            if (!result.Succeeded)
+                return ResultDto.Failure(new List<string>() { $"Failed to save donor information : {string.Join(", ", result)}" });
+
+            donation.DonorId = result.Id;
+
             if (donation.Id > 0)
             {
                 entity = await tenantDbContext.Donations.FindAsync(donation.Id);

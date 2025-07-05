@@ -207,6 +207,9 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.Property<string>("AdditionalNote")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("AssignRoleGroupId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("CreatedByUserId")
                         .HasColumnType("int");
 
@@ -241,6 +244,8 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AssignRoleGroupId");
+
                     b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("UpdatedByUserId");
@@ -256,7 +261,7 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ApprovalLevel")
+                    b.Property<int>("ApprovalLevelId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("ApprovedDate")
@@ -291,6 +296,8 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ApprovalLevelId");
+
                     b.HasIndex("ApproverUserId");
 
                     b.HasIndex("CreatedByUserId");
@@ -300,6 +307,66 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("JobCardApproval", (string)null);
+                });
+
+            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardApprovalLevel", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AssignRoleGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LevelName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignRoleGroupId");
+
+                    b.ToTable("JobCardApprovalLevel", (string)null);
+                });
+
+            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("JobCardId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("JobCardId");
+
+                    b.HasIndex("UpdatedByUserId");
+
+                    b.ToTable("JobCardComment", (string)null);
                 });
 
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardFundRequest", b =>
@@ -415,6 +482,112 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("JobCardFundRequestApproval", (string)null);
+                });
+
+            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardFundRequestRelease", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("JobCardId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PaymentProofUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ReleaseMethod")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransactionNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("JobCardId");
+
+                    b.HasIndex("UpdatedByUserId");
+
+                    b.ToTable("JobCardFundRequestRelease", (string)null);
+                });
+
+            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("ActualTotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("AdditionalNote")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("EstimatedTotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("JobCardId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("JobCardId");
+
+                    b.HasIndex("UpdatedByUserId");
+
+                    b.ToTable("JobCardHistory", (string)null);
                 });
 
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardTask", b =>
@@ -541,6 +714,9 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("PaidById")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("UpdateDate")
                         .HasColumnType("datetime2");
 
@@ -553,6 +729,8 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
                     b.HasIndex("JobCardTaskId");
 
+                    b.HasIndex("PaidById");
+
                     b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("JobCardTaskPayment", (string)null);
@@ -561,10 +739,7 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.Role", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -720,6 +895,12 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCard", b =>
                 {
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.Role", "AssignRoleGroup")
+                        .WithMany("AssignedJobCards")
+                        .HasForeignKey("AssignRoleGroupId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "CreatedByUser")
                         .WithMany("CreatedJobCards")
                         .HasForeignKey("CreatedByUserId")
@@ -730,6 +911,8 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                         .HasForeignKey("UpdatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.Navigation("AssignRoleGroup");
+
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("UpdatedByUser");
@@ -737,6 +920,12 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardApproval", b =>
                 {
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.JobCardApprovalLevel", "ApprovalLevel")
+                        .WithMany("JobCardApprovals")
+                        .HasForeignKey("ApprovalLevelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "ApprovedUser")
                         .WithMany("JobCardApprovals")
                         .HasForeignKey("ApproverUserId")
@@ -759,7 +948,45 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                         .HasForeignKey("UpdatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.Navigation("ApprovalLevel");
+
                     b.Navigation("ApprovedUser");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("JobCard");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
+            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardApprovalLevel", b =>
+                {
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.Role", "AssignRoleGroup")
+                        .WithMany("JobCardApprovalLevels")
+                        .HasForeignKey("AssignRoleGroupId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AssignRoleGroup");
+                });
+
+            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardComment", b =>
+                {
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "CreatedByUser")
+                        .WithMany("CreatedJobCardComments")
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.JobCard", "JobCard")
+                        .WithMany("JobCardComments")
+                        .HasForeignKey("JobCardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "UpdatedByUser")
+                        .WithMany("UpdatedJobCardComments")
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreatedByUser");
 
@@ -834,6 +1061,56 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.Navigation("UpdatedByUser");
                 });
 
+            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardFundRequestRelease", b =>
+                {
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "CreatedByUser")
+                        .WithMany("CreatedJobCardFundRequestReleases")
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.JobCard", "JobCard")
+                        .WithMany("JobCardFundRequestReleases")
+                        .HasForeignKey("JobCardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "UpdatedByUser")
+                        .WithMany("UpdatedJobCardFundRequestReleases")
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("JobCard");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
+            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardHistory", b =>
+                {
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "CreatedByUser")
+                        .WithMany("CreatedJobCardHistories")
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.JobCard", "JobCard")
+                        .WithMany("JobCardHistories")
+                        .HasForeignKey("JobCardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "UpdatedByUser")
+                        .WithMany("UpdatedJobCardHistories")
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("JobCard");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardTask", b =>
                 {
                     b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "CreatedByUser")
@@ -897,6 +1174,12 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "PaidByUser")
+                        .WithMany("JobCardTaskPayments")
+                        .HasForeignKey("PaidById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "UpdatedByUser")
                         .WithMany("UpdatedJobCardTaskPayments")
                         .HasForeignKey("UpdatedByUserId")
@@ -905,6 +1188,8 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("JobCardTask");
+
+                    b.Navigation("PaidByUser");
 
                     b.Navigation("UpdatedByUser");
                 });
@@ -942,9 +1227,20 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                 {
                     b.Navigation("JobCardApprovals");
 
+                    b.Navigation("JobCardComments");
+
+                    b.Navigation("JobCardFundRequestReleases");
+
                     b.Navigation("JobCardFundRequests");
 
+                    b.Navigation("JobCardHistories");
+
                     b.Navigation("JobCardTasks");
+                });
+
+            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardApprovalLevel", b =>
+                {
+                    b.Navigation("JobCardApprovals");
                 });
 
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardFundRequest", b =>
@@ -966,6 +1262,10 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.Role", b =>
                 {
+                    b.Navigation("AssignedJobCards");
+
+                    b.Navigation("JobCardApprovalLevels");
+
                     b.Navigation("UserRoles");
                 });
 
@@ -979,9 +1279,15 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
                     b.Navigation("CreatedJobCardApprovals");
 
+                    b.Navigation("CreatedJobCardComments");
+
                     b.Navigation("CreatedJobCardFundRequestApprovals");
 
+                    b.Navigation("CreatedJobCardFundRequestReleases");
+
                     b.Navigation("CreatedJobCardFundRequests");
+
+                    b.Navigation("CreatedJobCardHistories");
 
                     b.Navigation("CreatedJobCardTaskAttachments");
 
@@ -997,6 +1303,8 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
                     b.Navigation("JobCardFundRequests");
 
+                    b.Navigation("JobCardTaskPayments");
+
                     b.Navigation("UpdatedDonationExpenses");
 
                     b.Navigation("UpdatedDonations");
@@ -1005,9 +1313,15 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
                     b.Navigation("UpdatedJobCardApprovals");
 
+                    b.Navigation("UpdatedJobCardComments");
+
                     b.Navigation("UpdatedJobCardFundRequestApprovals");
 
+                    b.Navigation("UpdatedJobCardFundRequestReleases");
+
                     b.Navigation("UpdatedJobCardFundRequests");
+
+                    b.Navigation("UpdatedJobCardHistories");
 
                     b.Navigation("UpdatedJobCardTaskAttachments");
 

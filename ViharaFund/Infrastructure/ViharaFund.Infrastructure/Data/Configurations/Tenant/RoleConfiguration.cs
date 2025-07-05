@@ -12,7 +12,7 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
 
             builder.HasKey(p => p.Id);
 
-            builder.Property(p => p.Id).ValueGeneratedOnAdd();
+            builder.Property(p => p.Id).ValueGeneratedNever();
         }
     }
 }

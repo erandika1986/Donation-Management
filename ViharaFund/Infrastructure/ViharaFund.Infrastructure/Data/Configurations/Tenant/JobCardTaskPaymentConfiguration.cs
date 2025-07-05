@@ -18,6 +18,13 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
                 .IsRequired(false);
 
             builder
+                .HasOne<User>(c => c.PaidByUser)
+                .WithMany(c => c.JobCardTaskPayments)
+                .HasForeignKey(c => c.PaidById)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(true);
+
+            builder
                .HasOne<JobCardTask>(c => c.JobCardTask)
                .WithMany(c => c.JobCardTaskPayments)
                .HasForeignKey(c => c.JobCardTaskId)

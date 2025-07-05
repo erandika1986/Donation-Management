@@ -20,6 +20,11 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
             builder.Property(b => b.Remarks)
                 .IsRequired(false);
 
+            builder.HasOne<JobCardApprovalLevel>(a => a.ApprovalLevel)
+                   .WithMany(u => u.JobCardApprovals)
+                   .HasForeignKey(a => a.ApprovalLevelId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
             builder
                .HasOne<User>(c => c.ApprovedUser)
                .WithMany(c => c.JobCardApprovals)

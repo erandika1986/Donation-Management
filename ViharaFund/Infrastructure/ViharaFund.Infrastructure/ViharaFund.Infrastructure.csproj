@@ -30,4 +30,8 @@
     <ProjectReference Include="..\..\Domain\ViharaFund.Domain\ViharaFund.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\Tenant\" />
+  </ItemGroup>
+
 </Project>

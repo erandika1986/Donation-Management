@@ -12,9 +12,15 @@ namespace ViharaFund.Domain.Entities.Tenant
         public decimal? EstimatedTotalAmount { get; set; }
         public decimal? ActualTotalAmount { get; set; }
         public string? AdditionalNote { get; set; }
+        public int AssignRoleGroupId { get; set; }
+
+        public virtual Role AssignRoleGroup { get; set; }
 
         public virtual ICollection<JobCardApproval> JobCardApprovals { get; set; } = new HashSet<JobCardApproval>();
         public virtual ICollection<JobCardFundRequest> JobCardFundRequests { get; set; } = new HashSet<JobCardFundRequest>();
+        public virtual ICollection<JobCardFundRequestRelease> JobCardFundRequestReleases { get; set; } = new HashSet<JobCardFundRequestRelease>();
         public virtual ICollection<JobCardTask> JobCardTasks { get; set; } = new HashSet<JobCardTask>();
+        public virtual ICollection<JobCardHistory> JobCardHistories { get; set; } = new HashSet<JobCardHistory>();
+        public virtual ICollection<JobCardComment> JobCardComments { get; set; } = new HashSet<JobCardComment>();
     }
 }

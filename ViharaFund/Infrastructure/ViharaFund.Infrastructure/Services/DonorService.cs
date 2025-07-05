@@ -7,17 +7,11 @@ using ViharaFund.Infrastructure.Data;
 
 namespace ViharaFund.Infrastructure.Services
 {
-    public class DonorService : IDonorService
+    public class DonorService(TenantDbContext tenantDbContext) : IDonorService
     {
-        private readonly TenantDbContext _tenantDbContext;
-        public DonorService(TenantDbContext tenantDbContext)
+        public async Task<ResultDto> DeleteAsync(int donorId)
         {
-            _tenantDbContext = tenantDbContext;
-        }
-
-        public async Task<ResultDto> DeleteDonorAsync(int donorId)
-        {
-            var entity = await _tenantDbContext.Donors.FirstOrDefaultAsync(x => x.Id == donorId);
+            var entity = await tenantDbContext.Donors.FirstOrDefaultAsync(x => x.Id == donorId);
             if (entity == null)
                 return ResultDto.Failure(new[] { "Donor not found." });
 
@@ -25,15 +19,15 @@ namespace ViharaFund.Infrastructure.Services
             entity.IsActive = false;
             entity.UpdateDate = DateTime.UtcNow;
 
-            _tenantDbContext.Donors.Update(entity);
-            await _tenantDbContext.SaveChangesAsync();
+            tenantDbContext.Donors.Update(entity);
+            await tenantDbContext.SaveChangesAsync();
 
             return ResultDto.Success("Donor deleted successfully", entity.Id);
         }
 
-        public async Task<PaginatedResultDTO<DonorDTO>> GetAllDonorsAsync(DonorFilterDTO filter)
+        public async Task<PaginatedResultDTO<DonorDTO>> GetAllAsync(DonorFilterDTO filter)
         {
-            var query = _tenantDbContext.Donors.AsQueryable();
+            var query = tenantDbContext.Donors.AsQueryable();
 
             if (!string.IsNullOrEmpty(filter.SearchTerm))
             {
@@ -66,9 +60,9 @@ namespace ViharaFund.Infrastructure.Services
             return newResult;
         }
 
-        public async Task<DonorDTO> GetDonorByIdAsync(int donorId)
+        public async Task<DonorDTO> GetByIdAsync(int donorId)
         {
-            var entity = await _tenantDbContext.Donors.FirstOrDefaultAsync(x => x.Id == donorId && x.IsActive);
+            var entity = await tenantDbContext.Donors.FirstOrDefaultAsync(x => x.Id == donorId && x.IsActive);
             if (entity == null)
                 return null;
 
@@ -82,7 +76,7 @@ namespace ViharaFund.Infrastructure.Services
             };
         }
 
-        public async Task<ResultDto> SaveDonorAsync(DonorDTO donor)
+        public async Task<ResultDto> saveAsync(DonorDTO donor)
         {
             if (string.IsNullOrWhiteSpace(donor.Name))
             {
@@ -101,11 +95,11 @@ namespace ViharaFund.Infrastructure.Services
                     IsActive = true,
                     CreatedDate = DateTime.UtcNow
                 };
-                _tenantDbContext.Donors.Add(entity);
+                tenantDbContext.Donors.Add(entity);
             }
             else
             {
-                entity = await _tenantDbContext.Donors.FirstOrDefaultAsync(x => x.Id == donor.Id);
+                entity = await tenantDbContext.Donors.FirstOrDefaultAsync(x => x.Id == donor.Id);
                 if (entity == null)
                     return ResultDto.Failure(new[] { "Donor not found." });
 
@@ -115,16 +109,16 @@ namespace ViharaFund.Infrastructure.Services
                 entity.Address = donor.Address;
                 entity.UpdateDate = DateTime.UtcNow;
 
-                _tenantDbContext.Donors.Update(entity);
+                tenantDbContext.Donors.Update(entity);
             }
 
-            await _tenantDbContext.SaveChangesAsync();
+            await tenantDbContext.SaveChangesAsync();
             return ResultDto.Success("Donor saved successfully", entity.Id);
         }
 
-        public async Task<List<DropDownDto>> SearchDonorAsync(string searchText)
+        public async Task<List<DropDownDto>> SearchAsync(string searchText)
         {
-            return await _tenantDbContext.Donors
+            return await tenantDbContext.Donors
                 .Where(x => x.IsActive &&
                             (x.Name.Contains(searchText) ||
                              x.Email.Contains(searchText) ||

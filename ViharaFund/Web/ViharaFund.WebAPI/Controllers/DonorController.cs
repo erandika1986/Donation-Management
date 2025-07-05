@@ -17,38 +17,46 @@ namespace ViharaFund.WebAPI.Controllers
             this._donorService = donorService;
         }
 
-        [HttpPost("saveDonor")]
-        public async Task<IActionResult> SaveDonor([FromBody] DonorDTO donor)
+        [HttpPost("save")]
+        public async Task<IActionResult> Save([FromBody] DonorDTO donor)
         {
-            var result = await _donorService.SaveDonorAsync(donor);
+            var result = await _donorService.saveAsync(donor);
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
         }
 
-        [HttpGet("searchDonor")]
-        public async Task<IActionResult> SearchDonor([FromQuery] string searchText)
+        [HttpGet("search")]
+        public async Task<IActionResult> search([FromQuery] string searchText)
         {
-            var donors = await _donorService.SearchDonorAsync(searchText);
+            var donors = await _donorService.SearchAsync(searchText);
             return Ok(donors);
         }
 
-        [HttpDelete("deleteDonor/{donorId}")]
-        public async Task<IActionResult> DeleteDonor(int donorId)
+        [HttpDelete("delete/{donorId}")]
+        public async Task<IActionResult> Delete(int donorId)
         {
-            var result = await _donorService.DeleteDonorAsync(donorId);
+            var result = await _donorService.DeleteAsync(donorId);
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
         }
 
-        [HttpGet("getDonorById/{donorId}")]
-        public async Task<IActionResult> GetDonorById(int donorId)
+        [HttpGet("getById/{donorId}")]
+        public async Task<IActionResult> GetById(int donorId)
         {
-            var donor = await _donorService.GetDonorByIdAsync(donorId);
+            var donor = await _donorService.GetByIdAsync(donorId);
             if (donor == null)
                 return NotFound();
             return Ok(donor);
+        }
+
+        [HttpGet("getAll")]
+        public async Task<IActionResult> GetAll([FromQuery] DonorFilterDTO filter)
+        {
+            var response = await _donorService.GetAllAsync(filter);
+
+            return Ok(response);
         }
     }
 }

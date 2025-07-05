@@ -28,8 +28,7 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                 name: "Role",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -58,6 +57,25 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                 });
 
             migrationBuilder.CreateTable(
+                name: "JobCardApprovalLevel",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false),
+                    LevelName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AssignRoleGroupId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_JobCardApprovalLevel", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_JobCardApprovalLevel_Role_AssignRoleGroupId",
+                        column: x => x.AssignRoleGroupId,
+                        principalTable: "Role",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Donor",
                 columns: table => new
                 {
@@ -67,6 +85,7 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RequestedAsUnknownDonor = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedByUserId = table.Column<int>(type: "int", nullable: true),
                     UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -103,6 +122,7 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     EstimatedTotalAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     ActualTotalAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     AdditionalNote = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AssignRoleGroupId = table.Column<int>(type: "int", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedByUserId = table.Column<int>(type: "int", nullable: true),
                     UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -112,6 +132,12 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_JobCard", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_JobCard_Role_AssignRoleGroupId",
+                        column: x => x.AssignRoleGroupId,
+                        principalTable: "Role",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_JobCard_User_CreatedByUserId",
                         column: x => x.CreatedByUserId,
@@ -206,7 +232,7 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     JobCardId = table.Column<int>(type: "int", nullable: false),
-                    ApprovalLevel = table.Column<int>(type: "int", nullable: false),
+                    ApprovalLevelId = table.Column<int>(type: "int", nullable: false),
                     ApproverUserId = table.Column<int>(type: "int", nullable: false),
                     ApprovedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false),
@@ -220,6 +246,12 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_JobCardApproval", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_JobCardApproval_JobCardApprovalLevel_ApprovalLevelId",
+                        column: x => x.ApprovalLevelId,
+                        principalTable: "JobCardApprovalLevel",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_JobCardApproval_JobCard_JobCardId",
                         column: x => x.JobCardId,
@@ -240,6 +272,43 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_JobCardApproval_User_UpdatedByUserId",
+                        column: x => x.UpdatedByUserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "JobCardComment",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    JobCardId = table.Column<int>(type: "int", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_JobCardComment", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_JobCardComment_JobCard_JobCardId",
+                        column: x => x.JobCardId,
+                        principalTable: "JobCard",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_JobCardComment_User_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_JobCardComment_User_UpdatedByUserId",
                         column: x => x.UpdatedByUserId,
                         principalTable: "User",
                         principalColumn: "Id",
@@ -290,6 +359,88 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_JobCardFundRequest_User_UpdatedByUserId",
+                        column: x => x.UpdatedByUserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "JobCardFundRequestRelease",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    JobCardId = table.Column<int>(type: "int", nullable: false),
+                    ReleaseMethod = table.Column<int>(type: "int", nullable: false),
+                    TransactionNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PaymentProofUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_JobCardFundRequestRelease", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_JobCardFundRequestRelease_JobCard_JobCardId",
+                        column: x => x.JobCardId,
+                        principalTable: "JobCard",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_JobCardFundRequestRelease_User_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_JobCardFundRequestRelease_User_UpdatedByUserId",
+                        column: x => x.UpdatedByUserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "JobCardHistory",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    JobCardId = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Priority = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    EstimatedTotalAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    ActualTotalAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    AdditionalNote = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_JobCardHistory", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_JobCardHistory_JobCard_JobCardId",
+                        column: x => x.JobCardId,
+                        principalTable: "JobCard",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_JobCardHistory_User_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_JobCardHistory_User_UpdatedByUserId",
                         column: x => x.UpdatedByUserId,
                         principalTable: "User",
                         principalColumn: "Id",
@@ -430,6 +581,7 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     JobCardTaskId = table.Column<int>(type: "int", nullable: false),
                     Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PaidById = table.Column<int>(type: "int", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedByUserId = table.Column<int>(type: "int", nullable: true),
                     UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -448,6 +600,12 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     table.ForeignKey(
                         name: "FK_JobCardTaskPayment_User_CreatedByUserId",
                         column: x => x.CreatedByUserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_JobCardTaskPayment_User_PaidById",
+                        column: x => x.PaidById,
                         principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -544,6 +702,11 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                 column: "UpdatedByUserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_JobCard_AssignRoleGroupId",
+                table: "JobCard",
+                column: "AssignRoleGroupId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_JobCard_CreatedByUserId",
                 table: "JobCard",
                 column: "CreatedByUserId");
@@ -552,6 +715,11 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                 name: "IX_JobCard_UpdatedByUserId",
                 table: "JobCard",
                 column: "UpdatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobCardApproval_ApprovalLevelId",
+                table: "JobCardApproval",
+                column: "ApprovalLevelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_JobCardApproval_ApproverUserId",
@@ -571,6 +739,26 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
             migrationBuilder.CreateIndex(
                 name: "IX_JobCardApproval_UpdatedByUserId",
                 table: "JobCardApproval",
+                column: "UpdatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobCardApprovalLevel_AssignRoleGroupId",
+                table: "JobCardApprovalLevel",
+                column: "AssignRoleGroupId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobCardComment_CreatedByUserId",
+                table: "JobCardComment",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobCardComment_JobCardId",
+                table: "JobCardComment",
+                column: "JobCardId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobCardComment_UpdatedByUserId",
+                table: "JobCardComment",
                 column: "UpdatedByUserId");
 
             migrationBuilder.CreateIndex(
@@ -614,6 +802,36 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                 column: "UpdatedByUserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_JobCardFundRequestRelease_CreatedByUserId",
+                table: "JobCardFundRequestRelease",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobCardFundRequestRelease_JobCardId",
+                table: "JobCardFundRequestRelease",
+                column: "JobCardId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobCardFundRequestRelease_UpdatedByUserId",
+                table: "JobCardFundRequestRelease",
+                column: "UpdatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobCardHistory_CreatedByUserId",
+                table: "JobCardHistory",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobCardHistory_JobCardId",
+                table: "JobCardHistory",
+                column: "JobCardId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobCardHistory_UpdatedByUserId",
+                table: "JobCardHistory",
+                column: "UpdatedByUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_JobCardTask_CreatedByUserId",
                 table: "JobCardTask",
                 column: "CreatedByUserId");
@@ -654,6 +872,11 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                 column: "JobCardTaskId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_JobCardTaskPayment_PaidById",
+                table: "JobCardTaskPayment",
+                column: "PaidById");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_JobCardTaskPayment_UpdatedByUserId",
                 table: "JobCardTaskPayment",
                 column: "UpdatedByUserId");
@@ -682,7 +905,16 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                 name: "JobCardApproval");
 
             migrationBuilder.DropTable(
+                name: "JobCardComment");
+
+            migrationBuilder.DropTable(
                 name: "JobCardFundRequestApproval");
+
+            migrationBuilder.DropTable(
+                name: "JobCardFundRequestRelease");
+
+            migrationBuilder.DropTable(
+                name: "JobCardHistory");
 
             migrationBuilder.DropTable(
                 name: "JobCardTaskAttachment");
@@ -700,16 +932,19 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                 name: "JobCardTaskPayment");
 
             migrationBuilder.DropTable(
-                name: "JobCardFundRequest");
+                name: "JobCardApprovalLevel");
 
             migrationBuilder.DropTable(
-                name: "Role");
+                name: "JobCardFundRequest");
 
             migrationBuilder.DropTable(
                 name: "JobCardTask");
 
             migrationBuilder.DropTable(
                 name: "JobCard");
+
+            migrationBuilder.DropTable(
+                name: "Role");
 
             migrationBuilder.DropTable(
                 name: "User");

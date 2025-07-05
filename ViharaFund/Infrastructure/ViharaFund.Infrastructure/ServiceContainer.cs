@@ -43,6 +43,9 @@ namespace Microsoft.Extensions.DependencyInjection
             //    }
             //}
 
+            services.AddScoped<IJobCardService, JobCardService>();
+            services.AddScoped<IJobCardHistoryService, JobCardHistoryService>();
+            services.AddScoped<IDonationService, DonationService>();
             services.AddScoped<IDonorService, DonorService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddTransient<IDateTime, DateTimeService>();

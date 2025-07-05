@@ -17,41 +17,41 @@ namespace ViharaFund.WebAPI.Controllers
             _donationService = donationService;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [HttpGet("getAll")]
+        public async Task<IActionResult> GetAll([FromQuery] DonationFilterDTO filter)
         {
-            var donations = await _donationService.GetAllAsync();
-            return Ok(donations);
+            var response = await _donationService.GetAllAsync(filter);
+
+            return Ok(response);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("getById/{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var donation = await _donationService.GetDonationByIdAsync(id);
-            if (donation == null)
+            var response = await _donationService.GetByIdAsync(id);
+            if (response == null)
                 return NotFound();
-            return Ok(donation);
+            return Ok(response);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] DonationDTO model)
+        [HttpPost("save")]
+        public async Task<IActionResult> Save([FromBody] DonationDTO model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var created = await _donationService.SaveDonationAsync(model);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            var response = await _donationService.SaveAsync(model);
+            return Ok(response);
         }
 
 
 
-        [HttpDelete("{id}")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _donationService.DeleteDonationAsync(id);
-            if (!deleted)
-                return NotFound();
-            return NoContent();
+            var response = await _donationService.DeleteAsync(id);
+
+            return Ok(response);
         }
     }
 }

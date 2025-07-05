@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ViharaFund.Application.Constants;
+using ViharaFund.Application.Helpers;
+using ViharaFund.Domain.Enums;
 
 namespace ViharaFund.Infrastructure.Data
 {
@@ -35,6 +37,7 @@ namespace ViharaFund.Infrastructure.Data
             {
                 await SeedUserRolesAsync();
                 await SeedAdminUserAsync();
+                await SeedJobCardApprovalLevelAsync();
             }
             catch (Exception ex)
             {
@@ -45,25 +48,16 @@ namespace ViharaFund.Infrastructure.Data
 
         private async Task SeedUserRolesAsync()
         {
-
-            string[] roles =
+            foreach (RoleName roleName in Enum.GetValues(typeof(RoleName)))
             {
-                RoleConstants.Admin,
-                RoleConstants.ChiefMonk,
-                RoleConstants.Monk,
-                RoleConstants.TempleManagementCommittee,
-                RoleConstants.TempleFinancialManagementCommittee,
-                RoleConstants.TemporaryCommittee
-            };
-
-            foreach (var roleName in roles)
-            {
-                var role = await _context.Roles.FirstOrDefaultAsync(x => x.Name == roleName);
+                var role = await _context.Roles.FirstOrDefaultAsync(x => x.Id == (int)roleName);
                 if (role is null)
                 {
+
                     role = new Domain.Entities.Tenant.Role
                     {
-                        Name = roleName
+                        Id = (int)roleName,
+                        Name = EnumHelper.GetEnumDescription(roleName)
                     };
 
                     _context.Roles.Add(role);
@@ -87,8 +81,40 @@ namespace ViharaFund.Infrastructure.Data
                     Phone = ApplicationConstants.AdminPhone,
                     DOB = DateTime.Now,
                 };
+                admin.UserRoles = new List<Domain.Entities.Tenant.UserRole>
+                {
+                    new Domain.Entities.Tenant.UserRole
+                    {
+                        RoleId = 1,
+                        IsActive = true
+                    }
+                };
 
                 _context.Users.Add(admin);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SeedJobCardApprovalLevelAsync()
+        {
+            if (!_context.JobCardApprovalLevels.Any())
+            {
+                _context.JobCardApprovalLevels.AddRange(new List<Domain.Entities.Tenant.JobCardApprovalLevel>
+                {
+                    new Domain.Entities.Tenant.JobCardApprovalLevel
+                    {
+                        Id = 1,
+                        LevelName = "Level 1",
+                        AssignRoleGroupId = (int)RoleName.ChiefMonk
+                    },
+                    new Domain.Entities.Tenant.JobCardApprovalLevel
+                    {
+                        Id = 2,
+                        LevelName = "Level 2",
+                        AssignRoleGroupId = (int)RoleName.TempleManagementCommittee
+                    }
+                });
+
                 await _context.SaveChangesAsync();
             }
         }

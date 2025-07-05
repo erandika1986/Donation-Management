@@ -17,6 +17,7 @@ namespace ViharaFund.Domain.Entities.Tenant
         public virtual ICollection<JobCardApproval> JobCardApprovals { get; set; } = new HashSet<JobCardApproval>();
         public virtual ICollection<JobCardFundRequestApproval> JobCardFundRequestApprovals { get; set; } = new HashSet<JobCardFundRequestApproval>();
         public virtual ICollection<JobCardFundRequest> JobCardFundRequests { get; set; } = new HashSet<JobCardFundRequest>();
+        public virtual ICollection<JobCardTaskPayment> JobCardTaskPayments { get; set; } = new HashSet<JobCardTaskPayment>();
 
 
         public virtual ICollection<Donation> CreatedDonations { get; set; } = new HashSet<Donation>();
@@ -31,11 +32,20 @@ namespace ViharaFund.Domain.Entities.Tenant
         public virtual ICollection<JobCard> CreatedJobCards { get; set; } = new HashSet<JobCard>();
         public virtual ICollection<JobCard> UpdatedJobCards { get; set; } = new HashSet<JobCard>();
 
+        public virtual ICollection<JobCardComment> CreatedJobCardComments { get; set; } = new HashSet<JobCardComment>();
+        public virtual ICollection<JobCardComment> UpdatedJobCardComments { get; set; } = new HashSet<JobCardComment>();
+
+        public virtual ICollection<JobCardHistory> CreatedJobCardHistories { get; set; } = new HashSet<JobCardHistory>();
+        public virtual ICollection<JobCardHistory> UpdatedJobCardHistories { get; set; } = new HashSet<JobCardHistory>();
+
         public virtual ICollection<JobCardApproval> CreatedJobCardApprovals { get; set; } = new HashSet<JobCardApproval>();
         public virtual ICollection<JobCardApproval> UpdatedJobCardApprovals { get; set; } = new HashSet<JobCardApproval>();
 
         public virtual ICollection<JobCardFundRequest> CreatedJobCardFundRequests { get; set; } = new HashSet<JobCardFundRequest>();
         public virtual ICollection<JobCardFundRequest> UpdatedJobCardFundRequests { get; set; } = new HashSet<JobCardFundRequest>();
+
+        public virtual ICollection<JobCardFundRequestRelease> CreatedJobCardFundRequestReleases { get; set; } = new HashSet<JobCardFundRequestRelease>();
+        public virtual ICollection<JobCardFundRequestRelease> UpdatedJobCardFundRequestReleases { get; set; } = new HashSet<JobCardFundRequestRelease>();
 
         public virtual ICollection<JobCardFundRequestApproval> CreatedJobCardFundRequestApprovals { get; set; } = new HashSet<JobCardFundRequestApproval>();
         public virtual ICollection<JobCardFundRequestApproval> UpdatedJobCardFundRequestApprovals { get; set; } = new HashSet<JobCardFundRequestApproval>();
