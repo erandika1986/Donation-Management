@@ -10,5 +10,7 @@
         public string AssignRoles { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; }
+
+        public List<int> AssignedRoles { get; set; } = new List<int>();
     }
 }

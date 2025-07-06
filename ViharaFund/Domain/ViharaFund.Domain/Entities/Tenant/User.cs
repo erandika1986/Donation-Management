@@ -2,7 +2,7 @@
 
 namespace ViharaFund.Domain.Entities.Tenant
 {
-    public class User : BaseEntity
+    public class User : BaseAuditableEntity
     {
         public string FullName { get; set; }
         public string Email { get; set; }
@@ -11,7 +11,6 @@ namespace ViharaFund.Domain.Entities.Tenant
         public string PasswordHash { get; set; }
         public DateTime? DOB { get; set; }
         public DateTime? LastLoggedIn { get; set; }
-        public bool IsActive { get; set; }
 
         public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
         public virtual ICollection<JobCardApproval> JobCardApprovals { get; set; } = new HashSet<JobCardApproval>();
@@ -19,6 +18,8 @@ namespace ViharaFund.Domain.Entities.Tenant
         public virtual ICollection<JobCardFundRequest> JobCardFundRequests { get; set; } = new HashSet<JobCardFundRequest>();
         public virtual ICollection<JobCardTaskPayment> JobCardTaskPayments { get; set; } = new HashSet<JobCardTaskPayment>();
 
+        public virtual ICollection<User> CreatedUsers { get; set; } = new HashSet<User>();
+        public virtual ICollection<User> UpdatedUsers { get; set; } = new HashSet<User>();
 
         public virtual ICollection<Donation> CreatedDonations { get; set; } = new HashSet<Donation>();
         public virtual ICollection<Donation> UpdatedDonations { get; set; } = new HashSet<Donation>();
