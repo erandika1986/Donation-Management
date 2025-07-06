@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ViharaFund.Application.DTOs.JobCard;
 using ViharaFund.Application.Services;
 
 namespace ViharaFund.WebAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class JobCardController : ControllerBase
@@ -144,6 +146,13 @@ namespace ViharaFund.WebAPI.Controllers
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
+        }
+
+        [HttpGet("getJobCardMasterData")]
+        public async Task<IActionResult> GetDonationMasterData()
+        {
+            var response = await _jobCardService.GetJobCardMasterDataAsync();
+            return Ok(response);
         }
     }
 }

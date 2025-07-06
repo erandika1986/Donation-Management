@@ -21,5 +21,7 @@ namespace ViharaFund.Application.Services
         Task<ResultDto> AskForCompletion(int jobCardId, string comments);
         Task<ResultDto> MarkAsCompleted(int jobCardId, string comment);
 
+        Task<JobCardMasterDataDTO> GetJobCardMasterDataAsync();
+
     }
 }

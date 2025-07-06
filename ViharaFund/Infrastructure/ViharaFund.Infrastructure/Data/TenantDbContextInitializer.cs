@@ -38,6 +38,7 @@ namespace ViharaFund.Infrastructure.Data
                 await SeedUserRolesAsync();
                 await SeedAdminUserAsync();
                 await SeedJobCardApprovalLevelAsync();
+                await SeedDonorPurposeAsync();
             }
             catch (Exception ex)
             {
@@ -115,6 +116,49 @@ namespace ViharaFund.Infrastructure.Data
                     }
                 });
 
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SeedDonorPurposeAsync()
+        {
+            if (!_context.DonorPurposes.Any())
+            {
+                _context.DonorPurposes.AddRange(new List<Domain.Entities.Tenant.DonorPurpose>
+                {
+                    new Domain.Entities.Tenant.DonorPurpose
+                    {
+                        Name = "General Donation",
+                    },
+                    new Domain.Entities.Tenant.DonorPurpose
+                    {
+                        Name = "New Building Projects",
+                    },
+                    new Domain.Entities.Tenant.DonorPurpose
+                    {
+                        Name = "Support to the Poor and Needy",
+                    },
+                    new Domain.Entities.Tenant.DonorPurpose
+                    {
+                        Name = "Daily Needs of Monks",
+                    },
+                    new Domain.Entities.Tenant.DonorPurpose
+                    {
+                        Name = "Upkeep of Temple Buildings",
+                    },
+                    new Domain.Entities.Tenant.DonorPurpose
+                    {
+                        Name = "Utility Expenses",
+                    },
+                    new Domain.Entities.Tenant.DonorPurpose
+                    {
+                        Name = "Recurring Donation",
+                    },
+                    new Domain.Entities.Tenant.DonorPurpose
+                    {
+                        Name = "Other",
+                    }
+                });
                 await _context.SaveChangesAsync();
             }
         }

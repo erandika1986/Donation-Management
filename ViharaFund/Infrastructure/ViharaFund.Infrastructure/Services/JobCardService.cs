@@ -511,5 +511,21 @@ namespace ViharaFund.Infrastructure.Services
 
             return ResultDto.Success("Job Card marked as Pending Completion successfully.", entity.Id);
         }
+
+        public async Task<JobCardMasterDataDTO> GetJobCardMasterDataAsync()
+        {
+            var masterData = new JobCardMasterDataDTO();
+
+            foreach (JobPriority jobPriority in Enum.GetValues(typeof(JobPriority)))
+            {
+                masterData.JobPriorities.Add(new DropDownDto
+                {
+                    Id = (int)jobPriority,
+                    Name = EnumHelper.GetEnumDescription(jobPriority)
+                });
+            }
+
+            return masterData;
+        }
     }
 }

@@ -2,6 +2,7 @@
 using System.Globalization;
 using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.DTOs.Donation;
+using ViharaFund.Application.DTOs.Donor;
 using ViharaFund.Application.Services;
 using ViharaFund.Domain.Entities.Tenant;
 using ViharaFund.Infrastructure.Data;
@@ -78,6 +79,24 @@ namespace ViharaFund.Infrastructure.Services
                 Date = donation.Date.ToString("yyyy-MM-dd"),
                 Note = donation.Note
             };
+        }
+
+        public async Task<DonationMasterDataDTO> GetDonationMasterDataAsync()
+        {
+            var masterData = new DonationMasterDataDTO();
+
+            var donorPurposes = await tenantDbContext.DonorPurposes
+                .OrderBy(dp => dp.Name)
+                .Select(dp => new DropDownDto
+                {
+                    Id = dp.Id,
+                    Name = dp.Name
+                })
+                .ToListAsync();
+
+            masterData.DonorPurpose.AddRange(donorPurposes);
+
+            return masterData;
         }
 
         public async Task<List<DonationSummaryDTO>> GetRecentRecordsAsync(int numberOfRecords)

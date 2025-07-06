@@ -53,5 +53,12 @@ namespace ViharaFund.WebAPI.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("getDonationMasterData")]
+        public async Task<IActionResult> GetDonationMasterData()
+        {
+            var response = await _donationService.GetDonationMasterDataAsync();
+            return Ok(response);
+        }
     }
 }
