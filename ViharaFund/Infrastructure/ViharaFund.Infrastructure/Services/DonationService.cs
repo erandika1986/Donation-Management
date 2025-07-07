@@ -18,7 +18,7 @@ namespace ViharaFund.Infrastructure.Services
                 return ResultDto.Success("Donation not found", 0);
 
             donation.IsActive = false;
-            donation.UpdateDate = DateTime.UtcNow;
+            donation.UpdatedDate = DateTime.UtcNow;
 
             tenantDbContext.Donations.Update(donation);
             await tenantDbContext.SaveChangesAsync();

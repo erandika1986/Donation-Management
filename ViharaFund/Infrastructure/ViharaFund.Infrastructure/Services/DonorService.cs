@@ -17,7 +17,7 @@ namespace ViharaFund.Infrastructure.Services
 
             // Soft delete
             entity.IsActive = false;
-            entity.UpdateDate = DateTime.UtcNow;
+            entity.UpdatedDate = DateTime.UtcNow;
 
             tenantDbContext.Donors.Update(entity);
             await tenantDbContext.SaveChangesAsync();
@@ -107,7 +107,7 @@ namespace ViharaFund.Infrastructure.Services
                 entity.Email = donor.Email;
                 entity.Phone = donor.Phone;
                 entity.Address = donor.Address;
-                entity.UpdateDate = DateTime.UtcNow;
+                entity.UpdatedDate = DateTime.UtcNow;
 
                 tenantDbContext.Donors.Update(entity);
             }

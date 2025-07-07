@@ -43,13 +43,13 @@ namespace ViharaFund.Infrastructure.Interceptors
                     entry.Entity.CreatedByUserId = _currentUserService.UserId;
                     entry.Entity.UpdatedByUserId = _currentUserService.UserId;
                     entry.Entity.CreatedDate = _dateTime.UtcNow;
-                    entry.Entity.UpdateDate = _dateTime.UtcNow;
+                    entry.Entity.UpdatedDate = _dateTime.UtcNow;
                 }
 
                 if (entry.State == EntityState.Added || entry.State == EntityState.Modified || entry.HasChangedOwnedEntities())
                 {
                     entry.Entity.UpdatedByUserId = _currentUserService.UserId;
-                    entry.Entity.UpdateDate = _dateTime.UtcNow;
+                    entry.Entity.UpdatedDate = _dateTime.UtcNow;
                 }
             }
         }

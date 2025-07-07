@@ -25,7 +25,7 @@ namespace ViharaFund.Infrastructure.Services
             }
 
             entity.IsActive = false;
-            entity.UpdateDate = DateTime.UtcNow;
+            entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
 
             tenantDbContext.JobCards.Update(entity);
@@ -116,7 +116,7 @@ namespace ViharaFund.Infrastructure.Services
             entity.EstimatedTotalAmount = jobCard.EstimatedTotalAmount;
             entity.ActualTotalAmount = jobCard.ActualTotalAmount;
             entity.AdditionalNote = jobCard.AdditionalNote;
-            entity.UpdateDate = DateTime.UtcNow;
+            entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
 
             tenantDbContext.JobCards.Update(entity);
@@ -165,7 +165,7 @@ namespace ViharaFund.Infrastructure.Services
                 EstimatedTotalAmount = jobCard.EstimatedTotalAmount,
                 ActualTotalAmount = jobCard.ActualTotalAmount,
                 AdditionalNote = jobCard.AdditionalNote,
-                UpdateDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
@@ -197,18 +197,38 @@ namespace ViharaFund.Infrastructure.Services
 
             entity.AssignRoleGroupId = (int)RoleName.ChiefMonk;
             entity.Status = Domain.Enums.JobCardStatus.PendingApproval;
-            entity.UpdateDate = DateTime.UtcNow;
+            entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
 
             entity.JobCardComments.Add(new JobCardComment
             {
                 Comment = comment,
-                UpdateDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
                 CreatedByUserId = currentUserService.UserId
             });
+
+            if (entity.JobCardApprovals.Count() == 0)
+            {
+                var approvalLevels = await tenantDbContext.JobCardApprovalLevels.ToListAsync();
+
+                foreach (var approvalLevel in approvalLevels)
+                {
+                    entity.JobCardApprovals.Add(new JobCardApproval
+                    {
+                        JobCardId = entity.Id,
+                        ApprovalLevelId = approvalLevel.Id,
+                        Status = Domain.Enums.JobCardApprovalStatus.Pending,
+                        UpdatedDate = DateTime.UtcNow,
+                        UpdatedByUserId = currentUserService.UserId,
+                        CreatedDate = DateTime.UtcNow,
+                        CreatedByUserId = currentUserService.UserId,
+                        IsActive = true
+                    });
+                }
+            }
 
             tenantDbContext.JobCards.Update(entity);
             await tenantDbContext.SaveChangesAsync();
@@ -235,12 +255,12 @@ namespace ViharaFund.Infrastructure.Services
 
             entity.AssignRoleGroupId = (int)RoleName.TempleFinancialManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.OnGoing;
-            entity.UpdateDate = DateTime.UtcNow;
+            entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
                 Comment = comment,
-                UpdateDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
@@ -272,12 +292,12 @@ namespace ViharaFund.Infrastructure.Services
 
             entity.AssignRoleGroupId = (int)RoleName.TempleFinancialManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.Completed;
-            entity.UpdateDate = DateTime.UtcNow;
+            entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
                 Comment = comment,
-                UpdateDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
@@ -309,12 +329,12 @@ namespace ViharaFund.Infrastructure.Services
 
             entity.AssignRoleGroupId = (int)RoleName.TempleFinancialManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.Cancelled;
-            entity.UpdateDate = DateTime.UtcNow;
+            entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
                 Comment = comment,
-                UpdateDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
@@ -346,12 +366,12 @@ namespace ViharaFund.Infrastructure.Services
 
             entity.AssignRoleGroupId = (int)RoleName.TempleFinancialManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.Rejected;
-            entity.UpdateDate = DateTime.UtcNow;
+            entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
                 Comment = comment,
-                UpdateDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
@@ -383,12 +403,12 @@ namespace ViharaFund.Infrastructure.Services
 
             entity.AssignRoleGroupId = (int)RoleName.TempleManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.PendingOnHold;
-            entity.UpdateDate = DateTime.UtcNow;
+            entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
                 Comment = comment,
-                UpdateDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
@@ -420,12 +440,12 @@ namespace ViharaFund.Infrastructure.Services
 
             entity.AssignRoleGroupId = (int)RoleName.TempleFinancialManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.OnHold;
-            entity.UpdateDate = DateTime.UtcNow;
+            entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
                 Comment = comment,
-                UpdateDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
@@ -457,12 +477,12 @@ namespace ViharaFund.Infrastructure.Services
 
             entity.AssignRoleGroupId = (int)RoleName.TempleManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.PendingCancellation;
-            entity.UpdateDate = DateTime.UtcNow;
+            entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
                 Comment = comment,
-                UpdateDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
@@ -494,12 +514,12 @@ namespace ViharaFund.Infrastructure.Services
 
             entity.AssignRoleGroupId = (int)RoleName.TempleManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.PendingCompletion;
-            entity.UpdateDate = DateTime.UtcNow;
+            entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
                 Comment = comment,
-                UpdateDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
@@ -526,6 +546,179 @@ namespace ViharaFund.Infrastructure.Services
             }
 
             return masterData;
+        }
+
+        public async Task<List<JobCardCommentDTO>> GetJobCardComments(int jobCardId)
+        {
+            var comments = await tenantDbContext.JobCardComments.Where(x => x.JobCardId == jobCardId)
+                .Select(x => new JobCardCommentDTO
+                {
+                    Id = x.Id,
+                    JobCardId = x.JobCardId,
+                    Comment = x.Comment,
+                    CommentedBy = x.CreatedByUser.FullName.ToString(),
+                    CommentedOn = x.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss")
+                })
+                .ToListAsync();
+
+            return comments;
+        }
+
+        public async Task<ResultDto> MakeJobCardFundRequestAsync(JobCardFundRequestDTO jobCardFundRequest)
+        {
+            if (jobCardFundRequest == null)
+            {
+                return ResultDto.Failure(new[] { "Job Card Fund Request data is required." });
+            }
+
+            var jobCard = await tenantDbContext.JobCards
+                .FirstOrDefaultAsync(x => x.Id == jobCardFundRequest.JobCardId && x.IsActive);
+
+            if (jobCard == null)
+            {
+                return ResultDto.Failure(new[] { "Job Card not found." });
+            }
+
+            var fundRequest = new JobCardFundRequest
+            {
+                JobCardId = jobCardFundRequest.JobCardId,
+                Purpose = jobCardFundRequest.Purpose,
+                RequestedById = currentUserService.UserId.Value,
+                RequestedDate = DateTime.UtcNow,
+                RequestedAmount = jobCardFundRequest.RequestedAmount,
+                Status = FundRequestStatus.Pending,
+                CreatedDate = DateTime.UtcNow,
+                CreatedByUserId = currentUserService.UserId,
+                UpdatedDate = DateTime.UtcNow,
+                UpdatedByUserId = currentUserService.UserId,
+                IsActive = true
+            };
+
+            fundRequest.JobCardFundRequestComments.Add(new JobCardFundRequestComment
+            {
+                Comment = jobCardFundRequest.Note,
+                UpdatedByUserId = currentUserService.UserId,
+                UpdatedDate = DateTime.UtcNow,
+                CreatedDate = DateTime.UtcNow,
+                CreatedByUserId = currentUserService.UserId,
+                IsActive = true
+            });
+
+            tenantDbContext.JobCardFundRequests.Add(fundRequest);
+            await tenantDbContext.SaveChangesAsync();
+
+            return ResultDto.Success("Job Card Fund Request created successfully.", fundRequest.Id);
+        }
+
+        public async Task<ResultDto> UpdateJobCardFundRequestAsync(JobCardFundRequestDTO jobCardFundRequest)
+        {
+            if (jobCardFundRequest == null)
+            {
+                return ResultDto.Failure(new[] { "Job Card Fund Request data is required." });
+            }
+
+            var fundRequest = await tenantDbContext.JobCardFundRequests
+                .Include(fr => fr.JobCardFundRequestComments)
+                .FirstOrDefaultAsync(fr => fr.Id == jobCardFundRequest.JobCardId && fr.IsActive);
+
+            if (fundRequest == null)
+            {
+                return ResultDto.Failure(new[] { "Job Card Fund Request not found." });
+            }
+
+            // Update properties (add more as needed)
+            fundRequest.Purpose = jobCardFundRequest.Purpose;
+            fundRequest.RequestedAmount = jobCardFundRequest.RequestedAmount;
+            fundRequest.Status = jobCardFundRequest.Status;
+            fundRequest.UpdatedDate = DateTime.UtcNow;
+            fundRequest.UpdatedByUserId = currentUserService.UserId;
+
+            // Optionally add a comment if provided
+            if (!string.IsNullOrWhiteSpace(jobCardFundRequest.Note))
+            {
+                fundRequest.JobCardFundRequestComments.Add(new JobCardFundRequestComment
+                {
+                    Comment = jobCardFundRequest.Note,
+                    UpdatedByUserId = currentUserService.UserId,
+                    UpdatedDate = DateTime.UtcNow,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedByUserId = currentUserService.UserId,
+                    IsActive = true
+                });
+            }
+
+            tenantDbContext.JobCardFundRequests.Update(fundRequest);
+            await tenantDbContext.SaveChangesAsync();
+
+            return ResultDto.Success("Job Card Fund Request updated successfully.", fundRequest.Id);
+        }
+
+        public async Task<ResultDto> UpdateJobCardFundRequestAsync(int fundRequestId, FundRequestStatus status, string comment)
+        {
+            var fundRequest = await tenantDbContext.JobCardFundRequests
+                .Include(fr => fr.JobCardFundRequestComments)
+                .FirstOrDefaultAsync(fr => fr.Id == fundRequestId && fr.IsActive);
+
+            if (fundRequest == null)
+            {
+                return ResultDto.Failure(new[] { "Job Card Fund Request not found." });
+            }
+
+            fundRequest.Status = status;
+            fundRequest.UpdatedDate = DateTime.UtcNow;
+            fundRequest.UpdatedByUserId = currentUserService.UserId;
+
+            if (!string.IsNullOrWhiteSpace(comment))
+            {
+                fundRequest.JobCardFundRequestComments.Add(new JobCardFundRequestComment
+                {
+                    Comment = comment,
+                    UpdatedByUserId = currentUserService.UserId,
+                    UpdatedDate = DateTime.UtcNow,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedByUserId = currentUserService.UserId,
+                    IsActive = true
+                });
+            }
+
+            tenantDbContext.JobCardFundRequests.Update(fundRequest);
+            await tenantDbContext.SaveChangesAsync();
+
+            return ResultDto.Success("Job Card Fund Request status updated successfully.", fundRequest.Id);
+        }
+
+        public async Task<ResultDto> ArchiveFundRequestAsync(int fundRequestId, string comment)
+        {
+            var fundRequest = await tenantDbContext.JobCardFundRequests
+                .Include(fr => fr.JobCardFundRequestComments)
+                .FirstOrDefaultAsync(fr => fr.Id == fundRequestId && fr.IsActive);
+
+            if (fundRequest == null)
+            {
+                return ResultDto.Failure(new[] { "Job Card Fund Request not found." });
+            }
+
+            fundRequest.IsActive = false;
+            fundRequest.UpdatedDate = DateTime.UtcNow;
+            fundRequest.UpdatedByUserId = currentUserService.UserId;
+
+            if (!string.IsNullOrWhiteSpace(comment))
+            {
+                fundRequest.JobCardFundRequestComments.Add(new JobCardFundRequestComment
+                {
+                    Comment = comment,
+                    UpdatedByUserId = currentUserService.UserId,
+                    UpdatedDate = DateTime.UtcNow,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedByUserId = currentUserService.UserId,
+                    IsActive = true
+                });
+            }
+
+            tenantDbContext.JobCardFundRequests.Update(fundRequest);
+            await tenantDbContext.SaveChangesAsync();
+
+            return ResultDto.Success("Job Card Fund Request archived successfully.", fundRequest.Id);
         }
     }
 }

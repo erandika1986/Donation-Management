@@ -29,7 +29,7 @@ namespace ViharaFund.Infrastructure.Services
             {
                 // Remove related user roles
                 user.IsActive = false; // Soft delete
-                user.UpdateDate = dateTime.UtcNow;
+                user.UpdatedDate = dateTime.UtcNow;
                 user.UpdatedByUserId = currentUserService.UserId; // Assuming currentUserService provides the current user's ID
 
                 tenantDbContext.Users.Update(user);
@@ -156,7 +156,7 @@ namespace ViharaFund.Infrastructure.Services
                     IsActive = true,
                     CreatedDate = dateTime.UtcNow,
                     CreatedByUserId = currentUserService.UserId, // Assuming currentUserService provides the current user's ID
-                    UpdateDate = dateTime.UtcNow,
+                    UpdatedDate = dateTime.UtcNow,
                     UpdatedByUserId = currentUserService.UserId // Assuming currentUserService provides the current user's ID
                 };
 
@@ -218,7 +218,7 @@ namespace ViharaFund.Infrastructure.Services
                 existingUser.Phone = user.Phone;
 
             existingUser.IsActive = user.IsActive;
-            existingUser.UpdateDate = dateTime.UtcNow;
+            existingUser.UpdatedDate = dateTime.UtcNow;
             existingUser.UpdatedByUserId = currentUserService.UserId;
 
             // Update roles

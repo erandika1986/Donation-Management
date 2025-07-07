@@ -19,5 +19,6 @@ namespace ViharaFund.Domain.Entities.Tenant
         public virtual User RequestedBy { get; set; }
 
         public virtual ICollection<JobCardFundRequestApproval> JobCardFundRequestApprovals { get; set; } = new HashSet<JobCardFundRequestApproval>();
+        public virtual ICollection<JobCardFundRequestComment> JobCardFundRequestComments { get; set; } = new HashSet<JobCardFundRequestComment>();
     }
 }

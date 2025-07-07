@@ -6,7 +6,7 @@ namespace ViharaFund.Domain.Entities.Common
     {
         public DateTime CreatedDate { get; set; }
         public int? CreatedByUserId { get; set; }
-        public DateTime? UpdateDate { get; set; }
+        public DateTime? UpdatedDate { get; set; }
         public int? UpdatedByUserId { get; set; }
         public bool IsActive { get; set; }
 

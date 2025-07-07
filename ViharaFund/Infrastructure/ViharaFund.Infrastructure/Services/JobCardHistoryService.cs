@@ -19,7 +19,7 @@ namespace ViharaFund.Infrastructure.Services
                 IsActive = jobCard.IsActive,
                 CreatedByUserId = jobCard.CreatedByUserId,
                 UpdatedByUserId = jobCard.UpdatedByUserId,
-                UpdateDate = jobCard.UpdateDate,
+                UpdatedDate = jobCard.UpdatedDate,
                 JobCardId = jobCard.Id,
                 Status = jobCard.Status,
                 Description = jobCard.Description,

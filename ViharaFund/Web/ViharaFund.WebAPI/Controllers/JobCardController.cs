@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ViharaFund.Application.DTOs.JobCard;
 using ViharaFund.Application.Services;
+using ViharaFund.Domain.Enums;
 
 namespace ViharaFund.WebAPI.Controllers
 {
@@ -148,11 +149,55 @@ namespace ViharaFund.WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("getJobCardMasterData")]
+        [HttpGet("get-job-card-master-data")]
         public async Task<IActionResult> GetDonationMasterData()
         {
             var response = await _jobCardService.GetJobCardMasterDataAsync();
             return Ok(response);
         }
+
+        [HttpGet("get-job-card-comments/{jobCardId}")]
+        public async Task<IActionResult> GetJobCardComments(int jobCardId)
+        {
+            var comments = await _jobCardService.GetJobCardComments(jobCardId);
+            return Ok(comments);
+        }
+
+        [HttpPost("make-fund-request")]
+        public async Task<IActionResult> MakeJobCardFundRequest([FromBody] JobCardFundRequestDTO jobCardFundRequest)
+        {
+            var result = await _jobCardService.MakeJobCardFundRequestAsync(jobCardFundRequest);
+            if (result.Succeeded)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPut("update-fund-request")]
+        public async Task<IActionResult> UpdateJobCardFundRequest([FromBody] JobCardFundRequestDTO jobCardFundRequest)
+        {
+            var result = await _jobCardService.UpdateJobCardFundRequestAsync(jobCardFundRequest);
+            if (result.Succeeded)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPut("update-fund-request-status/{fundRequestId}")]
+        public async Task<IActionResult> UpdateJobCardFundRequestStatus(int fundRequestId, [FromQuery] FundRequestStatus status, [FromBody] string comment)
+        {
+            var result = await _jobCardService.UpdateJobCardFundRequestAsync(fundRequestId, status, comment);
+            if (result.Succeeded)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPost("archive-fund-request/{fundRequestId}")]
+        public async Task<IActionResult> ArchiveFundRequest(int fundRequestId, [FromBody] string comment)
+        {
+            var result = await _jobCardService.ArchiveFundRequestAsync(fundRequestId, comment);
+            if (result.Succeeded)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
     }
 }
