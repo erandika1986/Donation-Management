@@ -44,6 +44,7 @@ namespace Microsoft.Extensions.DependencyInjection
             //}
 
             services.AddScoped<IJobCardService, JobCardService>();
+            services.AddScoped<IJobCardTaskService, JobCardTaskService>();
             services.AddScoped<IJobCardHistoryService, JobCardHistoryService>();
             services.AddScoped<IDonationService, DonationService>();
             services.AddScoped<IDonorService, DonorService>();
