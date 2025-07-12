@@ -8,6 +8,7 @@
         public string Title { get; set; }
         public decimal EstimateAmount { get; set; }
         public decimal? ActualAmount { get; set; }
+        public string? Comment { get; set; }
         public ViharaFund.Domain.Enums.TaskStatus TaskStatus { get; set; }
     }
 }

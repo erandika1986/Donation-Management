@@ -8,7 +8,11 @@ using ViharaFund.Infrastructure.Data;
 
 namespace ViharaFund.Infrastructure.Services
 {
-    public class JobCardTaskService(TenantDbContext tenantDbContext, IDateTime dateTime, ICurrentUserService currentUserService) : IJobCardTaskService
+    public class JobCardTaskService(
+        TenantDbContext tenantDbContext,
+        IDateTime dateTime,
+        ICurrentUserService currentUserService,
+        IAzureBlobService azureBlobService) : IJobCardTaskService
     {
         public async Task<ResultDto> Create(JobCardTaskDTO jobCardTask)
         {
@@ -32,6 +36,16 @@ namespace ViharaFund.Infrastructure.Services
                 // Map other properties from DTO if available
             };
 
+            entity.JobCardTaskComments.Add(new JobCardTaskComment()
+            {
+                Comment = jobCardTask.Comment,
+                IsActive = true,
+                CreatedDate = dateTime.UtcNow,
+                CreatedByUserId = currentUserService.UserId,
+                UpdatedDate = dateTime.UtcNow,
+                UpdatedByUserId = currentUserService.UserId
+            });
+
             await tenantDbContext.AddAsync(entity);
             await tenantDbContext.SaveChangesAsync();
 
@@ -54,6 +68,11 @@ namespace ViharaFund.Infrastructure.Services
             await tenantDbContext.SaveChangesAsync();
 
             return ResultDto.Success("Job card task deleted successfully.", entity.Id);
+        }
+
+        public Task<ResultDto> DeleteJobCardTaskAttachment(int jobCardTaskId, string fileName)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<IEnumerable<JobCardTaskDTO>> GetAllByJobCardId(int jobCardId)
@@ -119,12 +138,65 @@ namespace ViharaFund.Infrastructure.Services
             entity.UpdatedDate = dateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
 
+            entity.JobCardTaskComments.Add(new JobCardTaskComment()
+            {
+                Comment = jobCardTask.Comment,
+                IsActive = true,
+                CreatedDate = dateTime.UtcNow,
+                CreatedByUserId = currentUserService.UserId,
+                UpdatedDate = dateTime.UtcNow,
+                UpdatedByUserId = currentUserService.UserId
+            });
+
             // Map other updatable properties from DTO if available
 
             tenantDbContext.JobCardTasks.Update(entity);
             await tenantDbContext.SaveChangesAsync();
 
             return ResultDto.Success("Job card task updated successfully.", entity.Id);
+        }
+
+        public async Task<ResultDto> UpdateJobCardTaskStatus(int jobCardTaskId, string comment, Domain.Enums.TaskStatus taskStatus)
+        {
+            // Step 1: Find the JobCardTask entity by id and ensure it's active
+            var entity = await tenantDbContext.JobCardTasks
+                .FirstOrDefaultAsync(t => t.Id == jobCardTaskId && t.IsActive);
+
+            if (entity == null)
+            {
+                return ResultDto.Failure(new[] { "Job card task not found." });
+            }
+
+            // Step 2: Update the status
+            entity.TaskStatus = taskStatus;
+            entity.UpdatedDate = dateTime.UtcNow;
+            entity.UpdatedByUserId = currentUserService.UserId;
+
+            // Step 3: Add a comment if provided
+            if (!string.IsNullOrWhiteSpace(comment))
+            {
+                entity.JobCardTaskComments.Add(new JobCardTaskComment
+                {
+                    Comment = comment,
+                    IsActive = true,
+                    CreatedDate = dateTime.UtcNow,
+                    CreatedByUserId = currentUserService.UserId,
+                    UpdatedDate = dateTime.UtcNow,
+                    UpdatedByUserId = currentUserService.UserId
+                });
+            }
+
+            // Step 4: Save changes
+            tenantDbContext.JobCardTasks.Update(entity);
+            await tenantDbContext.SaveChangesAsync();
+
+            // Step 5: Return success
+            return ResultDto.Success("Job card task status updated successfully.", entity.Id);
+        }
+
+        public Task<ResultDto> UploadJobCardTaskAttachment()
+        {
+            throw new NotImplementedException();
         }
     }
 }

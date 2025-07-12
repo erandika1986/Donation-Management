@@ -31,6 +31,7 @@ namespace ViharaFund.Infrastructure.Data
         public DbSet<JobCardFundRequestComment> JobCardFundRequestComments { get; set; }
         public DbSet<JobCardFundRequestApproval> JobCardFundRequestApprovals { get; set; }
         public DbSet<JobCardTask> JobCardTasks { get; set; }
+        public DbSet<JobCardTaskComment> JobCardTaskComments { get; set; }
         public DbSet<JobCardTaskAttachment> JobCardTaskAttachments { get; set; }
         public DbSet<JobCardTaskPayment> JobCardTaskPayments { get; set; }
         public DbSet<JobCardApprovalLevel> JobCardApprovalLevels { get; set; }

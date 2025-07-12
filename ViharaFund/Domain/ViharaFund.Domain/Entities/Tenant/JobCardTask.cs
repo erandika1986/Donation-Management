@@ -14,5 +14,6 @@ namespace ViharaFund.Domain.Entities.Tenant
 
         public virtual ICollection<JobCardTaskAttachment> JobCardTaskAttachments { get; set; } = new HashSet<JobCardTaskAttachment>();
         public virtual ICollection<JobCardTaskPayment> JobCardTaskPayments { get; set; } = new HashSet<JobCardTaskPayment>();
+        public virtual ICollection<JobCardTaskComment> JobCardTaskComments { get; set; } = new HashSet<JobCardTaskComment>();
     }
 }
