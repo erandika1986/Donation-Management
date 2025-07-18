@@ -132,7 +132,8 @@ namespace Microsoft.Extensions.DependencyInjection
                 {
                     policy.AllowAnyOrigin()
                           .AllowAnyMethod()
-                          .AllowAnyHeader();
+                          .AllowAnyHeader()
+                          .WithExposedHeaders("Content-Disposition");
                 });
             });
 

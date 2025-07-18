@@ -1,0 +1,36 @@
+﻿@page "/login"
+@using Blazored.LocalStorage
+@using Microsoft.AspNetCore.Components.Authorization
+@using ViharaFund.Application.DTOs.User
+@inject HttpClient Http
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthProvider
+
+<h3>Login</h3>
+
+<EditForm Model="_login" OnValidSubmit="HandleLogin">
+    <InputText @bind-Value="_login.OrganizationId" placeholder="Organization Id" />
+    <InputText @bind-Value="_login.Username" placeholder="Username" />
+    <InputText @bind-Value="_login.Password" placeholder="Password" type="password" />
+    <button type="submit">Login</button>
+</EditForm>
+
+@code {
+    private LoginDTO _login = new();
+
+    private async Task HandleLogin()
+    {
+        var response = await Http.PostAsJsonAsync("api/auth/login", _login);
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+            //var token = result["token"];
+            await LocalStorage.SetItemAsync("authToken", result.Token);
+
+            ((ApiAuthenticationStateProvider)AuthProvider).MarkUserAsAuthenticated(result.Token);
+            Nav.NavigateTo("/");
+        }
+    }
+
+}

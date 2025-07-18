@@ -7,5 +7,7 @@
         public const string Username = "admin";
         public const string AdminPhone = "+94702605650";
         public const string AdminTempPassword = "Admin@123!!";
+
+        public const string AzureBlobStorageName = "viharafund";
     }
 }

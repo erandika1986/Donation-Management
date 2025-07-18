@@ -4,6 +4,7 @@ Script-Migration -Context TenantDbContext -Project ViharaFund.Infrastructure -St
 Add-Migration ViharaFund_00001 -Context TenantDbContext -OutputDir Migrations/Tenant -Project ViharaFund.Infrastructure -StartupProject ViharaFund.WebAPI -Verbose
 Add-Migration ViharaFund_00002 -Context TenantDbContext -OutputDir Migrations/Tenant -Project ViharaFund.Infrastructure -StartupProject ViharaFund.WebAPI -Verbose
 Add-Migration ViharaFund_00003 -Context TenantDbContext -OutputDir Migrations/Tenant -Project ViharaFund.Infrastructure -StartupProject ViharaFund.WebAPI -Verbose
+Add-Migration ViharaFund_00004 -Context TenantDbContext -OutputDir Migrations/Tenant -Project ViharaFund.Infrastructure -StartupProject ViharaFund.WebAPI -Verbose
 
 Update-Database -Project ViharaFund.Infrastructure -Context TenantDbContext -StartUp ViharaFund.WebAPI -Verbose
 

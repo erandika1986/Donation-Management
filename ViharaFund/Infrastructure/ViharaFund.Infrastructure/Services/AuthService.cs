@@ -73,7 +73,7 @@ namespace ViharaFund.Infrastructure.Services
             var secretKey = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"]);
             var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"]);
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Username),
@@ -81,6 +81,11 @@ namespace ViharaFund.Infrastructure.Services
                 new Claim("TenantId", tenant.OrganizationId),
                 new Claim("TenantName", tenant.Name)
             };
+
+            foreach (var role in user.UserRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role.Role.Name));
+            }
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {

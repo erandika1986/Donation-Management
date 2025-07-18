@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using ViharaFund.Application.Constants;
 using ViharaFund.Application.Contracts;
 using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.DTOs.JobCardTask;
@@ -12,7 +14,8 @@ namespace ViharaFund.Infrastructure.Services
         TenantDbContext tenantDbContext,
         IDateTime dateTime,
         ICurrentUserService currentUserService,
-        IAzureBlobService azureBlobService) : IJobCardTaskService
+        IAzureBlobService azureBlobService,
+        IConfiguration configuration) : IJobCardTaskService
     {
         public async Task<ResultDto> Create(JobCardTaskDTO jobCardTask)
         {
@@ -194,9 +197,58 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Job card task status updated successfully.", entity.Id);
         }
 
-        public Task<ResultDto> UploadJobCardTaskAttachment()
+
+        public async Task<ResultDto> UploadJobCardTaskAttachment(UploadFileDTO upload)
         {
-            throw new NotImplementedException();
+            try
+            {
+                string leaveSupportDocumentPath = configuration["FileSavePaths:LeaveSupportDocumentPath"];
+                if (!Directory.Exists(leaveSupportDocumentPath))
+                {
+                    Directory.CreateDirectory(leaveSupportDocumentPath);
+                }
+
+
+                for (int i = 0; i < upload.Files.Count; i++)
+                {
+                    var extension = Path.GetExtension(upload.Files[i].Name);
+
+                    var fileName = $"{Path.GetFileNameWithoutExtension(upload.Files[i].Name)}{extension}";
+                    var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+                    var filePath = Path.Combine(leaveSupportDocumentPath, uniqueFileName);
+
+                    await using var stream = upload.Files[i].OpenReadStream();
+                    using var memoryStream = new MemoryStream();
+                    await stream.CopyToAsync(memoryStream);
+                    memoryStream.Position = 0;
+
+                    var uploadedFileUrl = await azureBlobService
+                        .UploadFileAsync(memoryStream, uniqueFileName, upload.Files[i].ContentType, ApplicationConstants.AzureBlobStorageName);
+
+                    var jobCardTaskAttachment = new JobCardTaskAttachment()
+                    {
+                        JobCardTaskId = upload.JobCardTaskId,
+                        FileName = fileName,
+                        FilePath = uploadedFileUrl,
+                        CreatedDate = dateTime.UtcNow,
+                        CreatedByUserId = currentUserService.UserId,
+                        UpdatedDate = dateTime.UtcNow,
+                        UpdatedByUserId = currentUserService.UserId,
+                        IsActive = true,
+                    };
+
+                    await tenantDbContext.JobCardTaskAttachments.AddAsync(jobCardTaskAttachment);
+
+                }
+
+                await tenantDbContext.SaveChangesAsync();
+
+                return ResultDto.Success("File(s) uploaded successfully.");
+            }
+            catch (Exception ex)
+            {
+                return ResultDto.Failure(new[] { "An error occurred while uploading the file.", ex.Message });
+            }
         }
     }
 }

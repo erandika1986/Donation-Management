@@ -41,12 +41,7 @@ namespace ViharaFund.WebAPI.Controllers
                 });
             }
 
-            return Ok(new ApiResponse<LoginResponse>
-            {
-                Success = true,
-                Message = "Login successful.",
-                Data = loginResponse
-            });
+            return Ok(loginResponse);
         }
     }
 }

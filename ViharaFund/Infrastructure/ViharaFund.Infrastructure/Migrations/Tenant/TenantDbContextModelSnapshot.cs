@@ -729,6 +729,47 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.ToTable("JobCardTaskAttachment", (string)null);
                 });
 
+            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardTaskComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("JobCardTaskId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("JobCardTaskId");
+
+                    b.HasIndex("UpdatedByUserId");
+
+                    b.ToTable("JobCardTaskComment", (string)null);
+                });
+
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardTaskPayment", b =>
                 {
                     b.Property<int>("Id")
@@ -1243,6 +1284,31 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.Navigation("UpdatedByUser");
                 });
 
+            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardTaskComment", b =>
+                {
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "CreatedByUser")
+                        .WithMany("CreatedJobCardTaskComments")
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.JobCardTask", "JobCardTask")
+                        .WithMany("JobCardTaskComments")
+                        .HasForeignKey("JobCardTaskId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "UpdatedByUser")
+                        .WithMany("UpdatedJobCardTaskComments")
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("JobCardTask");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardTaskPayment", b =>
                 {
                     b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "CreatedByUser")
@@ -1353,6 +1419,8 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                 {
                     b.Navigation("JobCardTaskAttachments");
 
+                    b.Navigation("JobCardTaskComments");
+
                     b.Navigation("JobCardTaskPayments");
                 });
 
@@ -1394,6 +1462,8 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
                     b.Navigation("CreatedJobCardTaskAttachments");
 
+                    b.Navigation("CreatedJobCardTaskComments");
+
                     b.Navigation("CreatedJobCardTaskPayments");
 
                     b.Navigation("CreatedJobCardTasks");
@@ -1431,6 +1501,8 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.Navigation("UpdatedJobCardHistories");
 
                     b.Navigation("UpdatedJobCardTaskAttachments");
+
+                    b.Navigation("UpdatedJobCardTaskComments");
 
                     b.Navigation("UpdatedJobCardTaskPayments");
 

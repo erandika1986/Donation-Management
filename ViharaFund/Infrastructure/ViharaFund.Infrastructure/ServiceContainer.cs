@@ -42,7 +42,7 @@ namespace Microsoft.Extensions.DependencyInjection
             //        services.AddTransient(interfaceType, implementationType);
             //    }
             //}
-
+            services.AddScoped<IAzureBlobService, AzureBlobService>();
             services.AddScoped<IJobCardService, JobCardService>();
             services.AddScoped<IJobCardTaskService, JobCardTaskService>();
             services.AddScoped<IJobCardHistoryService, JobCardHistoryService>();

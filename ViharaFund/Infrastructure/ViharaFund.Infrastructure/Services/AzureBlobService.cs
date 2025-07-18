@@ -6,18 +6,12 @@ using ViharaFund.Application.Services;
 
 namespace ViharaFund.Infrastructure.Services
 {
-    public class AzureBlobService : IAzureBlobService
+    public class AzureBlobService(IConfiguration configuration) : IAzureBlobService
     {
-        private readonly string _connectionString;
-
-        public AzureBlobService(IConfiguration configuration)
-        {
-            _connectionString = configuration["AzureStorage:ConnectionString"];
-        }
-
         private async Task<BlobContainerClient> GetContainerClientAsync(string containerName, PublicAccessType publicAccessType = PublicAccessType.None)
         {
-            var containerClient = new BlobContainerClient(_connectionString, containerName);
+            var connectionString = configuration["AzureStorage:ConnectionString"];
+            var containerClient = new BlobContainerClient(connectionString, containerName);
 
             // Create the container if it doesn't exist
             await containerClient.CreateIfNotExistsAsync(publicAccessType);
@@ -74,6 +68,7 @@ namespace ViharaFund.Infrastructure.Services
         {
             var containerClient = await GetContainerClientAsync(containerName);
             var blobClient = containerClient.GetBlobClient(blobName);
+            var connectionString = configuration["AzureStorage:ConnectionString"];
 
             // Check if the blob exists
             if (!await blobClient.ExistsAsync())
@@ -97,8 +92,8 @@ namespace ViharaFund.Infrastructure.Services
             var blobUriBuilder = new BlobUriBuilder(blobClient.Uri)
             {
                 Sas = sasBuilder.ToSasQueryParameters(new Azure.Storage.StorageSharedKeyCredential(
-                    accountName: GetAccountName(_connectionString),
-                    accountKey: GetAccountKey(_connectionString)))
+                    accountName: GetAccountName(connectionString),
+                    accountKey: GetAccountKey(connectionString)))
             };
 
             // Return the full URI with SAS token
