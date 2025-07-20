@@ -1,49 +1,86 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">ViharaFund.Admin</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
+﻿<MudNavMenu>
+    <MudText Typo="Typo.h6" Class="px-4 py-2">
+        Navigation
+    </MudText>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <AuthorizeView Roles="Admin,Chief Monk">
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="counter">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-                    </NavLink>
-                </div>
-            </Authorized>
-        </AuthorizeView>
-        <AuthorizeView Roles="Admin">
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="weather">
-                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-                    </NavLink>
-                </div>
-            </Authorized>
-        </AuthorizeView>
+    <MudDivider Class="mb-2" />
 
-    </nav>
-</div>
+    <MudNavLink Href="/"
+                Icon="@Icons.Material.Filled.Dashboard"
+                IconColor="Color.Primary">
+        Dashboard
+    </MudNavLink>
 
-@code {
-    private bool collapseNavMenu = true;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    <MudNavLink Href="/orders"
+                Icon="@Icons.Material.Filled.AttachMoney"
+                IconColor="Color.Success">
+        Donations
+    </MudNavLink>
 
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
+    <MudNavLink Href="/orders"
+                Icon="@Icons.Material.Filled.Assignment"
+                IconColor="Color.Secondary">
+        Job Cards
+    </MudNavLink>
+
+    <MudNavLink Href="/reports"
+                Icon="@Icons.Material.Filled.Analytics"
+                IconColor="Color.Info">
+        Reports
+    </MudNavLink>
+
+    <MudNavLink Href="/notifications"
+                Icon="@Icons.Material.Filled.Notifications"
+                IconColor="Color.Success"
+                Badge="3"
+                BadgeColor="Color.Error">
+        Notifications
+    </MudNavLink>
+
+    <MudNavGroup Title="Donations" Expanded="true" Icon="@Icons.Material.Filled.MonetizationOn">
+        <MudNavLink Href="Users/Salaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Money">Manage Employee Salaries</MudNavLink>
+        <MudNavLink Href="Users/MonthlySalaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney">Manage Monthly Salaries</MudNavLink>
+    </MudNavGroup>
+
+    <MudDivider Class="my-2" />
+
+    <MudNavLink Href="/settings"
+                Icon="@Icons.Material.Filled.Settings"
+                IconColor="Color.Default">
+        Settings
+    </MudNavLink>
+
+    <MudNavLink Href="/help"
+                Icon="@Icons.Material.Filled.Help"
+                IconColor="Color.Default">
+        Help & Support
+    </MudNavLink>
+</MudNavMenu>
+
+<style>
+    .mud-nav-link-text {
+        font-weight: 500;
     }
+
+    .mud-nav-link:hover {
+        background-color: rgba(var(--mud-palette-primary-rgb), 0.08);
+        border-radius: 4px;
+    }
+
+    .mud-nav-link.active {
+        background-color: rgba(var(--mud-palette-primary-rgb), 0.12);
+        border-radius: 4px;
+        color: var(--mud-palette-primary);
+    }
+
+    .mud-nav-group .mud-nav-link {
+        padding-left: 32px;
+    }
+</style>
+
+@code
+{
+
+
 }

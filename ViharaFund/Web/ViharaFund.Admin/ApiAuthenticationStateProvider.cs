@@ -39,8 +39,14 @@ namespace ViharaFund.Admin
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
         }
 
-        public void MarkUserAsLoggedOut()
+        public async Task MarkUserAsLoggedOut()
         {
+            var token = await _localStorage.GetItemAsync<string>("authToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                await _localStorage.RemoveItemAsync("authToken");
+            }
+
             _http.DefaultRequestHeaders.Authorization = null;
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));
         }

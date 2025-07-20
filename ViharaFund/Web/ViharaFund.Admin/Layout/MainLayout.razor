@@ -4,35 +4,104 @@
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager navManager
 
-<div class="page">
-    <div class="sidebar">
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudStaticNavDrawerToggle DrawerId="nav-drawer" Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" />
+        <MudText Typo="Typo.h5" Class="ml-3">Vihara Fund</MudText>
+        <MudSpacer />
+@*         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" /> *@
+        <MudSpacer />
+
+        <MudTooltip Text="User Menu">
+            <MudMenu Icon="@Icons.Material.Filled.AccountCircle"
+                     Color="Color.Inherit"
+                     Direction="Direction.Bottom"
+                     OffsetX="true"
+                     Dense="true">
+                <MudMenuItem Icon="@Icons.Material.Filled.Person">
+                    <MudText>Profile</MudText>
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Settings">
+                    <MudText>Settings</MudText>
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Notifications">
+                    <MudText>Notifications</MudText>
+                </MudMenuItem>
+                <MudDivider />
+                <MudMenuItem Icon="@Icons.Material.Filled.Logout"
+                             OnClick="LogoutAsync">
+                    <MudText>Logout</MudText>
+                </MudMenuItem>
+            </MudMenu>
+        </MudTooltip>
+    </MudAppBar>
+    <MudDrawer id="nav-drawer" @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <NavMenu />
-    </div>
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mt-4">
+            <div style="margin-top: 64px; padding: 16px;">
+                @Body
+            </div>
+        </MudContainer>
+    </MudMainContent>
+    <LoadingScreen />
+</MudLayout>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-            <AuthorizeView>
-                <Authorized>
-                    <a @onclick="Logout" href="javascript:void(0)">Logout</a>
-                </Authorized>
-                <NotAuthorized>
-                    <a href="/login">Login</a>
-                </NotAuthorized>
-            </AuthorizeView>
-        </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+<div id="blazor-error-ui">
+    Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" ? "An error has occurred. This application may no longer respond until reloaded." : "An error has occurred."
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
 </div>
 
+<style>
+    .mud-drawer-custom {
+        box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12);
+    }
+
+    .mud-drawer-header-custom {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(0,0,0,0.12);
+        background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    .mud-main-content {
+        transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mud-appbar {
+        backdrop-filter: blur(8px);
+        background: rgba(25, 118, 210, 0.95) !important;
+    }
+
+    @@media (max-width: 960px) {
+        .mud-drawer {
+            z-index: 1300;
+        }
+    }
+</style>
+
 @code {
-    private async Task Logout()
+    private bool _drawerOpen = true;
+
+    private async Task LogoutAsync()
     {
         var customAuthStateProvider = (ApiAuthenticationStateProvider)authStateProvider;
         customAuthStateProvider.MarkUserAsLoggedOut();
         navManager.NavigateTo("/", true);
     }
 }
+
+@* @code {
+    private async Task Logout()
+    {
+        var customAuthStateProvider = (ApiAuthenticationStateProvider)authStateProvider;
+        customAuthStateProvider.MarkUserAsLoggedOut();
+        navManager.NavigateTo("/", true);
+    }
+} *@
