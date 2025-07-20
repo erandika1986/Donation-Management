@@ -11,11 +11,21 @@
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudStaticNavDrawerToggle DrawerId="nav-drawer" Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" />
-        <MudText Typo="Typo.h5" Class="ml-3">Vihara Fund</MudText>
-        <MudSpacer />
-@*         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" /> *@
-        <MudSpacer />
 
+        <!-- Vihara Fund Icon and Title -->
+        <div class="d-flex align-center ml-3">
+            <div class="vhara-icon-container mr-2">
+                <img src="https://schoolmanagement.blob.core.windows.net/viharafund/ViharaFundIcon32.png"
+                     alt="Vihara Fund"
+                     width="32"
+                     height="32" />
+            </div>
+            <MudText Typo="Typo.h5">Vihara Fund</MudText>
+        </div>
+
+        <MudSpacer />
+        @*         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" /> *@
+        <MudSpacer />
         <MudTooltip Text="User Menu">
             <MudMenu Icon="@Icons.Material.Filled.AccountCircle"
                      Color="Color.Inherit"
@@ -76,14 +86,47 @@
 
     .mud-appbar {
         backdrop-filter: blur(8px);
-        background: rgba(25, 118, 210, 0.95) !important;
+        background: #ffffff !important;
+        border-bottom: 2px solid #D2691E;
+        color: #333333 !important;
     }
 
-    @@media (max-width: 960px) {
-        .mud-drawer {
-            z-index: 1300;
+        .mud-appbar .mud-text {
+            color: #333333 !important;
         }
+
+        .mud-appbar .mud-button-root {
+            color: #333333 !important;
+        }
+
+        .mud-appbar .mud-icon-button {
+            color: #333333 !important;
+        }
+
+    @@media (max-width: 960px) {
+        .mud-drawer
+
+    {
+        z-index: 1300;
     }
+
+    }
+
+    .vhara-icon-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .vhara-icon-container img {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+            transition: transform 0.2s ease-in-out;
+            border-radius: 4px;
+        }
+
+            .vhara-icon-container img:hover {
+                transform: scale(1.05);
+            }
 </style>
 
 @code {

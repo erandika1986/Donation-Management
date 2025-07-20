@@ -1,36 +1,205 @@
-﻿@page "/login"
-@using Blazored.LocalStorage
+﻿@* Login.razor *@
+@page "/login"
+@layout LoginLayout
+
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.ComponentModel.DataAnnotations
+@using static System.Net.WebRequestMethods
+@using Blazored.LocalStorage
 @using ViharaFund.Application.DTOs.User
+
+
+@inject IJSRuntime JSRuntime
 @inject HttpClient Http
 @inject ILocalStorageService LocalStorage
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthProvider
 
-<h3>Login</h3>
-
-<EditForm Model="_login" OnValidSubmit="HandleLogin">
-    <InputText @bind-Value="_login.OrganizationId" placeholder="Organization Id" />
-    <InputText @bind-Value="_login.Username" placeholder="Username" />
-    <InputText @bind-Value="_login.Password" placeholder="Password" type="password" />
-    <button type="submit">Login</button>
-</EditForm>
+<MudLayout>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4 d-flex justify-center align-center" Style="min-height: calc(100vh - 64px);">
+            <MudPaper Elevation="3" Class="pa-8" Style="width: 100%; max-width: 400px;">
+                <div class="text-center mb-6">
+                    <div class="vhara-icon-container mb-4" style="justify-content: center;">
+                        <img src="https://schoolmanagement.blob.core.windows.net/viharafund/ViharaFundIcon64.png"
+                             alt="Vihara Fund" 
+                             width="64" 
+                             height="64" />
+                    </div>
+                    <MudText Typo="Typo.h4" Class="mb-2">Welcome to Vihara Fund</MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">Please sign in to continue</MudText>
+                </div>
+                
+                <MudForm @ref="_form" Model="_loginModel">
+                    <MudTextField @bind-Value="_loginModel.OrganizationId"
+                                  For="@(() => _loginModel.OrganizationId)"
+                                  Label="Organization ID"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Organization name is required!"
+                                  Validation="@(new EmailAddressAttribute())"
+                                  InputType="InputType.Text"
+                                  Class="mb-4" />
+                    <MudTextField @bind-Value="_loginModel.Username"
+                                  For="@(() => _loginModel.Username)"
+                                  Label="Email" 
+                                  Variant="Variant.Outlined" 
+                                  Required="true" 
+                                  RequiredError="Username is required!"
+                                  InputType="InputType.Text"
+                                  Class="mb-4" />
+                    
+                    <MudTextField @bind-Value="_loginModel.Password" 
+                                  For="@(() => _loginModel.Password)"
+                                  Label="Password" 
+                                  Variant="Variant.Outlined" 
+                                  InputType="InputType.Password" 
+                                  Required="true" 
+                                  RequiredError="Password is required!"
+                                  Class="mb-4" />
+                    
+                    <div class="d-flex justify-space-between align-center mb-4">
+                        <MudLink Href="/forgot-password" Color="Color.Primary">Forgot Password?</MudLink>
+                    </div>
+                    
+                    <MudButton ButtonType="ButtonType.Submit" 
+                               Variant="Variant.Filled" 
+                               Color="Color.Primary" 
+                               FullWidth="true"
+                               Size="Size.Large"
+                               OnClick="LoginAsync"
+                               Disabled="_isLoading"
+                               Class="mb-4">
+                        @if (_isLoading)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                            <span class="ml-2">Signing In...</span>
+                        }
+                        else
+                        {
+                            <span>Sign In</span>
+                        }
+                    </MudButton>
+                </MudForm>
+                
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Class="mb-4">
+                        @_errorMessage
+                    </MudAlert>
+                }
+                
+                <MudDivider Class="my-4" />
+            </MudPaper>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
 @code {
-    private LoginDTO _login = new();
+    private MudForm _form = new();
+    private LoginDTO _loginModel = new();
+    private bool _isLoading = false;
+    private string _errorMessage = string.Empty;
 
-    private async Task HandleLogin()
+
+
+    private async Task LoginAsync()
     {
-        var response = await Http.PostAsJsonAsync("api/auth/login", _login);
-        if (response.IsSuccessStatusCode)
-        {
-            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
-            //var token = result["token"];
-            await LocalStorage.SetItemAsync("authToken", result.Token);
+        _errorMessage = string.Empty;
 
-            ((ApiAuthenticationStateProvider)AuthProvider).MarkUserAsAuthenticated(result.Token);
-            Nav.NavigateTo("/");
+        // Validate form
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/auth/login", _loginModel);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                //var token = result["token"];
+                await LocalStorage.SetItemAsync("authToken", result.Token);
+
+                ((ApiAuthenticationStateProvider)AuthProvider).MarkUserAsAuthenticated(result.Token);
+                Nav.NavigateTo("/");
+            }
+            else
+            {
+                _errorMessage = "Invalid email or password. Try demo@viharafund.com / password";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Login failed: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
         }
     }
 
+    private async Task ShowAbout()
+    {
+        await JSRuntime.InvokeVoidAsync("alert", "Vihara Fund Management System\nVersion 1.0\nManaging temple funds with transparency and efficiency.");
+    }
 }
+
+<style>
+    .mud-appbar {
+        backdrop-filter: blur(8px);
+        background: #ffffff !important;
+        border-bottom: 2px solid #D2691E;
+        color: #333333 !important;
+    }
+
+        .mud-appbar .mud-text {
+            color: #333333 !important;
+        }
+
+        .mud-appbar .mud-button-root {
+            color: #333333 !important;
+        }
+
+    .vhara-icon-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .vhara-icon-container img {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+            transition: transform 0.2s ease-in-out;
+            border-radius: 4px;
+        }
+
+            .vhara-icon-container img:hover {
+                transform: scale(1.05);
+            }
+
+    /* Login form styles */
+    .mud-paper {
+        border-radius: 12px;
+    }
+
+    .mud-button.mud-button-filled-primary {
+        background: linear-gradient(45deg, #D2691E, #FF8C42);
+        box-shadow: 0 3px 5px 2px rgba(210, 105, 30, 0.3);
+    }
+
+        .mud-button.mud-button-filled-primary:hover:not(:disabled) {
+            background: linear-gradient(45deg, #B8601B, #E67A32);
+        }
+
+        .mud-button.mud-button-filled-primary:disabled {
+            background: #ccc;
+            box-shadow: none;
+        }
+
+    .mud-alert {
+        border-radius: 8px;
+    }
+</style>
