@@ -1,0 +1,112 @@
+﻿@using MudBlazor
+@using ViharaFund.Application.DTOs.User
+@inherits MudComponentBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="Icons.Material.Filled.Person" Class="mr-3" />
+            User Details
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudCard Elevation="0">
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12" Class="mb-3">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                            <MudAvatar Color="Color.Primary" Size="Size.Large">
+                                @GetUserInitials(User.FullName)
+                            </MudAvatar>
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.h5">@User.FullName</MudText>
+                                <MudChip T="string" Color="@(User.IsActive? Color.Success: Color.Error)"
+                                         Size="Size.Small"
+                                         Variant="Variant.Filled">
+                                    @(User.IsActive ? "Active" : "Inactive")
+                                </MudChip>
+                            </MudStack>
+                        </MudStack>
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudDivider />
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">User ID</MudText>
+                            <MudText Typo="Typo.body1">@User.Id</MudText>
+                        </MudStack>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Username</MudText>
+                            <MudText Typo="Typo.body1">@User.Username</MudText>
+                        </MudStack>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Email</MudText>
+                            <MudText Typo="Typo.body1">
+                                <MudLink Href="@($"mailto:{User.Email}")">@User.Email</MudLink>
+                            </MudText>
+                        </MudStack>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Phone</MudText>
+                            <MudText Typo="Typo.body1">@(string.IsNullOrWhiteSpace(User.Phone) ? "Not provided" : User.Phone)</MudText>
+                        </MudStack>
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Assigned Roles</MudText>
+                            <MudText Typo="Typo.body1">@(string.IsNullOrWhiteSpace(User.AssignRoles) ? "No roles assigned" : User.AssignRoles)</MudText>
+                        </MudStack>
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Created At</MudText>
+                            <MudText Typo="Typo.body1">@User.CreatedOn.ToString("MMMM dd, yyyy 'at' hh:mm tt")</MudText>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public UserDTO User { get; set; } = new();
+
+    void Close() => MudDialog.Close();
+
+    private string GetUserInitials(string fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName))
+            return "?";
+
+        var names = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (names.Length == 1)
+            return names[0].Substring(0, Math.Min(2, names[0].Length)).ToUpper();
+        else if (names.Length >= 2)
+            return $"{names[0][0]}{names[names.Length - 1][0]}".ToUpper();
+
+        return fullName.Substring(0, Math.Min(2, fullName.Length)).ToUpper();
+    }
+}

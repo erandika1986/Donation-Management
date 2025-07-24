@@ -46,7 +46,7 @@
                                     }
                                 </MudSelect>
                                 <MudTooltip Text="Create New User" Color="Color.Primary" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.PersonAddAlt1" Color="Color.Primary" Variant="Variant.Filled"></MudIconButton>
+                                    <MudIconButton Icon="@Icons.Material.Filled.PersonAddAlt1" Color="Color.Primary" Variant="Variant.Filled" OnClick="@(() => OpenAddUserDialog())"></MudIconButton>
                                 </MudTooltip>
 
                             </MudPaper>
@@ -295,143 +295,142 @@
 
     private async Task OpenAddUserDialog()
     {
-        // var parameters = new DialogParameters<AddEditUserDialog>
-        // {
-        //     { x => x.IsEdit, false },
-        //     { x => x.User, new UserDto() }
-        // };
+        var parameters = new DialogParameters<AddEditUserDialog>
+        {
+            { x => x.IsEdit, false },
+            { x => x.User, new UserDTO() }
+        };
 
-        // var options = new DialogOptions
-        // {
-        //     CloseButton = true,
-        //     MaxWidth = MaxWidth.Medium,
-        //     FullWidth = true,
-        //     DisableBackdropClick = true
-        // };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
 
-        // var dialog = await DialogService.ShowAsync<AddEditUserDialog>("Add New User", parameters, options);
-        // var result = await dialog.Result;
+        var dialog = await DialogService.ShowAsync<AddEditUserDialog>("Add New User", parameters, options);
+        var result = await dialog.Result;
 
-        // if (!result.Canceled && result.Data is UserDto newUser)
-        // {
-        //     await CreateUser(newUser);
-        // }
+        if (!result.Canceled && result.Data is UserDTO newUser)
+        {
+            await CreateUser(newUser);
+        }
     }
 
     private async Task EditUser(UserDTO user)
     {
-        // var parameters = new DialogParameters<AddEditUserDialog>
-        // {
-        //     { x => x.IsEdit, true },
-        //     { x => x.User, new UserDto
-        //         {
-        //             Id = user.Id,
-        //             Username = user.Username,
-        //             Email = user.Email,
-        //             Phone = user.Phone,
-        //             FullName = user.FullName,
-        //             AssignRoles = user.AssignRoles,
-        //             IsActive = user.IsActive,
-        //             AssignedRoles = new List<int>(user.AssignedRoles)
-        //         }
-        //     }
-        // };
+        var parameters = new DialogParameters<AddEditUserDialog>
+        {
+            { x => x.IsEdit, true },
+            { x => x.User, new UserDTO
+                {
+                    Id = user.Id,
+                    Username = user.Username,
+                    Email = user.Email,
+                    Phone = user.Phone,
+                    FullName = user.FullName,
+                    AssignRoles = user.AssignRoles,
+                    IsActive = user.IsActive,
+                    AssignedRoles = new List<int>(user.AssignedRoles)
+                }
+            }
+        };
 
-        // var options = new DialogOptions
-        // {
-        //     CloseButton = true,
-        //     MaxWidth = MaxWidth.Medium,
-        //     FullWidth = true,
-        //     DisableBackdropClick = true
-        // };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = false
+        };
 
-        // var dialog = await DialogService.ShowAsync<AddEditUserDialog>("Edit User", parameters, options);
-        // var result = await dialog.Result;
+        var dialog = await DialogService.ShowAsync<AddEditUserDialog>("Edit User", parameters, options);
+        var result = await dialog.Result;
 
-        // if (!result.Canceled && result.Data is UserDto updatedUser)
-        // {
-        //     await UpdateUser(updatedUser);
-        // }
+        if (!result.Canceled && result.Data is UserDTO updatedUser)
+        {
+            await UpdateUser(updatedUser);
+        }
     }
 
     private async Task ViewUserDetails(UserDTO user)
     {
-        // var parameters = new DialogParameters<UserDetailsDialog>
-        // {
-        //     { x => x.User, user }
-        // };
+        var parameters = new DialogParameters<UserDetailsDialog>
+        {
+            { x => x.User, user }
+        };
 
-        // var options = new DialogOptions
-        // {
-        //     CloseButton = true,
-        //     MaxWidth = MaxWidth.Medium,
-        //     FullWidth = true
-        // };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
 
-        // await DialogService.ShowAsync<UserDetailsDialog>("User Details", parameters, options);
+        await DialogService.ShowAsync<UserDetailsDialog>("User Details", parameters, options);
     }
 
     private async Task ChangePassword(UserDTO user)
     {
-        // var parameters = new DialogParameters<ChangePasswordDialog>
-        // {
-        //     { x => x.UserId, user.Id },
-        //     { x => x.Username, user.Username }
-        // };
+        var parameters = new DialogParameters<ChangePasswordDialog>
+        {
+            { x => x.UserId, user.Id },
+            { x => x.Username, user.Username }
+        };
 
-        // var options = new DialogOptions
-        // {
-        //     CloseButton = true,
-        //     MaxWidth = MaxWidth.Small,
-        //     FullWidth = true,
-        //     DisableBackdropClick = true
-        // };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            BackdropClick = true
+        };
 
-        // var dialog = await DialogService.ShowAsync<ChangePasswordDialog>("Change Password", parameters, options);
-        // var result = await dialog.Result;
+        var dialog = await DialogService.ShowAsync<ChangePasswordDialog>("Change Password", parameters, options);
+        var result = await dialog.Result;
 
-        // if (!result.Canceled)
-        // {
-        //     Snackbar.Add("Password changed successfully!", Severity.Success);
-        // }
+        if (!result.Canceled)
+        {
+            Snackbar.Add("Password changed successfully!", Severity.Success);
+        }
     }
 
     private async Task DeleteUser(UserDTO user)
     {
-        // var parameters = new DialogParameters<ConfirmationDialog>
-        // {
-        //     { "ContentText", $"Are you sure you want to delete user '{user.FullName}'? This action cannot be undone." },
-        //     { "ButtonText", "Delete" },
-        //     { "Color", Color.Error }
-        // };
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "ContentText", $"Are you sure you want to delete user '{user.FullName}'? This action cannot be undone." },
+            { "ButtonText", "Delete" },
+            { "Color", Color.Error }
+        };
 
-        // var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-        // var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Delete", parameters, options);
-        // var result = await dialog.Result;
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
 
-        // if (!result.Canceled)
-        // {
-        //     try
-        //     {
-        //         // Replace with your actual API endpoint
-        //         var response = await HttpClient.DeleteAsync($"api/users/{user.Id}");
+        if (!result.Canceled)
+        {
+            try
+            {
+                // Replace with your actual API endpoint
+                var response = await HttpClient.DeleteAsync($"api/users/{user.Id}");
 
-        //         if (response.IsSuccessStatusCode)
-        //         {
-        //             users.Remove(user);
-        //             ApplyFilters();
-        //             Snackbar.Add("User deleted successfully!", Severity.Success);
-        //         }
-        //         else
-        //         {
-        //             Snackbar.Add("Failed to delete user.", Severity.Error);
-        //         }
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Snackbar.Add($"Error deleting user: {ex.Message}", Severity.Error);
-        //     }
-        // }
+                if (response.IsSuccessStatusCode)
+                {
+                    users.Remove(user);
+                    Snackbar.Add("User deleted successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete user.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting user: {ex.Message}", Severity.Error);
+            }
+        }
     }
 
     private async Task CreateUser(UserDTO user)

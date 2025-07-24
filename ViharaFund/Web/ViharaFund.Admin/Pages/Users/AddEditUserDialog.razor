@@ -1,0 +1,98 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using MudBlazor
+@using ViharaFund.Application.DTOs.User
+@inherits MudComponentBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@(IsEdit? Icons.Material.Filled.Edit : Icons.Material.Filled.PersonAdd)" Class="mr-3" />
+            @(IsEdit ? "Edit User" : "Add New User")
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@isValid">
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="User.FullName"
+                                  Label="Full Name"
+                                  Required="true"
+                                  RequiredError="Full name is required"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="User.Username"
+                                  Label="Username"
+                                  Required="true"
+                                  RequiredError="Username is required"
+                                  Variant="Variant.Outlined"
+                                  Disabled="IsEdit" />
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="User.Email"
+                                  Label="Email"
+                                  Required="true"
+                                  RequiredError="Email is required"
+                                  Validation="@(new EmailAddressAttribute() { ErrorMessage = "Invalid email format" })"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="User.Phone"
+                                  Label="Phone"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="User.AssignRoles"
+                                  Label="Assigned Roles"
+                                  Variant="Variant.Outlined"
+                                  Placeholder="e.g., Admin, User, Manager" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudSwitch @bind-Value="User.IsActive"
+                               Label="Active"
+                               Color="Color.Primary" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="Submit"
+                   Disabled="!isValid">
+            @(IsEdit ? "Update" : "Create")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public UserDTO User { get; set; } = new();
+
+    private MudForm form = null!;
+    private bool isValid;
+
+    void Submit()
+    {
+        if (isValid)
+        {
+            MudDialog.Close(DialogResult.Ok(User));
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}
