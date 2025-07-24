@@ -8,7 +8,7 @@
         public string Phone { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
         public string AssignRoles { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedOn { get; set; }
         public bool IsActive { get; set; }
 
         public List<int> AssignedRoles { get; set; } = new List<int>();

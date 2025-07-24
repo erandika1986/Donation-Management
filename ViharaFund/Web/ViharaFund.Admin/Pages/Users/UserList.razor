@@ -35,30 +35,20 @@
                         <MudItem xs="12" sm="12" md="6" lg="6">
 
                             <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
-                                <MudTextField 
-                                    T="string" 
-                                    ValueChanged="@(s => OnSearch(s))" 
-                                    Placeholder="Search User" 
-                                    Adornment="Adornment.Start"
-                                    AdornmentIcon="@Icons.Material.Filled.Search" 
-                                    IconSize="Size.Medium" 
-                                    Class="mt-0"></MudTextField>
 
-                                <MudSelect 
-                                    T="DropDownDTO"
-                                    Label="User Role" 
-                                    Class="mt-0" 
-                                    ToStringFunc="(item) => item is not null ? item.Name : string.Empty" 
-                                    MultiSelection="false" 
-                                    Value="SelectedRole" 
-                                    ValueChanged="@RoleChanged" 
-                                    Style="padding-right:2px;">
+                                <MudTextField T="string" Label="Search" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+
+                                <MudSelect T="DropDownDTO" Label="User Role" Class="mt-0" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Value="SelectedRole" ValueChanged="@RoleChanged" Style="padding-right:2px;">
                                     @foreach (var role in Roles)
                                     {
                                         <MudSelectItem T="DropDownDTO" Value="@role">@role.Name</MudSelectItem>
                                     }
                                 </MudSelect>
-                                <MudIconButton Icon="@Icons.Material.Filled.PersonAddAlt1" Color="Color.Primary" Variant="Variant.Filled" ></MudIconButton>
+                                <MudTooltip Text="Create New User" Color="Color.Primary" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.PersonAddAlt1" Color="Color.Primary" Variant="Variant.Filled"></MudIconButton>
+                                </MudTooltip>
+
                             </MudPaper>
 
                         </MudItem>
@@ -88,15 +78,49 @@
                         </CellTemplate>
                     </TemplateColumn>
 
-                    <TemplateColumn Title="Created" Sortable="true" SortBy="@(x => x.CreatedAt)">
+@*                     <TemplateColumn Title="Created On" Sortable="true" SortBy="@(x => x.CreatedOn)">
                         <CellTemplate>
                             <MudText Typo="Typo.caption">
-                                @context.Item.CreatedAt.ToString("MMM dd, yyyy")
+                                @context.Item.CreatedOn.ToString("MMM dd, yyyy")
                             </MudText>
+                        </CellTemplate>
+                    </TemplateColumn> *@
+                    <TemplateColumn CellClass="d-flex justify-end">
+                        <CellTemplate Context="user">
+                            <MudStack Row>
+                                <MudTooltip Text="View User" Color="Color.Info" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                   Color="Color.Info"
+                                                   Variant="Variant.Filled"
+                                                   Title="View Details"
+                                                   OnClick="@(() => ViewUserDetails(user.Item))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Edit User" Color="Color.Success" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Success"
+                                                   Variant="Variant.Filled"
+                                                   Title="Edit User"
+                                                   OnClick="@(() => EditUser(user.Item))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Update User Password" Color="Color.Warning" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Key"
+                                                   Color="Color.Warning"
+                                                   Variant="Variant.Filled"
+                                                   Title="Change Password"
+                                                   OnClick="@(() => ChangePassword(user.Item))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Delete User" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Variant="Variant.Filled"
+                                                   Title="Delete User"
+                                                   OnClick="@(() => DeleteUser(user.Item))" />
+                                </MudTooltip>
+                            </MudStack>
                         </CellTemplate>
                     </TemplateColumn>
 
-                    <TemplateColumn Title="Actions" Sortable="false" Filterable="false">
+@*                     <TemplateColumn Title="Actions" Sortable="false" Filterable="false">
                         <CellTemplate>
                             <MudStack Row Spacing="1">
                                 <MudIconButton Icon="Icons.Material.Filled.Visibility"
@@ -124,7 +148,7 @@
                                                OnClick="@(() => DeleteUser(context.Item))" />
                             </MudStack>
                         </CellTemplate>
-                    </TemplateColumn>
+                    </TemplateColumn> *@
                 </Columns>
 
                 <PagerContent>

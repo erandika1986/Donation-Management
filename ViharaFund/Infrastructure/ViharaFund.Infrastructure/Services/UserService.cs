@@ -90,7 +90,8 @@ namespace ViharaFund.Infrastructure.Services
                 FullName = u.FullName,
                 AssignRoles = string.Join(",", u.UserRoles?.Select(ur => ur.Role.Name).ToList()),
                 // If UserDto has AssignedRoles, map them as well
-                AssignedRoles = u.UserRoles?.Select(ur => ur.RoleId).ToList()
+                AssignedRoles = u.UserRoles?.Select(ur => ur.RoleId).ToList(),
+                CreatedOn = u.CreatedDate,
             }).ToList();
 
             return new PaginatedResultDTO<UserDTO>
