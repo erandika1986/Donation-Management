@@ -1,7 +1,10 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @using MudBlazor
+@using ViharaFund.Application.DTOs.Common
 @using ViharaFund.Application.DTOs.User
 @inherits MudComponentBase
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
 
 <MudDialog>
     <TitleContent>
@@ -47,10 +50,12 @@
                 </MudItem>
 
                 <MudItem xs="12">
-                    <MudTextField @bind-Value="User.AssignRoles"
-                                  Label="Assigned Roles"
-                                  Variant="Variant.Outlined"
-                                  Placeholder="e.g., Admin, User, Manager" />
+                    <MudSelect T="DropDownDTO" Label="User Role" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="true" @bind-SelectedValues="SelectedRoles" Required="true" RequiredError="Role is required!">
+                        @foreach (var role in Roles)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@role">@role.Name</MudSelectItem>
+                        }
+                    </MudSelect>
                 </MudItem>
 
                 <MudItem xs="12">
@@ -86,10 +91,45 @@
     private MudForm form = null!;
     private bool isValid;
 
+    private IEnumerable<DropDownDTO> Roles = new HashSet<DropDownDTO>();
+    private IEnumerable<DropDownDTO> SelectedRoles = new HashSet<DropDownDTO>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterDataAsync();
+    }
+
+    private async Task LoadMasterDataAsync()
+    {
+        try
+        {
+            // Load your master data
+            Roles = await HttpClient.GetFromJsonAsync<List<DropDownDTO>>("api/User/getAvailableRoles") ?? new();
+            if(IsEdit && User != null)
+            {
+                SelectedRoles = Roles.Where(x => User.AssignedRoles.Contains(x.Id)).ToHashSet();
+            }
+            else
+            {
+
+                //SelectedRole = Roles.FirstOrDefault();
+            }
+
+
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"Error loading master data: {ex.Message}");
+        }
+    }
+
     void Submit()
     {
         if (isValid)
         {
+            User.AssignedRoles.Clear();
+            User.AssignedRoles.AddRange(SelectedRoles.Select(x => x.Id).ToList());
             MudDialog.Close(DialogResult.Ok(User));
         }
     }
