@@ -4,6 +4,6 @@ namespace ViharaFund.Application.DTOs.Donor
 {
     public class DonationMasterDataDTO
     {
-        public List<DropDownDto> DonorPurpose { get; set; } = new List<DropDownDto>();
+        public List<DropDownDTO> DonorPurpose { get; set; } = new List<DropDownDTO>();
     }
 }

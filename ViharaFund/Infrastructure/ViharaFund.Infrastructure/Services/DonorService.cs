@@ -116,14 +116,14 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Donor saved successfully", entity.Id);
         }
 
-        public async Task<List<DropDownDto>> SearchAsync(string searchText)
+        public async Task<List<DropDownDTO>> SearchAsync(string searchText)
         {
             return await tenantDbContext.Donors
                 .Where(x => x.IsActive &&
                             (x.Name.Contains(searchText) ||
                              x.Email.Contains(searchText) ||
                              x.Phone.Contains(searchText)))
-                .Select(x => new DropDownDto
+                .Select(x => new DropDownDTO
                 {
                     Id = x.Id,
                     Name = x.Name

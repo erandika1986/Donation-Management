@@ -5,10 +5,11 @@ namespace ViharaFund.Application.Services
 {
     public interface IUserService
     {
-        Task<PaginatedResultDTO<UserDto>> GetAllAsync(UserFilterDTO filter);
+        Task<PaginatedResultDTO<UserDTO>> GetAllAsync(UserFilterDTO filter);
         Task<ResultDto> CreateAsync(RegisterDTO user);
-        Task<ResultDto> UpdateAsync(UserDto user);
+        Task<ResultDto> UpdateAsync(UserDTO user);
         Task<ResultDto> DeleteAsync(int userId);
-        Task<UserDto> GetByIdAsync(int userId);
+        Task<UserDTO> GetByIdAsync(int userId);
+        Task<List<DropDownDTO>> GetAvailableRoles();
     }
 }

@@ -37,7 +37,6 @@
                                   Variant="Variant.Outlined"
                                   Required="true"
                                   RequiredError="Organization name is required!"
-                                  Validation="@(new EmailAddressAttribute())"
                                   InputType="InputType.Text"
                                   Class="mb-4" />
                     <MudTextField @bind-Value="_loginModel.Username"
@@ -101,6 +100,9 @@
     private bool _isLoading = false;
     private string _errorMessage = string.Empty;
 
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
 
 
     private async Task LoginAsync()
@@ -124,7 +126,14 @@
                 await LocalStorage.SetItemAsync("authToken", result.Token);
 
                 ((ApiAuthenticationStateProvider)AuthProvider).MarkUserAsAuthenticated(result.Token);
-                Nav.NavigateTo("/");
+                if (!string.IsNullOrEmpty(ReturnUrl))
+                {
+                    Nav.NavigateTo(ReturnUrl, true);
+                }
+                else
+                {
+                    Nav.NavigateTo("/", true);
+                }
             }
             else
             {

@@ -22,6 +22,8 @@
 
   <ItemGroup>
     <Folder Include="Authentication\" />
+    <Folder Include="Components\" />
+    <Folder Include="Pages\Reports\" />
   </ItemGroup>
 
 </Project>

@@ -17,6 +17,11 @@
                 IconColor="Color.Success">
         Donations
     </MudNavLink>
+    <MudNavLink Href="/orders"
+                Icon="@Icons.Material.Filled.VolunteerActivism"
+                IconColor="Color.Success">
+        Donor
+    </MudNavLink>
 
     <MudNavLink Href="/orders"
                 Icon="@Icons.Material.Filled.Assignment"
@@ -38,18 +43,14 @@
         Notifications
     </MudNavLink>
 
-    <MudNavGroup Title="Donations" Expanded="true" Icon="@Icons.Material.Filled.MonetizationOn">
-        <MudNavLink Href="Users/Salaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Money">Manage Employee Salaries</MudNavLink>
-        <MudNavLink Href="Users/MonthlySalaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney">Manage Monthly Salaries</MudNavLink>
-    </MudNavGroup>
-
     <MudDivider Class="my-2" />
 
-    <MudNavLink Href="/settings"
-                Icon="@Icons.Material.Filled.Settings"
-                IconColor="Color.Default">
-        Settings
-    </MudNavLink>
+    <MudNavGroup Title="Admin" Expanded="true" Icon="@Icons.Material.Filled.AdminPanelSettings" IconColor="Color.Error">
+        <MudNavLink Href="users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person" IconColor="Color.Info">Users</MudNavLink>
+        <MudNavLink Href="Users/MonthlySalaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Redeem" IconColor="Color.Warning">Donor Purpose</MudNavLink>
+        <MudNavLink Href="Users/MonthlySalaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings" IconColor="Color.Dark">Setting</MudNavLink>
+    </MudNavGroup>
+
 
     <MudNavLink Href="/help"
                 Icon="@Icons.Material.Filled.Help"
@@ -75,7 +76,7 @@
     }
 
     .mud-nav-group .mud-nav-link {
-        padding-left: 32px;
+    
     }
 </style>
 

@@ -4,6 +4,6 @@ namespace ViharaFund.Application.DTOs.JobCard
 {
     public class JobCardMasterDataDTO
     {
-        public List<DropDownDto> JobPriorities { get; set; } = new List<DropDownDto>();
+        public List<DropDownDTO> JobPriorities { get; set; } = new List<DropDownDTO>();
     }
 }

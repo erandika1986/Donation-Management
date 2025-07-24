@@ -6,7 +6,7 @@ namespace ViharaFund.Application.Services
     public interface IDonorService
     {
         Task<ResultDto> saveAsync(DonorDTO donor);
-        Task<List<DropDownDto>> SearchAsync(string searchText);
+        Task<List<DropDownDTO>> SearchAsync(string searchText);
         Task<ResultDto> DeleteAsync(int donorId);
         Task<DonorDTO> GetByIdAsync(int donorId);
         Task<PaginatedResultDTO<DonorDTO>> GetAllAsync(DonorFilterDTO filter);

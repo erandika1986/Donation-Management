@@ -538,7 +538,7 @@ namespace ViharaFund.Infrastructure.Services
 
             foreach (JobPriority jobPriority in Enum.GetValues(typeof(JobPriority)))
             {
-                masterData.JobPriorities.Add(new DropDownDto
+                masterData.JobPriorities.Add(new DropDownDTO
                 {
                     Id = (int)jobPriority,
                     Name = EnumHelper.GetEnumDescription(jobPriority)

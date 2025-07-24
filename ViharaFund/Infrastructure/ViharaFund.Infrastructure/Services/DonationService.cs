@@ -87,7 +87,7 @@ namespace ViharaFund.Infrastructure.Services
 
             var donorPurposes = await tenantDbContext.DonorPurposes
                 .OrderBy(dp => dp.Name)
-                .Select(dp => new DropDownDto
+                .Select(dp => new DropDownDTO
                 {
                     Id = dp.Id,
                     Name = dp.Name

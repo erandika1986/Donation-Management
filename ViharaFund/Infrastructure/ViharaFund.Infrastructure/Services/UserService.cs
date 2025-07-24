@@ -44,7 +44,7 @@ namespace ViharaFund.Infrastructure.Services
             }
         }
 
-        public async Task<PaginatedResultDTO<UserDto>> GetAllAsync(UserFilterDTO filter)
+        public async Task<PaginatedResultDTO<UserDTO>> GetAllAsync(UserFilterDTO filter)
         {
             var query = tenantDbContext.Users
                 .Include(u => u.UserRoles)
@@ -80,18 +80,20 @@ namespace ViharaFund.Infrastructure.Services
                 .Take(pageSize)
                 .ToListAsync();
 
-            var userDtos = users.Select(u => new UserDto
+            var userDtos = users.Select(u => new UserDTO
             {
                 Id = u.Id,
                 Username = u.Username,
                 Email = u.Email,
                 Phone = u.Phone,
                 IsActive = u.IsActive,
+                FullName = u.FullName,
+                AssignRoles = string.Join(",", u.UserRoles?.Select(ur => ur.Role.Name).ToList()),
                 // If UserDto has AssignedRoles, map them as well
                 AssignedRoles = u.UserRoles?.Select(ur => ur.RoleId).ToList()
             }).ToList();
 
-            return new PaginatedResultDTO<UserDto>
+            return new PaginatedResultDTO<UserDTO>
             {
                 Items = userDtos,
                 TotalItems = totalItems,
@@ -101,7 +103,7 @@ namespace ViharaFund.Infrastructure.Services
             };
         }
 
-        public async Task<UserDto> GetByIdAsync(int userId)
+        public async Task<UserDTO> GetByIdAsync(int userId)
         {
             if (userId <= 0)
                 return null;
@@ -113,7 +115,7 @@ namespace ViharaFund.Infrastructure.Services
             if (user == null)
                 return null;
 
-            var userDto = new UserDto
+            var userDto = new UserDTO
             {
                 Id = user.Id,
                 Username = user.Username,
@@ -185,7 +187,7 @@ namespace ViharaFund.Infrastructure.Services
             }
         }
 
-        public async Task<ResultDto> UpdateAsync(UserDto user)
+        public async Task<ResultDto> UpdateAsync(UserDTO user)
         {
             if (user == null || user.Id <= 0)
                 return ResultDto.Failure(new[] { "Valid user data is required." });
@@ -254,6 +256,19 @@ namespace ViharaFund.Infrastructure.Services
                 // Log exception (not implemented)
                 return ResultDto.Failure(new[] { "An error occurred while updating the user." });
             }
+        }
+
+        public async Task<List<DropDownDTO>> GetAvailableRoles()
+        {
+            var roles = await tenantDbContext.Roles
+                .Select(r => new DropDownDTO
+                {
+                    Id = r.Id,
+                    Name = r.Name
+                })
+                .ToListAsync();
+
+            return roles;
         }
     }
 }

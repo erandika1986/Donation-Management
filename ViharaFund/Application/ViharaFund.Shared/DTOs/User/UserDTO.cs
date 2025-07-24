@@ -1,6 +1,6 @@
 ﻿namespace ViharaFund.Application.DTOs.User
 {
-    public class UserDto
+    public class UserDTO
     {
         public int Id { get; set; }
         public string Username { get; set; } = string.Empty;

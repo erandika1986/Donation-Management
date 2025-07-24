@@ -1,0 +1,468 @@
+﻿@page "/users"
+@using System.Net.Http.Json
+@using ViharaFund.Admin.Helper
+@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Application.DTOs.User
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudGrid>
+        <MudItem xs="12" sm="12" md="12" lg="12">
+        @if (!_isMasterDataLoaded)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText>Loading master data...</MudText>
+        }
+        else
+        {
+            <!-- Data Table -->
+            <MudDataGrid @ref="_dataGrid"
+                T="UserDTO"
+                         ServerData="@(LoadData)" Sortable="true"
+                         Filterable="false"
+                         Hideable="true"
+                         Hover="true"
+                         Striped="true"
+                         Elevation="25"
+                         Loading="@_loading">
+                <ToolBarContent>
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="6" lg="6">
+                            <MudText Typo="Typo.h6">Manage Application Users</MudText>
+                            <MudSpacer />
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="6" lg="6">
+
+                            <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+                                <MudTextField 
+                                    T="string" 
+                                    ValueChanged="@(s => OnSearch(s))" 
+                                    Placeholder="Search User" 
+                                    Adornment="Adornment.Start"
+                                    AdornmentIcon="@Icons.Material.Filled.Search" 
+                                    IconSize="Size.Medium" 
+                                    Class="mt-0"></MudTextField>
+
+                                <MudSelect 
+                                    T="DropDownDTO"
+                                    Label="User Role" 
+                                    Class="mt-0" 
+                                    ToStringFunc="(item) => item is not null ? item.Name : string.Empty" 
+                                    MultiSelection="false" 
+                                    Value="SelectedRole" 
+                                    ValueChanged="@RoleChanged" 
+                                    Style="padding-right:2px;">
+                                    @foreach (var role in Roles)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@role">@role.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudIconButton Icon="@Icons.Material.Filled.PersonAddAlt1" Color="Color.Primary" Variant="Variant.Filled" ></MudIconButton>
+                            </MudPaper>
+
+                        </MudItem>
+                    </MudGrid>
+                </ToolBarContent>
+
+                <Columns>
+                    <PropertyColumn Property="x => x.Id" Title="ID" />
+
+                    <PropertyColumn Property="x => x.FullName" Title="Full Name" />
+
+                    <PropertyColumn Property="x => x.Username" Title="Username" />
+
+                    <PropertyColumn Property="x => x.Email" Title="Email" />
+
+                    <PropertyColumn Property="x => x.Phone" Title="Phone" />
+
+                    <PropertyColumn Property="x => x.AssignRoles" Title="Roles" />
+
+                    <TemplateColumn Title="Status" Sortable="false">
+                        <CellTemplate>
+                            <MudChip Color="@(context.Item.IsActive? Color.Success: Color.Error)"
+                                     Size="Size.Small"
+                                     Variant="Variant.Filled">
+                                @(context.Item.IsActive ? "Active" : "Inactive")
+                            </MudChip>
+                        </CellTemplate>
+                    </TemplateColumn>
+
+                    <TemplateColumn Title="Created" Sortable="true" SortBy="@(x => x.CreatedAt)">
+                        <CellTemplate>
+                            <MudText Typo="Typo.caption">
+                                @context.Item.CreatedAt.ToString("MMM dd, yyyy")
+                            </MudText>
+                        </CellTemplate>
+                    </TemplateColumn>
+
+                    <TemplateColumn Title="Actions" Sortable="false" Filterable="false">
+                        <CellTemplate>
+                            <MudStack Row Spacing="1">
+                                <MudIconButton Icon="Icons.Material.Filled.Visibility"
+                                               Color="Color.Info"
+                                               Size="Size.Small"
+                                               Title="View Details"
+                                               OnClick="@(() => ViewUserDetails(context.Item))" />
+
+                                <MudIconButton Icon="Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               Title="Edit User"
+                                               OnClick="@(() => EditUser(context.Item))" />
+
+                                <MudIconButton Icon="Icons.Material.Filled.Key"
+                                               Color="Color.Warning"
+                                               Size="Size.Small"
+                                               Title="Change Password"
+                                               OnClick="@(() => ChangePassword(context.Item))" />
+
+                                <MudIconButton Icon="Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               Title="Delete User"
+                                               OnClick="@(() => DeleteUser(context.Item))" />
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+
+                <PagerContent>
+                    <MudDataGridPager T="UserDTO" />
+                </PagerContent>
+            </MudDataGrid>
+        }
+
+        </MudItem>
+</MudGrid>
+
+@* <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudPaper Elevation="2" Class="pa-4">
+        <!-- Header Section -->
+        <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudText Typo="Typo.h4" Color="Color.Primary">User Management</MudText>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="Icons.Material.Filled.Add"
+                       OnClick="OpenAddUserDialog">
+                Add New User
+            </MudButton>
+        </MudStack>
+
+        <!-- Search and Filter Section -->
+        <MudStack Row Spacing="3" Class="mb-4">
+            <MudTextField @bind-Value="searchString"
+                          Placeholder="Search users..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Immediate="true"
+                          DebounceInterval="300"
+                          OnDebounceIntervalElapsed="OnSearch"
+                          Clearable="true"
+                          Style="flex: 1;" />
+
+            <MudSelect @bind-Value="statusFilter"
+                       Label="Status Filter"
+                       Variant="Variant.Outlined"
+                       Style="min-width: 150px;">
+                <MudSelectItem Value="@("All")">All Users</MudSelectItem>
+                <MudSelectItem Value="@("Active")">Active Only</MudSelectItem>
+                <MudSelectItem Value="@("Inactive")">Inactive Only</MudSelectItem>
+            </MudSelect>
+        </MudStack>
+
+
+    </MudPaper>
+</MudContainer> *@
+
+@code {
+    private List<UserDTO> users = new();
+    private List<UserDTO> filteredUsers = new();
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+    private string searchString = "";
+    private string statusFilter = "All";
+
+    private IEnumerable<DropDownDTO> Roles = new List<DropDownDTO>();
+    private DropDownDTO SelectedRole= new DropDownDTO();
+
+    private MudDataGrid<UserDTO> _dataGrid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterDataAsync();
+    }
+
+    private async Task LoadMasterDataAsync()
+    {
+        try
+        {
+            // Load your master data
+            Roles = await HttpClient.GetFromJsonAsync<List<DropDownDTO>>("api/User/getAvailableRoles") ?? new();
+            SelectedRole = Roles.FirstOrDefault();
+
+            _isMasterDataLoaded = true;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"Error loading master data: {ex.Message}");
+        }
+    }
+
+    private Task OnSearch(string text)
+    {
+        searchString = text;
+        return _dataGrid.ReloadServerData();
+    }
+
+    private void RoleChanged(DropDownDTO changedValue)
+    {
+        SelectedRole = changedValue;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task<GridData<UserDTO>> LoadData(GridState<UserDTO> state)
+    {
+        try
+        {
+            _loading = true;
+
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            var parameters = new UserFilterDTO
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                SearchTerm = searchString,
+                RoleId = SelectedRole.Id
+            };
+
+            var queryString = QueryStringHelper.ToQueryString(parameters);
+            var url = $"api/user/getAll?{queryString}";
+
+            var response = await HttpClient.GetFromJsonAsync<PaginatedResultDTO<UserDTO>>(url) ?? new();
+
+            // Return the result in GridData format
+            return new GridData<UserDTO>
+            {
+                Items = response.Items,
+                TotalItems = response.TotalItems
+            };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+
+    private async Task OpenAddUserDialog()
+    {
+        // var parameters = new DialogParameters<AddEditUserDialog>
+        // {
+        //     { x => x.IsEdit, false },
+        //     { x => x.User, new UserDto() }
+        // };
+
+        // var options = new DialogOptions
+        // {
+        //     CloseButton = true,
+        //     MaxWidth = MaxWidth.Medium,
+        //     FullWidth = true,
+        //     DisableBackdropClick = true
+        // };
+
+        // var dialog = await DialogService.ShowAsync<AddEditUserDialog>("Add New User", parameters, options);
+        // var result = await dialog.Result;
+
+        // if (!result.Canceled && result.Data is UserDto newUser)
+        // {
+        //     await CreateUser(newUser);
+        // }
+    }
+
+    private async Task EditUser(UserDTO user)
+    {
+        // var parameters = new DialogParameters<AddEditUserDialog>
+        // {
+        //     { x => x.IsEdit, true },
+        //     { x => x.User, new UserDto
+        //         {
+        //             Id = user.Id,
+        //             Username = user.Username,
+        //             Email = user.Email,
+        //             Phone = user.Phone,
+        //             FullName = user.FullName,
+        //             AssignRoles = user.AssignRoles,
+        //             IsActive = user.IsActive,
+        //             AssignedRoles = new List<int>(user.AssignedRoles)
+        //         }
+        //     }
+        // };
+
+        // var options = new DialogOptions
+        // {
+        //     CloseButton = true,
+        //     MaxWidth = MaxWidth.Medium,
+        //     FullWidth = true,
+        //     DisableBackdropClick = true
+        // };
+
+        // var dialog = await DialogService.ShowAsync<AddEditUserDialog>("Edit User", parameters, options);
+        // var result = await dialog.Result;
+
+        // if (!result.Canceled && result.Data is UserDto updatedUser)
+        // {
+        //     await UpdateUser(updatedUser);
+        // }
+    }
+
+    private async Task ViewUserDetails(UserDTO user)
+    {
+        // var parameters = new DialogParameters<UserDetailsDialog>
+        // {
+        //     { x => x.User, user }
+        // };
+
+        // var options = new DialogOptions
+        // {
+        //     CloseButton = true,
+        //     MaxWidth = MaxWidth.Medium,
+        //     FullWidth = true
+        // };
+
+        // await DialogService.ShowAsync<UserDetailsDialog>("User Details", parameters, options);
+    }
+
+    private async Task ChangePassword(UserDTO user)
+    {
+        // var parameters = new DialogParameters<ChangePasswordDialog>
+        // {
+        //     { x => x.UserId, user.Id },
+        //     { x => x.Username, user.Username }
+        // };
+
+        // var options = new DialogOptions
+        // {
+        //     CloseButton = true,
+        //     MaxWidth = MaxWidth.Small,
+        //     FullWidth = true,
+        //     DisableBackdropClick = true
+        // };
+
+        // var dialog = await DialogService.ShowAsync<ChangePasswordDialog>("Change Password", parameters, options);
+        // var result = await dialog.Result;
+
+        // if (!result.Canceled)
+        // {
+        //     Snackbar.Add("Password changed successfully!", Severity.Success);
+        // }
+    }
+
+    private async Task DeleteUser(UserDTO user)
+    {
+        // var parameters = new DialogParameters<ConfirmationDialog>
+        // {
+        //     { "ContentText", $"Are you sure you want to delete user '{user.FullName}'? This action cannot be undone." },
+        //     { "ButtonText", "Delete" },
+        //     { "Color", Color.Error }
+        // };
+
+        // var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        // var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Delete", parameters, options);
+        // var result = await dialog.Result;
+
+        // if (!result.Canceled)
+        // {
+        //     try
+        //     {
+        //         // Replace with your actual API endpoint
+        //         var response = await HttpClient.DeleteAsync($"api/users/{user.Id}");
+
+        //         if (response.IsSuccessStatusCode)
+        //         {
+        //             users.Remove(user);
+        //             ApplyFilters();
+        //             Snackbar.Add("User deleted successfully!", Severity.Success);
+        //         }
+        //         else
+        //         {
+        //             Snackbar.Add("Failed to delete user.", Severity.Error);
+        //         }
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Snackbar.Add($"Error deleting user: {ex.Message}", Severity.Error);
+        //     }
+        // }
+    }
+
+    private async Task CreateUser(UserDTO user)
+    {
+        // try
+        // {
+        //     // Replace with your actual API endpoint
+        //     var response = await HttpClient.PostAsJsonAsync("api/users", user);
+
+        //     if (response.IsSuccessStatusCode)
+        //     {
+        //         var createdUser = await response.Content.ReadFromJsonAsync<UserDto>();
+        //         if (createdUser != null)
+        //         {
+        //             users.Add(createdUser);
+        //             ApplyFilters();
+        //             Snackbar.Add("User created successfully!", Severity.Success);
+        //         }
+        //     }
+        //     else
+        //     {
+        //         Snackbar.Add("Failed to create user.", Severity.Error);
+        //     }
+        // }
+        // catch (Exception ex)
+        // {
+        //     Snackbar.Add($"Error creating user: {ex.Message}", Severity.Error);
+        // }
+    }
+
+    private async Task UpdateUser(UserDTO user)
+    {
+        // try
+        // {
+        //     // Replace with your actual API endpoint
+        //     var response = await HttpClient.PutAsJsonAsync($"api/users/{user.Id}", user);
+
+        //     if (response.IsSuccessStatusCode)
+        //     {
+        //         var index = users.FindIndex(u => u.Id == user.Id);
+        //         if (index >= 0)
+        //         {
+        //             users[index] = user;
+        //             ApplyFilters();
+        //             Snackbar.Add("User updated successfully!", Severity.Success);
+        //         }
+        //     }
+        //     else
+        //     {
+        //         Snackbar.Add("Failed to update user.", Severity.Error);
+        //     }
+        // }
+        // catch (Exception ex)
+        // {
+        //     Snackbar.Add($"Error updating user: {ex.Message}", Severity.Error);
+        // }
+    }
+}

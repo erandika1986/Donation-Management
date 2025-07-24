@@ -1,6 +1,6 @@
 ﻿namespace ViharaFund.Application.DTOs.Common
 {
-    public class DropDownDto
+    public class DropDownDTO
     {
         public int Id { get; set; }
         public string Name { get; set; }

@@ -25,10 +25,10 @@ namespace ViharaFund.Application.Helpers
         /// </summary>
         /// <typeparam name="TEnum">The enum type.</typeparam>
         /// <returns>A list of DropDownDTO objects.</returns>
-        public static List<DropDownDto> GetDropDownList<TEnum>() where TEnum : Enum
+        public static List<DropDownDTO> GetDropDownList<TEnum>() where TEnum : Enum
         {
             return ((TEnum[])Enum.GetValues(typeof(TEnum)))
-                    .Select(enumValue => new DropDownDto
+                    .Select(enumValue => new DropDownDTO
                     {
                         Id = Convert.ToInt32(enumValue),
                         Name = GetEnumDescriptionByEnum(enumValue)

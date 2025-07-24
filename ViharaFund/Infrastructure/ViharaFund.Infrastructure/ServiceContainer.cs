@@ -49,6 +49,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<IDonationService, DonationService>();
             services.AddScoped<IDonorService, DonorService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IUserService, UserService>();
             services.AddTransient<IDateTime, DateTimeService>();
 
             return services;

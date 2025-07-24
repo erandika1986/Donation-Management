@@ -12,10 +12,12 @@ namespace ViharaFund.WebAPI.Controllers
     {
         private readonly IUserService userService;
 
+
         public UserController(IUserService userService)
         {
             this.userService = userService;
         }
+
 
         [HttpGet("getAll")]
         public async Task<IActionResult> GetAll([FromQuery] UserFilterDTO filter)
@@ -46,8 +48,9 @@ namespace ViharaFund.WebAPI.Controllers
             return Ok(result);
         }
 
+
         [HttpPut("update/{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UserDto user)
+        public async Task<IActionResult> Update(int id, [FromBody] UserDTO user)
         {
             if (id != user.Id)
                 return BadRequest("User ID mismatch.");
@@ -62,6 +65,7 @@ namespace ViharaFund.WebAPI.Controllers
             return Ok(result);
         }
 
+
         [HttpDelete("delete/{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -70,6 +74,15 @@ namespace ViharaFund.WebAPI.Controllers
                 return BadRequest(result);
 
             return Ok(result);
+        }
+
+
+        [HttpGet("getAvailableRoles")]
+        public async Task<IActionResult> GetAvailableRoles()
+        {
+            var roles = await userService.GetAvailableRoles();
+
+            return Ok(roles);
         }
     }
 }
