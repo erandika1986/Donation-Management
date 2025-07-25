@@ -5,6 +5,7 @@ using ViharaFund.Application.DTOs.User;
 using ViharaFund.Application.Services;
 using ViharaFund.Domain.Entities.Tenant;
 using ViharaFund.Infrastructure.Data;
+using ViharaFund.Shared.DTOs.User;
 
 namespace ViharaFund.Infrastructure.Services
 {
@@ -28,7 +29,7 @@ namespace ViharaFund.Infrastructure.Services
             try
             {
                 // Remove related user roles
-                user.IsActive = false; // Soft delete
+                user.IsDeleted = true; // Soft delete
                 user.UpdatedDate = dateTime.UtcNow;
                 user.UpdatedByUserId = currentUserService.UserId; // Assuming currentUserService provides the current user's ID
 
@@ -46,7 +47,7 @@ namespace ViharaFund.Infrastructure.Services
 
         public async Task<PaginatedResultDTO<UserDTO>> GetAllAsync(UserFilterDTO filter)
         {
-            var query = tenantDbContext.Users
+            var query = tenantDbContext.Users.Where(u => !u.IsDeleted)
                 .Include(u => u.UserRoles)
                 .AsQueryable();
 
@@ -130,7 +131,7 @@ namespace ViharaFund.Infrastructure.Services
             return userDto;
         }
 
-        public async Task<ResultDto> CreateAsync(RegisterDTO user)
+        public async Task<ResultDto> CreateAsync(UserDTO user)
         {
             try
             {
@@ -152,7 +153,7 @@ namespace ViharaFund.Infrastructure.Services
                 {
                     // Map properties from RegisterDTO to User
                     Email = user.Email,
-                    FullName = user.Fullname,
+                    FullName = user.FullName,
                     Phone = user.Phone,
                     Username = user.Username,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.Password), // Ensure to hash the password in production code
@@ -270,6 +271,40 @@ namespace ViharaFund.Infrastructure.Services
                 .ToListAsync();
 
             return roles;
+        }
+
+        public async Task<ResultDto> UpdatePasswordAsync(UpdatePasswordDTO updatePassword)
+        {
+            if (updatePassword == null || updatePassword.UserId <= 0)
+                return ResultDto.Failure(new[] { "Valid user data is required." });
+
+            if (string.IsNullOrWhiteSpace(updatePassword.NewPassword) || string.IsNullOrWhiteSpace(updatePassword.ConfirmPassword))
+                return ResultDto.Failure(new[] { "New password and confirmation are required." });
+
+            if (updatePassword.NewPassword != updatePassword.ConfirmPassword)
+                return ResultDto.Failure(new[] { "Passwords do not match." });
+
+            var user = await tenantDbContext.Users.FirstOrDefaultAsync(u => u.Id == updatePassword.UserId && !u.IsDeleted);
+            if (user == null)
+                return ResultDto.Failure(new[] { "User not found." });
+
+            // Optionally: Add password strength validation here
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(updatePassword.NewPassword);
+            user.UpdatedDate = dateTime.UtcNow;
+            user.UpdatedByUserId = currentUserService.UserId;
+
+            try
+            {
+                tenantDbContext.Users.Update(user);
+                await tenantDbContext.SaveChangesAsync();
+                return ResultDto.Success("Password updated successfully.", user.Id);
+            }
+            catch (Exception)
+            {
+                // Log exception (not implemented)
+                return ResultDto.Failure(new[] { "An error occurred while updating the password." });
+            }
         }
     }
 }

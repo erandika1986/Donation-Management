@@ -11,6 +11,7 @@ namespace ViharaFund.Domain.Entities.Tenant
         public string PasswordHash { get; set; }
         public DateTime? DOB { get; set; }
         public DateTime? LastLoggedIn { get; set; }
+        public bool IsDeleted { get; set; }
 
         public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
         public virtual ICollection<JobCardApproval> JobCardApprovals { get; set; } = new HashSet<JobCardApproval>();

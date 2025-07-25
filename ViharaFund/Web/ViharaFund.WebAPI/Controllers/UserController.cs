@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ViharaFund.Application.DTOs.User;
 using ViharaFund.Application.Services;
+using ViharaFund.Shared.DTOs.User;
 
 namespace ViharaFund.WebAPI.Controllers
 {
@@ -36,7 +37,7 @@ namespace ViharaFund.WebAPI.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> Create([FromBody] RegisterDTO user)
+        public async Task<IActionResult> Create([FromBody] UserDTO user)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -49,16 +50,28 @@ namespace ViharaFund.WebAPI.Controllers
         }
 
 
-        [HttpPut("update/{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UserDTO user)
+        [HttpPut("update")]
+        public async Task<IActionResult> Update([FromBody] UserDTO user)
         {
-            if (id != user.Id)
-                return BadRequest("User ID mismatch.");
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var result = await userService.UpdateAsync(user);
+            if (!result.Succeeded)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost("update-password")]
+        public async Task<IActionResult> UpdatePasswordAsync([FromBody] UpdatePasswordDTO updatePassword)
+        {
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await userService.UpdatePasswordAsync(updatePassword);
             if (!result.Succeeded)
                 return BadRequest(result);
 

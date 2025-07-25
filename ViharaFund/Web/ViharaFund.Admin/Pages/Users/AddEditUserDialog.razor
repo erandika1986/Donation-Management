@@ -17,7 +17,7 @@
     <DialogContent>
         <MudForm @ref="form" @bind-IsValid="@isValid">
             <MudGrid>
-                <MudItem xs="12" sm="6">
+                <MudItem xs="12" sm="6" md="6" lg="6">
                     <MudTextField @bind-Value="User.FullName"
                                   Label="Full Name"
                                   Required="true"
@@ -25,7 +25,7 @@
                                   Variant="Variant.Outlined" />
                 </MudItem>
 
-                <MudItem xs="12" sm="6">
+                <MudItem xs="12" sm="6" md="6" lg="6">
                     <MudTextField @bind-Value="User.Username"
                                   Label="Username"
                                   Required="true"
@@ -34,22 +34,22 @@
                                   Disabled="IsEdit" />
                 </MudItem>
 
-                <MudItem xs="12" sm="6">
+                <MudItem xs="12" sm="6" md="6" lg="6">
                     <MudTextField @bind-Value="User.Email"
                                   Label="Email"
-                                  Required="true"
+                                  Required="true"                                
                                   RequiredError="Email is required"
                                   Validation="@(new EmailAddressAttribute() { ErrorMessage = "Invalid email format" })"
                                   Variant="Variant.Outlined" />
                 </MudItem>
 
-                <MudItem xs="12" sm="6">
+                <MudItem xs="12" sm="6" md="6" lg="6">
                     <MudTextField @bind-Value="User.Phone"
                                   Label="Phone"
                                   Variant="Variant.Outlined" />
                 </MudItem>
 
-                <MudItem xs="12">
+                <MudItem xs="12" sm="6" md="6" lg="6">
                     <MudSelect T="DropDownDTO" Label="User Role" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="true" @bind-SelectedValues="SelectedRoles" Required="true" RequiredError="Role is required!">
                         @foreach (var role in Roles)
                         {
@@ -58,11 +58,34 @@
                     </MudSelect>
                 </MudItem>
 
-                <MudItem xs="12">
+                <MudItem xs="12" sm="6" md="6" lg="6">
                     <MudSwitch @bind-Value="User.IsActive"
                                Label="Active"
                                Color="Color.Primary" />
                 </MudItem>
+                @if (User.Id == 0)
+                {
+                    <MudItem xs="12" sm="6" md="6" lg="6">
+                        <MudTextField T="string"
+                                      Label="Password"
+                                      InputType="InputType.Password"
+                                      @bind-Value="User.Password"
+                                      Required="true"
+                                      RequiredError="Password is required!"
+                                      For="@(() => User.Password)" />
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="6" lg="6">
+                        <MudTextField T="string"
+                                      Label="Confirm Password"
+                                      InputType="InputType.Password"
+                                      @bind-Value="User.ConfirmPassword"
+                                      Required="true"
+                                      RequiredError="Confirm password is required!"
+                                      Validation="@(() => ValidateConfirmPassword())"
+                                      For="@(() => User.ConfirmPassword)" />
+                    </MudItem>
+                }
             </MudGrid>
         </MudForm>
     </DialogContent>
@@ -122,6 +145,17 @@
             // Handle error
             Console.WriteLine($"Error loading master data: {ex.Message}");
         }
+    }
+
+    private string ValidateConfirmPassword()
+    {
+        if (User.Id != 0)
+            return null; // No validation on update
+
+        if (string.IsNullOrWhiteSpace(User.ConfirmPassword))
+            return "Confirm password is required!";
+
+        return User.Password == User.ConfirmPassword ? null : "Passwords do not match";
     }
 
     void Submit()

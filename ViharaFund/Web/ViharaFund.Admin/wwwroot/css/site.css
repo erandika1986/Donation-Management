@@ -1,0 +1,86 @@
+﻿/* Global font and spacing reductions for MudBlazor components */
+
+/* Reduce general input sizes */
+/*.mud-input-control input,
+.mud-input-control textarea {
+    font-size: 0.8rem !important;
+    height: 30px !important;
+    padding: 4px 6px !important;
+}*/
+
+/* Reduce label font size */
+/*.mud-input-label,
+.mud-select-label {
+    font-size: 0.75rem !important;
+}*/
+
+/* Make MudSelect smaller */
+/*.mud-select,
+.mud-select-input {
+    font-size: 0.8rem !important;
+    height: 30px !important;
+    padding: 4px 6px !important;
+}*/
+
+/* Make MudButton smaller */
+/*.mud-button-root {
+    font-size: 0.75rem !important;
+    padding: 4px 8px !important;
+    min-height: 30px !important;
+}*/
+
+/* Icon buttons */
+/*.mud-icon-button {
+    font-size: 18px !important;
+    width: 32px !important;
+    height: 32px !important;
+}*/
+
+/* Chips */
+/*.mud-chip {
+    font-size: 0.75rem !important;
+    padding: 2px 8px !important;
+}*/
+
+/* Snackbar */
+/*.mud-snackbar {
+    font-size: 0.8rem !important;
+}*/
+
+/* Dialog */
+/*.mud-dialog {
+    font-size: 0.8rem !important;
+}*/
+
+/* AppBar */
+/*.mud-appbar {
+    height: 48px !important;
+    font-size: 0.85rem !important;
+}*/
+
+/* Tabs */
+/*.mud-tabs-toolbar {
+    font-size: 0.8rem !important;
+}*/
+
+/* Table headers and cells */
+/*.mud-table thead th,
+.mud-table tbody td {
+    font-size: 0.8rem !important;
+    padding: 4px 6px !important;
+}*/
+
+/* Expansion panels */
+/*.mud-expansion-panel-header {
+    font-size: 0.8rem !important;
+    padding: 6px 8px !important;
+}
+
+.mud-dialog-title
+{
+    padding-bottom:12px !important;
+}
+
+.mud-grid-item {
+    padding-top: 15px !important;
+}*/
