@@ -7,6 +7,7 @@ Add-Migration ViharaFund_00003 -Context TenantDbContext -OutputDir Migrations/Te
 Add-Migration ViharaFund_00004 -Context TenantDbContext -OutputDir Migrations/Tenant -Project ViharaFund.Infrastructure -StartupProject ViharaFund.WebAPI -Verbose
 Add-Migration ViharaFund_00005 -Context TenantDbContext -OutputDir Migrations/Tenant -Project ViharaFund.Infrastructure -StartupProject ViharaFund.WebAPI -Verbose
 Add-Migration ViharaFund_00006 -Context TenantDbContext -OutputDir Migrations/Tenant -Project ViharaFund.Infrastructure -StartupProject ViharaFund.WebAPI -Verbose
+Add-Migration ViharaFund_00007 -Context TenantDbContext -OutputDir Migrations/Tenant -Project ViharaFund.Infrastructure -StartupProject ViharaFund.WebAPI -Verbose
 
 Update-Database -Project ViharaFund.Infrastructure -Context TenantDbContext -StartUp ViharaFund.WebAPI -Verbose
 

@@ -16,6 +16,7 @@ namespace ViharaFund.Infrastructure.Data
             _auditableEntitySaveChangesInterceptor = auditableEntitySaveChangesInterceptor;
         }
 
+        public DbSet<AppSetting> AppSettings { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ViharaFund.Application.Constants;
 using ViharaFund.Application.Helpers;
+using ViharaFund.Domain.Entities.Tenant;
 using ViharaFund.Domain.Enums;
 
 namespace ViharaFund.Infrastructure.Data
@@ -35,6 +36,7 @@ namespace ViharaFund.Infrastructure.Data
         {
             try
             {
+                await SeedAppSettingsAsync();
                 await SeedUserRolesAsync();
                 await SeedAdminUserAsync();
                 await SeedJobCardApprovalLevelAsync();
@@ -44,6 +46,37 @@ namespace ViharaFund.Infrastructure.Data
             {
                 //_logger.LogError(ex, "An error occurred while seeding the database.");
                 throw;
+            }
+        }
+
+        private async Task SeedAppSettingsAsync()
+        {
+            if (!_context.AppSettings.Any())
+            {
+                var appSettings = new List<AppSetting>
+                {
+                    new AppSetting() { Name = CompanySettingConstants.SMTPServer, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.SMTPPort, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.SMTPUsername, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.SMTPPassword, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.SMTPEnableSsl, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.SMTPSenderEmail, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.ApplicationUrl, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.CompanyEmail, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.CompanyPhone, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.CompanyName, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.CompanyLogoUrl, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.CompanyWebsiteUrl, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.CompanyAddress, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.LeaveRequestCCList, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.IsPasswordLoginEnable, Value = "False"},
+                    new AppSetting() { Name = CompanySettingConstants.SalarySlipFolderPath, Value = "C:\\WordDocuments\\"},
+                    new AppSetting() { Name = CompanySettingConstants.InvoiceFolderPath, Value = "C:\\InvoiceFolderPath\\"}
+
+                };
+                await _context.AppSettings.AddRangeAsync(appSettings);
+
+                await _context.SaveChangesAsync();
             }
         }
 

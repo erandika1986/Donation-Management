@@ -27,6 +27,7 @@ namespace ViharaFund.WebAPI.Controllers
             return Ok(result);
         }
 
+
         [HttpGet("getById/{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -35,6 +36,7 @@ namespace ViharaFund.WebAPI.Controllers
                 return NotFound();
             return Ok(user);
         }
+
 
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] UserDTO user)
@@ -63,6 +65,7 @@ namespace ViharaFund.WebAPI.Controllers
 
             return Ok(result);
         }
+
 
         [HttpPost("update-password")]
         public async Task<IActionResult> UpdatePasswordAsync([FromBody] UpdatePasswordDTO updatePassword)
