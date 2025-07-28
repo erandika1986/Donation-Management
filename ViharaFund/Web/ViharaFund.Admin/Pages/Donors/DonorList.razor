@@ -1,6 +1,318 @@
 ﻿@page "/donors"
-<h3>DonorList</h3>
+@using ViharaFund.Admin.Common
+@using ViharaFund.Admin.Helper
+@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Application.DTOs.Donor
+
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudGrid>
+    <MudItem xs="12" sm="12" md="12" lg="12">
+  
+       <!-- Data Table -->
+       <MudDataGrid @ref="_dataGrid"
+                         T="DonorDTO"
+                         ServerData="@(LoadData)" Sortable="true"
+                         Filterable="false"
+                         Hideable="true"
+                         Hover="true"
+                         Striped="true"
+                         Elevation="25"
+                         Loading="@_loading">
+                <ToolBarContent>
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="6" lg="6">
+                            <MudText Typo="Typo.h6">Manage Donors</MudText>
+                            <MudSpacer />
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="6" lg="6">
+
+                            <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+
+                                <MudTextField T="string" Label="Search" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+
+                                <MudTooltip Text="Create New Donor" Color="Color.Primary" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.PersonAddAlt1" Color="Color.Primary" Variant="Variant.Filled" OnClick="@(() => OpenAddDonorDialog())"></MudIconButton>
+                                </MudTooltip>
+
+                            </MudPaper>
+
+                        </MudItem>
+                    </MudGrid>
+                </ToolBarContent>
+
+                <Columns>
+                    <PropertyColumn Property="x => x.Id" Title="ID" />
+
+                    <PropertyColumn Property="x => x.Name" Title="Name" />
+
+                    <PropertyColumn Property="x => x.Email" Title="Email" />
+
+                    <PropertyColumn Property="x => x.Phone" Title="Phone" />
+
+                    <PropertyColumn Property="x => x.Address" Title="Address" />
+
+@*                     <TemplateColumn Title="Status" Sortable="false">
+                        <CellTemplate>
+                            <MudChip Color="@(context.Item.IsActive? Color.Success: Color.Error)"
+                                     Size="Size.Small"
+                                     Variant="Variant.Filled">
+                                @(context.Item.IsActive ? "Active" : "Inactive")
+                            </MudChip>
+                        </CellTemplate>
+                    </TemplateColumn> *@
+
+                                         <TemplateColumn Title="Created On" Sortable="true" SortBy="@(x => x.CreatedOn)">
+                        <CellTemplate>
+                            <MudText Typo="Typo.caption">
+                                @context.Item.CreatedOn.ToString("MMM dd, yyyy")
+                            </MudText>
+                        </CellTemplate>
+                    </TemplateColumn> 
+                    <TemplateColumn CellClass="d-flex justify-end">
+                        <CellTemplate Context="user">
+                            <MudStack Row>
+                                <MudTooltip Text="View User" Color="Color.Info" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                   Color="Color.Info"
+                                                   Variant="Variant.Filled"
+                                                   Title="View Details"
+                                                   OnClick="@(() => ViewUserDetails(user.Item))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Edit User" Color="Color.Success" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Success"
+                                                   Variant="Variant.Filled"
+                                                   Title="Edit User"
+                                                   OnClick="@(() => EditDonor(user.Item))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Delete User" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Variant="Variant.Filled"
+                                                   Title="Delete User"
+                                                   OnClick="@(() => DeleteDonor(user.Item))" />
+                                </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+
+                <PagerContent>
+                    <MudDataGridPager T="DonorDTO" />
+                </PagerContent>
+            </MudDataGrid>
+
+
+    </MudItem>
+</MudGrid>
 
 @code {
+    private List<DonorDTO> donors = new();
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+    private string searchString = "";
+    //private string statusFilter = "All";
 
+    private MudDataGrid<DonorDTO> _dataGrid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isMasterDataLoaded = false;
+    }
+
+    private Task OnSearch(string text)
+    {
+        searchString = text;
+        return _dataGrid.ReloadServerData();
+    }
+
+    private async Task<GridData<DonorDTO>> LoadData(GridState<DonorDTO> state)
+    {
+        try
+        {
+            _loading = true;
+
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            var parameters = new DonorFilterDTO
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                SearchTerm = searchString
+            };
+
+            var queryString = QueryStringHelper.ToQueryString(parameters);
+            var url = $"api/Donor/getAll?{queryString}";
+
+            var response = await HttpClient.GetFromJsonAsync<PaginatedResultDTO<DonorDTO>>(url) ?? new();
+
+            // Return the result in GridData format
+            return new GridData<DonorDTO>
+            {
+                Items = response.Items,
+                TotalItems = response.TotalItems
+            };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenAddDonorDialog()
+    {
+        var parameters = new DialogParameters<AddEditDonor>
+        {
+            { x => x.IsEdit, false },
+            { x => x.Donor, new DonorDTO() }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddEditDonor>("Add New User", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is DonorDTO doner)
+        {
+            await SaveDonor(doner);
+        }
+    }
+
+    private async Task EditDonor(DonorDTO donor)
+    {
+        var parameters = new DialogParameters<AddEditDonor>
+        {
+            { x => x.IsEdit, true },
+            { x => x.Donor, new DonorDTO
+                {
+                    Id = donor.Id,
+                    Name = donor.Name,
+                    Email = donor.Email,
+                    Phone = donor.Phone,
+                    Address = donor.Address,
+                    RequestedAsUnknownDonor = donor.RequestedAsUnknownDonor
+                }
+            }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = false
+        };
+
+        var dialog = await DialogService.ShowAsync<AddEditDonor>("Edit Donor", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is DonorDTO updateDonor)
+        {
+            await SaveDonor(updateDonor);
+        }
+    }
+
+    private async Task ViewUserDetails(DonorDTO donor)
+    {
+        var parameters = new DialogParameters<AddEditDonor>
+        {
+            { x => x.Donor, donor }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        await DialogService.ShowAsync<DonorDetail>("Donor Details", parameters, options);
+    }
+
+    private async Task DeleteDonor(DonorDTO donor)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "ContentText", $"Are you sure you want to delete user '{donor.Name}'? This action cannot be undone." },
+            { "ButtonText", "Delete" },
+            { "Color", Color.Error }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                // Replace with your actual API endpoint
+                var response = await HttpClient.DeleteAsync($"api/Donor/delete/{donor.Id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _dataGrid?.ReloadServerData();
+                    StateHasChanged();
+                    Snackbar.Add("Donor deleted successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete Donor.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting donor: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task SaveDonor(DonorDTO donor)
+    {
+        try
+        {
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/Donor/save", donor);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (result is not null && result.Succeeded)
+                {
+                    Snackbar.Add(result.SuccessMessage, Severity.Success);
+                    _dataGrid?.ReloadServerData();
+                    StateHasChanged();
+                }
+                else if (result is not null && !result.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", result.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create Donor.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating donor: {ex.Message}", Severity.Error);
+        }
+    }
 }

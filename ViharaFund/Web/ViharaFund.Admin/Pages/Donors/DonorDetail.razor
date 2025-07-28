@@ -1,5 +1,227 @@
-﻿<h3>DonorDetail</h3>
+﻿@using ViharaFund.Application.DTOs.Donor
+@using ViharaFund.Shared.DTOs.Donor
+
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="Icons.Material.Filled.VolunteerActivism" Class="mr-3" />
+            Donor Details
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <!-- Donor Information Card -->
+        <MudCard Elevation="0" Class="mb-4">
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12" Class="mb-3">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                            <MudAvatar Color="Color.Primary" Size="Size.Large">
+                                @GetDonorInitials(DonorSummary.Donor.Name)
+                            </MudAvatar>
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.h5">@(string.IsNullOrWhiteSpace(DonorSummary.Donor.Name) ? "Anonymous Donor" : DonorSummary.Donor.Name)</MudText>
+                                <MudChip T="string" Color="@(DonorSummary.Donor.RequestedAsUnknownDonor? Color.Warning: Color.Info)"
+                                         Size="Size.Small"
+                                         Variant="Variant.Filled">
+                                    @(DonorSummary.Donor.RequestedAsUnknownDonor ? "Anonymous" : "Public Donor")
+                                </MudChip>
+                            </MudStack>
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudDivider />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Donor ID</MudText>
+                            <MudText Typo="Typo.body1">@DonorSummary.Donor.Id</MudText>
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Total Donations</MudText>
+                            <MudText Typo="Typo.h6" Color="Color.Success">
+                                @DonorSummary.Donor.TotalDonations.ToString("C")
+                            </MudText>
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Email</MudText>
+                            <MudText Typo="Typo.body1">
+                                @if (!string.IsNullOrWhiteSpace(DonorSummary.Donor.Email))
+                                {
+                                    <MudLink Href="@($"mailto:{DonorSummary.Donor.Email}")">@DonorSummary.Donor.Email</MudLink>
+                                }
+                                else
+                                {
+                                    <span>Not provided</span>
+                                }
+                            </MudText>
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Phone</MudText>
+                            <MudText Typo="Typo.body1">@(string.IsNullOrWhiteSpace(DonorSummary.Donor.Phone) ? "Not provided" : DonorSummary.Donor.Phone)</MudText>
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Address</MudText>
+                            <MudText Typo="Typo.body1">@(string.IsNullOrWhiteSpace(DonorSummary.Donor.Address) ? "Not provided" : DonorSummary.Donor.Address)</MudText>
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Member Since</MudText>
+                            <MudText Typo="Typo.body1">@DonorSummary.Donor.CreatedOn.ToString("MMMM dd, yyyy 'at' hh:mm tt")</MudText>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Donation Summary Card -->
+        <MudCard Elevation="0">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="Icons.Material.Filled.Analytics" Class="mr-3" />
+                        Donation Summary
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudGrid>
+                    <!-- Summary Statistics -->
+                    <MudItem xs="12" sm="4">
+                        <MudPaper Class="pa-4" Elevation="2">
+                            <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="Icons.Material.Filled.MonetizationOn" Color="Color.Success" Size="Size.Large" />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Total Amount</MudText>
+                                <MudText Typo="Typo.h5" Color="Color.Success">@DonorSummary.DonationSummary.TotalAmount.ToString("C")</MudText>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudPaper Class="pa-4" Elevation="2">
+                            <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="Icons.Material.Filled.Receipt" Color="Color.Info" Size="Size.Large" />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Total Donations</MudText>
+                                <MudText Typo="Typo.h5" Color="Color.Info">@DonorSummary.DonationSummary.TotalDonations</MudText>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudPaper Class="pa-4" Elevation="2">
+                            <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="Icons.Material.Filled.TrendingUp" Color="Color.Warning" Size="Size.Large" />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Average Donation</MudText>
+                                <MudText Typo="Typo.h5" Color="Color.Warning">@DonorSummary.DonationSummary.AverageDonation.ToString("C")</MudText>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+
+                    <!-- Recent Donations -->
+                    <MudItem xs="12" Class="mt-4">
+                        <MudDivider />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.h6" Class="mb-3">Recent Donations</MudText>
+                        @if (DonorSummary.RecentDonations?.Any() == true)
+                        {
+                            <MudTable Items="@DonorSummary.RecentDonations" Hover="true" Dense="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Date</MudTh>
+                                    <MudTh>Amount</MudTh>
+                                    <MudTh>Campaign</MudTh>
+                                    <MudTh>Method</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Date">@context.Date.ToString("MMM dd, yyyy")</MudTd>
+                                    <MudTd DataLabel="Amount">
+                                        <MudText Color="Color.Success">@context.Amount.ToString("C")</MudText>
+                                    </MudTd>
+                                    <MudTd DataLabel="Campaign">@context.</MudTd>
+                                    <MudTd DataLabel="Method">
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Default">
+                                            @context.PaymentMethod
+                                        </MudChip>
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        }
+                        else
+                        {
+                            <MudAlert Severity="Severity.Info" Variant="Variant.Text">
+                                No donation history available for this donor.
+                            </MudAlert>
+                        }
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Secondary" OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
+    [Parameter] public DonorDTO Donor { get; set; } = new();
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnEdit { get; set; }
 
+    // Sample data - replace with actual service calls
+    public int DonationCount { get; set; } = 12;
+    public decimal AverageDonation => DonationCount > 0 ? Donor.TotalDonations / DonationCount : 0;
+    //public List<RecentDonationDTO>? RecentDonations { get; set; }
+    public DonorSummaryDTO DonorSummary { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load recent donations - replace with actual service call
+        await LoadRecentDonations();
+    }
+
+    private async Task LoadRecentDonations()
+    {
+        DonorSummary = await HttpClient.GetFromJsonAsync<DonorSummaryDTO>($"api/Donor/getDonorSummary/{Donor.Id}") ?? new();
+    }
+
+    private string GetDonorInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "AD"; // Anonymous Donor
+
+        var words = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length == 1)
+            return words[0][0..Math.Min(2, words[0].Length)].ToUpper();
+
+        return $"{words[0][0]}{words[^1][0]}".ToUpper();
+    }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task EditDonor()
+    {
+        await OnEdit.InvokeAsync();
+    }
+
+    // DTO for recent donations display
+    public class RecentDonationDTO
+    {
+        public DateTime Date { get; set; }
+        public decimal Amount { get; set; }
+        public string CampaignName { get; set; } = string.Empty;
+        public string PaymentMethod { get; set; } = string.Empty;
+    }
 }

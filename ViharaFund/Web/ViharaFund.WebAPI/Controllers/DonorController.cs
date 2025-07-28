@@ -20,14 +20,14 @@ namespace ViharaFund.WebAPI.Controllers
         [HttpPost("save")]
         public async Task<IActionResult> Save([FromBody] DonorDTO donor)
         {
-            var result = await _donorService.saveAsync(donor);
+            var result = await _donorService.SaveAsync(donor);
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> search([FromQuery] string searchText)
+        public async Task<IActionResult> Search([FromQuery] string searchText)
         {
             var donors = await _donorService.SearchAsync(searchText);
             return Ok(donors);
@@ -46,6 +46,15 @@ namespace ViharaFund.WebAPI.Controllers
         public async Task<IActionResult> GetById(int donorId)
         {
             var donor = await _donorService.GetByIdAsync(donorId);
+            if (donor == null)
+                return NotFound();
+            return Ok(donor);
+        }
+
+        [HttpGet("getDonorSummary/{donorId}")]
+        public async Task<IActionResult> GetDonorSummary(int donorId)
+        {
+            var donor = await _donorService.GetDonorSummaryAsync(donorId);
             if (donor == null)
                 return NotFound();
             return Ok(donor);

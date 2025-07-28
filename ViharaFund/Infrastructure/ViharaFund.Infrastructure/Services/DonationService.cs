@@ -124,7 +124,7 @@ namespace ViharaFund.Infrastructure.Services
         {
             Donation? entity; // Use nullable type to handle potential null values
 
-            var result = await donorService.saveAsync(donation.Donor);
+            var result = await donorService.SaveAsync(donation.Donor);
             if (!result.Succeeded)
                 return ResultDto.Failure(new List<string>() { $"Failed to save donor information : {string.Join(", ", result)}" });
 

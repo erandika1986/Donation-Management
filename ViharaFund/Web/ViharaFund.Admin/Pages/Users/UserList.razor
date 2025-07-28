@@ -161,46 +161,6 @@
         </MudItem>
 </MudGrid>
 
-@* <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
-    <MudPaper Elevation="2" Class="pa-4">
-        <!-- Header Section -->
-        <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
-            <MudText Typo="Typo.h4" Color="Color.Primary">User Management</MudText>
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="Icons.Material.Filled.Add"
-                       OnClick="OpenAddUserDialog">
-                Add New User
-            </MudButton>
-        </MudStack>
-
-        <!-- Search and Filter Section -->
-        <MudStack Row Spacing="3" Class="mb-4">
-            <MudTextField @bind-Value="searchString"
-                          Placeholder="Search users..."
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="Icons.Material.Filled.Search"
-                          IconSize="Size.Medium"
-                          Immediate="true"
-                          DebounceInterval="300"
-                          OnDebounceIntervalElapsed="OnSearch"
-                          Clearable="true"
-                          Style="flex: 1;" />
-
-            <MudSelect @bind-Value="statusFilter"
-                       Label="Status Filter"
-                       Variant="Variant.Outlined"
-                       Style="min-width: 150px;">
-                <MudSelectItem Value="@("All")">All Users</MudSelectItem>
-                <MudSelectItem Value="@("Active")">Active Only</MudSelectItem>
-                <MudSelectItem Value="@("Inactive")">Inactive Only</MudSelectItem>
-            </MudSelect>
-        </MudStack>
-
-
-    </MudPaper>
-</MudContainer> *@
-
 @code {
     private List<UserDTO> users = new();
     private List<UserDTO> filteredUsers = new();
