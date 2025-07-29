@@ -20,10 +20,12 @@ namespace ViharaFund.Infrastructure.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<CurrencyType> CurrencyTypes { get; set; }
+        public DbSet<CampaignCategory> CampaignCategories { get; set; }
+        public DbSet<Campaign> Campaigns { get; set; }
         public DbSet<Donation> Donations { get; set; }
         public DbSet<DonationExpense> DonationExpenses { get; set; }
         public DbSet<Donor> Donors { get; set; }
-        public DbSet<DonorPurpose> DonorPurposes { get; set; }
         public DbSet<JobCard> JobCards { get; set; }
         public DbSet<JobCardComment> JobCardComments { get; set; }
         public DbSet<JobCardHistory> JobCardHistories { get; set; }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ViharaFund.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using ViharaFund.Infrastructure.Data;
 namespace ViharaFund.Infrastructure.Migrations.Tenant
 {
     [DbContext(typeof(TenantDbContext))]
-    partial class TenantDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250729010116_ViharaFund_00009")]
+    partial class ViharaFund_00009
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,6 +49,9 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccessType")
+                        .HasColumnType("int");
 
                     b.Property<int>("CampaignCategoryId")
                         .HasColumnType("int");
@@ -85,7 +91,7 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("TargetAmount")
+                    b.Property<decimal?>("TargetAmount")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("UpdatedByUserId")
@@ -93,9 +99,6 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("Visibility")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

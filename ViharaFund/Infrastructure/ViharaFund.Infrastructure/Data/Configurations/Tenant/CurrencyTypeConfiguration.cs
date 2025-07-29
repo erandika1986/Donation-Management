@@ -4,11 +4,11 @@ using ViharaFund.Domain.Entities.Tenant;
 
 namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
 {
-    internal class DonorPurposeConfiguration : IEntityTypeConfiguration<DonorPurpose>
+    internal class CurrencyTypeConfiguration : IEntityTypeConfiguration<CurrencyType>
     {
-        public void Configure(EntityTypeBuilder<DonorPurpose> builder)
+        public void Configure(EntityTypeBuilder<CurrencyType> builder)
         {
-            builder.ToTable("DonorPurpose");
+            builder.ToTable("CurrencyType");
 
             builder.HasKey(p => p.Id);
 

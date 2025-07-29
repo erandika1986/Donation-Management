@@ -22,9 +22,9 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
                .IsRequired(true);
 
             builder
-               .HasOne<DonorPurpose>(c => c.DonorPurpose)
+               .HasOne<Campaign>(c => c.Campaign)
                .WithMany(c => c.Donations)
-               .HasForeignKey(c => c.PurposeId)
+               .HasForeignKey(c => c.CampaignId)
                .OnDelete(DeleteBehavior.Restrict)
                .IsRequired(true);
 
@@ -32,13 +32,13 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
                    .WithMany(u => u.CreatedDonations)
                    .HasForeignKey(a => a.CreatedByUserId)
                    .OnDelete(DeleteBehavior.Restrict)
-                   .IsRequired(false); ;
+                   .IsRequired(false);
 
             builder.HasOne<User>(a => a.UpdatedByUser)
                    .WithMany(u => u.UpdatedDonations)
                    .HasForeignKey(a => a.UpdatedByUserId)
                    .OnDelete(DeleteBehavior.Restrict)
-                   .IsRequired(false); ;
+                   .IsRequired(false);
         }
     }
 }

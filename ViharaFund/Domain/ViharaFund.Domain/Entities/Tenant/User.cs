@@ -22,6 +22,9 @@ namespace ViharaFund.Domain.Entities.Tenant
         public virtual ICollection<User> CreatedUsers { get; set; } = new HashSet<User>();
         public virtual ICollection<User> UpdatedUsers { get; set; } = new HashSet<User>();
 
+        public virtual ICollection<Campaign> CreatedCampaigns { get; set; } = new HashSet<Campaign>();
+        public virtual ICollection<Campaign> UpdatedCampaigns { get; set; } = new HashSet<Campaign>();
+
         public virtual ICollection<Donation> CreatedDonations { get; set; } = new HashSet<Donation>();
         public virtual ICollection<Donation> UpdatedDonations { get; set; } = new HashSet<Donation>();
 

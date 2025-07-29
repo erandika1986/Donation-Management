@@ -40,7 +40,8 @@ namespace ViharaFund.Infrastructure.Data
                 await SeedUserRolesAsync();
                 await SeedAdminUserAsync();
                 await SeedJobCardApprovalLevelAsync();
-                await SeedDonorPurposeAsync();
+                await SeedCurrencyTypesAsync();
+                await SeedCampaignCategoriesAsync();
             }
             catch (Exception ex)
             {
@@ -153,44 +154,67 @@ namespace ViharaFund.Infrastructure.Data
             }
         }
 
-        private async Task SeedDonorPurposeAsync()
+        private async Task SeedCurrencyTypesAsync()
         {
-            if (!_context.DonorPurposes.Any())
+            if (!_context.CurrencyTypes.Any())
             {
-                _context.DonorPurposes.AddRange(new List<Domain.Entities.Tenant.DonorPurpose>
+                _context.CurrencyTypes.AddRange(new List<Domain.Entities.Tenant.CurrencyType>
                 {
-                    new Domain.Entities.Tenant.DonorPurpose
+                    new Domain.Entities.Tenant.CurrencyType
                     {
-                        Name = "General Donation",
+                        Name = "LKR (Rs)"
                     },
-                    new Domain.Entities.Tenant.DonorPurpose
+                    new Domain.Entities.Tenant.CurrencyType
                     {
-                        Name = "New Building Projects",
+                        Name = "USD ($)"
                     },
-                    new Domain.Entities.Tenant.DonorPurpose
+                    new Domain.Entities.Tenant.CurrencyType
                     {
-                        Name = "Support to the Poor and Needy",
+                        Name = "EUR (€)"
                     },
-                    new Domain.Entities.Tenant.DonorPurpose
+                    new Domain.Entities.Tenant.CurrencyType
                     {
-                        Name = "Daily Needs of Monks",
+                        Name = "GBP (£)"
                     },
-                    new Domain.Entities.Tenant.DonorPurpose
+                });
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SeedCampaignCategoriesAsync()
+        {
+            if (!_context.CampaignCategories.Any())
+            {
+                _context.CampaignCategories.AddRange(new List<Domain.Entities.Tenant.CampaignCategory>
+                {
+                    new Domain.Entities.Tenant.CampaignCategory
                     {
-                        Name = "Upkeep of Temple Buildings",
+                        Name = "General"
                     },
-                    new Domain.Entities.Tenant.DonorPurpose
+                    new Domain.Entities.Tenant.CampaignCategory
                     {
-                        Name = "Utility Expenses",
+                        Name = "New Building Projects"
                     },
-                    new Domain.Entities.Tenant.DonorPurpose
+                    new Domain.Entities.Tenant.CampaignCategory
                     {
-                        Name = "Recurring Donation",
+                        Name = "Support to the Poor and Needy"
                     },
-                    new Domain.Entities.Tenant.DonorPurpose
+                    new Domain.Entities.Tenant.CampaignCategory
                     {
-                        Name = "Other",
-                    }
+                        Name = "Daily Needs of Monks"
+                    },
+                    new Domain.Entities.Tenant.CampaignCategory
+                    {
+                        Name = "Upkeep of Temple Buildings"
+                    },
+                    new Domain.Entities.Tenant.CampaignCategory
+                    {
+                        Name = "Utility Expenses"
+                    },
+                    new Domain.Entities.Tenant.CampaignCategory
+                    {
+                        Name = "Recurring Donation"
+                    },
                 });
                 await _context.SaveChangesAsync();
             }

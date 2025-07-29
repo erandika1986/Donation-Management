@@ -30,12 +30,12 @@ namespace ViharaFund.Infrastructure.Services
         {
             var query = tenantDbContext.Donations
                 .Include(d => d.Donor)
-                .Include(d => d.DonorPurpose)
+                .Include(d => d.Campaign)
                 .AsNoTracking();
 
             if (!string.IsNullOrEmpty(filter.SearchTerm))
             {
-                query = query.Where(x => x.Donor.Name.Contains(filter.SearchTerm) || x.DonorPurpose.Name.Contains(filter.SearchTerm));
+                query = query.Where(x => x.Donor.Name.Contains(filter.SearchTerm) || x.Campaign.Name.Contains(filter.SearchTerm));
             }
 
             var totalItems = await query.CountAsync();
@@ -48,7 +48,7 @@ namespace ViharaFund.Infrastructure.Services
                 {
                     Id = d.Id,
                     DonorName = d.Donor != null ? d.Donor.Name : "",
-                    Purpose = d.DonorPurpose != null ? d.DonorPurpose.Name : "",
+                    CampaignName = d.Campaign != null ? d.Campaign.Name : "",
                     Amount = d.Amount,
                     Date = d.Date.ToString("yyyy-MM-dd"),
                     Note = d.Note
@@ -74,7 +74,7 @@ namespace ViharaFund.Infrastructure.Services
             {
                 Id = donation.Id,
                 DonorId = donation.DonorId,
-                PurposeId = donation.PurposeId,
+                CampaignId = donation.CampaignId,
                 Amount = donation.Amount,
                 Date = donation.Date.ToString("yyyy-MM-dd"),
                 Note = donation.Note
@@ -85,7 +85,7 @@ namespace ViharaFund.Infrastructure.Services
         {
             var masterData = new DonationMasterDataDTO();
 
-            var donorPurposes = await tenantDbContext.DonorPurposes
+            var donorPurposes = await tenantDbContext.Campaigns.Where(a => a.IsActive)
                 .OrderBy(dp => dp.Name)
                 .Select(dp => new DropDownDTO
                 {
@@ -94,7 +94,7 @@ namespace ViharaFund.Infrastructure.Services
                 })
                 .ToListAsync();
 
-            masterData.DonorPurpose.AddRange(donorPurposes);
+            masterData.Campaigns.AddRange(donorPurposes);
 
             return masterData;
         }
@@ -103,14 +103,14 @@ namespace ViharaFund.Infrastructure.Services
         {
             var donations = await tenantDbContext.Donations
                 .Include(d => d.Donor)
-                .Include(d => d.DonorPurpose)
+                .Include(d => d.Campaign)
                 .OrderByDescending(d => d.Date)
                 .Take(numberOfRecords)
                 .Select(d => new DonationSummaryDTO
                 {
                     Id = d.Id,
                     DonorName = d.Donor != null ? d.Donor.Name : "",
-                    Purpose = d.DonorPurpose != null ? d.DonorPurpose.Name : "",
+                    CampaignName = d.Campaign != null ? d.Campaign.Name : "",
                     Amount = d.Amount,
                     Date = d.Date.ToString("yyyy-MM-dd"),
                     Note = d.Note
@@ -137,7 +137,7 @@ namespace ViharaFund.Infrastructure.Services
                     return ResultDto.Success("Donation not found", 0);
 
                 entity.DonorId = donation.DonorId;
-                entity.PurposeId = donation.PurposeId;
+                entity.CampaignId = donation.CampaignId;
                 entity.Amount = donation.Amount;
                 entity.Date = DateTime.ParseExact(donation.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
                 entity.Note = donation.Note;
@@ -148,7 +148,7 @@ namespace ViharaFund.Infrastructure.Services
                 entity = new Donation
                 {
                     DonorId = donation.DonorId,
-                    PurposeId = donation.PurposeId,
+                    CampaignId = donation.CampaignId,
                     Amount = donation.Amount,
                     Date = DateTime.ParseExact(donation.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture),
                     Note = donation.Note

@@ -2,9 +2,10 @@
 
 namespace ViharaFund.Domain.Entities.Tenant
 {
-    public class DonorPurpose : BaseEntity
+    public class CampaignCategory : BaseEntity
     {
         public string Name { get; set; }
-        public virtual ICollection<Donation> Donations { get; set; } = new HashSet<Donation>();
+
+        public virtual ICollection<Campaign> Campaigns { get; set; } = new HashSet<Campaign>();
     }
 }

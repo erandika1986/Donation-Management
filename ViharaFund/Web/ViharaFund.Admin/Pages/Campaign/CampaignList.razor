@@ -1,0 +1,468 @@
+﻿@page "/campaigns"
+@using MudBlazor
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Campaign Management</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <!-- Header Section -->
+    <MudPaper Elevation="8" Class="pa-8 mb-6" Style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%); backdrop-filter: blur(15px); border-radius: 20px;">
+        <MudGrid AlignItems="Center" Justify="Justify.SpaceBetween">
+            <MudItem xs="12" md="8">
+                <MudText Typo="Typo.h3" Class="mb-2" Style="background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">
+                    📊 Campaign Management
+                </MudText>
+                <MudText Typo="Typo.h6" Color="Color.Secondary">
+                    Create, manage and track your fundraising campaigns
+                </MudText>
+            </MudItem>
+            <MudItem xs="12" md="4" Class="d-flex justify-end">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Success"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           Style="border-radius: 50px; padding: 15px 30px; box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);"
+                           OnClick="OpenCreateModal">
+                    Create New Campaign
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Statistics Cards -->
+    <MudGrid Class="mb-6">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="4" Class="pa-4 text-center mud-height-full" Style="border-radius: 15px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);">
+                <MudText Typo="Typo.h4" Color="Color.Success" Class="mb-2">12</MudText>
+                <MudText Typo="Typo.caption" Style="text-transform: uppercase; letter-spacing: 1px;">Active Campaigns</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="4" Class="pa-4 text-center mud-height-full" Style="border-radius: 15px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);">
+                <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-2">$245,680</MudText>
+                <MudText Typo="Typo.caption" Style="text-transform: uppercase; letter-spacing: 1px;">Total Raised</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="4" Class="pa-4 text-center mud-height-full" Style="border-radius: 15px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);">
+                <MudText Typo="Typo.h4" Color="Color.Warning" Class="mb-2">$89,320</MudText>
+                <MudText Typo="Typo.caption" Style="text-transform: uppercase; letter-spacing: 1px;">This Month</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="4" Class="pa-4 text-center mud-height-full" Style="border-radius: 15px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);">
+                <MudText Typo="Typo.h4" Color="Color.Secondary" Class="mb-2">1,247</MudText>
+                <MudText Typo="Typo.caption" Style="text-transform: uppercase; letter-spacing: 1px;">Total Donors</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Main Content -->
+    <MudPaper Elevation="8" Class="pa-6" Style="background: rgba(255,255,255,0.95); backdrop-filter: blur(15px); border-radius: 20px;">
+        <!-- Filter Bar -->
+        <MudGrid Class="mb-6" AlignItems="Center">
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" @bind-Value="selectedStatus" Label="Status" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem Value="@("All")">All Campaigns</MudSelectItem>
+                    <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                    <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
+                    <MudSelectItem Value="@("Completed")">Completed</MudSelectItem>
+                    <MudSelectItem Value="@("Paused")">Paused</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" @bind-Value="selectedCategory" Label="Category" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem Value="@("All")">All Categories</MudSelectItem>
+                    <MudSelectItem Value="@("Education")">Education</MudSelectItem>
+                    <MudSelectItem Value="@("Healthcare")">Healthcare</MudSelectItem>
+                    <MudSelectItem Value="@("Environment")">Environment</MudSelectItem>
+                    <MudSelectItem Value="@("Emergency Relief")">Emergency Relief</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="searchTerm"
+                              Label="Search campaigns"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" />
+            </MudItem>
+        </MudGrid>
+
+        <!-- Campaigns Grid -->
+        <MudGrid>
+            @foreach (var campaign in filteredCampaigns)
+            {
+                <MudItem xs="12" md="6" lg="4">
+                    <MudCard Elevation="6" Style="border-radius: 15px; height: 100%; transition: all 0.3s ease;" Class="campaign-card">
+                        <!-- Card Header -->
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6" Class="mb-2">@campaign.Title</MudText>
+                                <MudGrid AlignItems="Center" Justify="Justify.SpaceBetween">
+                                    <MudItem>
+                                        <MudChip T="string" Color="@GetStatusColor(campaign.Status)" Size="Size.Small" Text="@campaign.Status.ToUpper()" />
+                                    </MudItem>
+                                    <MudItem>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@campaign.StartDate.ToString("MMM d") - @campaign.EndDate.ToString("MMM d, yyyy")</MudText>
+                                    </MudItem>
+                                </MudGrid>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+
+                        <!-- Progress Section -->
+                        <MudCardContent>
+                            <MudGrid AlignItems="Center" Justify="Justify.SpaceBetween" Class="mb-3">
+                                <MudItem>
+                                    <MudText Typo="Typo.h5" Color="Color.Success">$@campaign.RaisedAmount.ToString("N0")</MudText>
+                                </MudItem>
+                                <MudItem>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">of $@campaign.TargetAmount.ToString("N0")</MudText>
+                                </MudItem>
+                            </MudGrid>
+
+                            <MudProgressLinear Color="Color.Success"
+                                               Value="@campaign.ProgressPercentage"
+                                               Size="Size.Medium"
+                                               Class="mb-3"
+                                               Style="height: 8px; border-radius: 10px;" />
+
+                            <MudGrid Justify="Justify.SpaceBetween">
+                                <MudItem>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@campaign.ProgressPercentage% Complete</MudText>
+                                </MudItem>
+                                <MudItem>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@campaign.DaysLeft days left</MudText>
+                                </MudItem>
+                                <MudItem>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@campaign.DonorCount donors</MudText>
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+
+                        <!-- Card Actions -->
+                        <MudCardActions Class="pa-4" Style="background: #fafafa;">
+                            <MudSpacer />
+                            @if (campaign.Status == "Draft")
+                            {
+                                <MudButton Size="Size.Small" Color="Color.Default">Edit</MudButton>
+                                <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">Launch</MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Size="Size.Small" Color="Color.Default">Edit</MudButton>
+                                <MudButton Size="Size.Small" Color="Color.Info">Share</MudButton>
+                                <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">View Details</MudButton>
+                            }
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+<!-- Create Campaign Dialog -->
+<MudDialog @bind-IsVisible="isCreateModalOpen" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h5">Create New Campaign</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@isFormValid">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="newCampaign.Title"
+                                  Label="Campaign Name"
+                                  Required="true"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="e.g., Clean Water Initiative 2025" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="newCampaign.Description"
+                                  Label="Description"
+                                  Lines="3"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="Describe your campaign goals and impact..." />
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudNumericField @bind-Value="newCampaign.TargetAmount"
+                                     Label="Target Amount"
+                                     Required="true"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Min="1" />
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudSelect @bind-Value="newCampaign.Currency"
+                               Label="Currency"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        <MudSelectItem Value="@("USD")">USD ($)</MudSelectItem>
+                        <MudSelectItem Value="@("EUR")">EUR (€)</MudSelectItem>
+                        <MudSelectItem Value="@("GBP")">GBP (£)</MudSelectItem>
+                        <MudSelectItem Value="@("LKR")">LKR (Rs)</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudDatePicker @bind-Date="startDate"
+                                   Label="Start Date"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense" />
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudDatePicker @bind-Date="endDate"
+                                   Label="End Date"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudSelect @bind-Value="newCampaign.Category"
+                               Label="Category"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        <MudSelectItem Value="@("Education")">Education</MudSelectItem>
+                        <MudSelectItem Value="@("Healthcare")">Healthcare</MudSelectItem>
+                        <MudSelectItem Value="@("Environment")">Environment</MudSelectItem>
+                        <MudSelectItem Value="@("Emergency Relief")">Emergency Relief</MudSelectItem>
+                        <MudSelectItem Value="@("Community Development")">Community Development</MudSelectItem>
+                        <MudSelectItem Value="@("Animal Welfare")">Animal Welfare</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="newCampaign.ImageUrl"
+                                  Label="Campaign Image URL"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="https://example.com/image.jpg" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudSelect @bind-Value="newCampaign.Visibility"
+                               Label="Public Sharing"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        <MudSelectItem Value="@("Public")">Public - Anyone can view and donate</MudSelectItem>
+                        <MudSelectItem Value="@("Private")">Private - Only invited donors</MudSelectItem>
+                        <MudSelectItem Value="@("Organization")">Organization Only - Internal campaign</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseCreateModal" Color="Color.Default">Cancel</MudButton>
+        <MudButton OnClick="CreateCampaign"
+                   Color="Color.Success"
+                   Variant="Variant.Filled"
+                   Disabled="!isFormValid">
+            Create Campaign
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .campaign-card:hover {
+        transform: translateY(-8px) !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .mud-paper {
+        transition: all 0.3s ease;
+    }
+
+        .mud-paper:hover {
+            transform: translateY(-2px);
+        }
+</style>
+
+@code {
+    private bool isCreateModalOpen = false;
+    private bool isFormValid = false;
+    private MudForm form;
+    private string selectedStatus = "All";
+    private string selectedCategory = "All";
+    private string searchTerm = "";
+
+    // Separate nullable DateTime properties for the date pickers
+    private DateTime? startDate = DateTime.Today;
+    private DateTime? endDate = DateTime.Today.AddMonths(3);
+
+    private DialogOptions dialogOptions = new()
+    {
+        MaxWidth = MaxWidth.Medium,
+        FullWidth = true,
+        CloseButton = true,
+        BackdropClick = true,
+        CloseOnEscapeKey = true
+    };
+
+    private Campaign newCampaign = new();
+    private List<Campaign> campaigns = new();
+    private List<Campaign> filteredCampaigns => FilterCampaigns();
+
+    protected override void OnInitialized()
+    {
+        // Initialize with sample data
+        campaigns = new List<Campaign>
+        {
+            new Campaign
+            {
+                Id = 1,
+                Title = "Clean Water for Rural Schools",
+                Status = "Active",
+                StartDate = new DateTime(2024, 12, 1),
+                EndDate = new DateTime(2025, 3, 31),
+                RaisedAmount = 45680,
+                TargetAmount = 60000,
+                DonorCount = 234,
+                Category = "Education"
+            },
+            new Campaign
+            {
+                Id = 2,
+                Title = "Emergency Food Drive 2025",
+                Status = "Active",
+                StartDate = new DateTime(2025, 1, 15),
+                EndDate = new DateTime(2025, 4, 30),
+                RaisedAmount = 28420,
+                TargetAmount = 40000,
+                DonorCount = 156,
+                Category = "Emergency Relief"
+            },
+            new Campaign
+            {
+                Id = 3,
+                Title = "Medical Equipment Fund",
+                Status = "Completed",
+                StartDate = new DateTime(2024, 10, 1),
+                EndDate = new DateTime(2024, 12, 31),
+                RaisedAmount = 75000,
+                TargetAmount = 70000,
+                DonorCount = 421,
+                Category = "Healthcare"
+            },
+            new Campaign
+            {
+                Id = 4,
+                Title = "Youth Education Program",
+                Status = "Draft",
+                StartDate = new DateTime(2025, 3, 1),
+                EndDate = new DateTime(2025, 8, 31),
+                RaisedAmount = 0,
+                TargetAmount = 50000,
+                DonorCount = 0,
+                Category = "Education"
+            }
+        };
+
+        newCampaign = new Campaign
+        {
+            Currency = "USD",
+            Visibility = "Public"
+        };
+        startDate = DateTime.Today;
+        endDate = DateTime.Today.AddMonths(3);
+    }
+
+    private void OpenCreateModal()
+    {
+        isCreateModalOpen = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        isCreateModalOpen = false;
+        newCampaign = new Campaign
+        {
+            Currency = "USD",
+            Visibility = "Public"
+        };
+        startDate = DateTime.Today;
+        endDate = DateTime.Today.AddMonths(3);
+    }
+
+    private async Task CreateCampaign()
+    {
+        await form.Validate();
+        if (isFormValid)
+        {
+            newCampaign.Id = campaigns.Count + 1;
+            newCampaign.Status = "Draft";
+            newCampaign.RaisedAmount = 0;
+            newCampaign.DonorCount = 0;
+            newCampaign.StartDate = startDate ?? DateTime.Today;
+            newCampaign.EndDate = endDate ?? DateTime.Today.AddMonths(3);
+
+            campaigns.Add(newCampaign);
+            CloseCreateModal();
+
+            // Show success message
+            await JSRuntime.InvokeVoidAsync("alert", "Campaign created successfully!");
+        }
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Active" => Color.Success,
+            "Draft" => Color.Warning,
+            "Completed" => Color.Primary,
+            "Paused" => Color.Secondary,
+            _ => Color.Default
+        };
+    }
+
+    private List<Campaign> FilterCampaigns()
+    {
+        var filtered = campaigns.AsEnumerable();
+
+        if (selectedStatus != "All")
+        {
+            filtered = filtered.Where(c => c.Status == selectedStatus);
+        }
+
+        if (selectedCategory != "All")
+        {
+            filtered = filtered.Where(c => c.Category == selectedCategory);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            filtered = filtered.Where(c => c.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return filtered.ToList();
+    }
+
+    public class Campaign
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Status { get; set; } = "";
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public decimal RaisedAmount { get; set; }
+        public decimal TargetAmount { get; set; }
+        public int DonorCount { get; set; }
+        public string Category { get; set; } = "";
+        public string Currency { get; set; } = "USD";
+        public string ImageUrl { get; set; } = "";
+        public string Visibility { get; set; } = "Public";
+
+        public double ProgressPercentage => TargetAmount > 0 ? Math.Min((double)(RaisedAmount / TargetAmount * 100), 100) : 0;
+        public int DaysLeft => (EndDate - DateTime.Today).Days > 0 ? (EndDate - DateTime.Today).Days : 0;
+    }
+}
