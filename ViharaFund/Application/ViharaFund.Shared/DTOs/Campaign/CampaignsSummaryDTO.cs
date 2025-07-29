@@ -2,6 +2,9 @@
 {
     public class CampaignsSummaryDTO
     {
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages { get; set; }
         public CampaignStatisticsDTO Statistics { get; set; } = new();
         public List<CampaignSummaryDTO> Campaigns { get; set; } = new();
     }
@@ -30,8 +33,8 @@
     public class CampaignStatisticsDTO
     {
         public int ActiveCampaign { get; set; }
-        public decimal TotalRaised { get; set; }
-        public decimal ThisMonth { get; set; }
+        public string TotalRaised { get; set; }
+        public string ThisMonth { get; set; }
         public int TotalDonors { get; set; }
     }
 }

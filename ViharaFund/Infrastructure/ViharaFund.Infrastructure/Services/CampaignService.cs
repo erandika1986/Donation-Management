@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using ViharaFund.Application.Constants;
 using ViharaFund.Application.Contracts;
 using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.Helpers;
@@ -34,7 +36,7 @@ namespace ViharaFund.Infrastructure.Services
                     CampaignCategoryId = campaignDto.CampaignCategoryId,
                     Visibility = campaignDto.Visibility,
                     Status = campaignDto.Status,
-                    StartDate = campaignDto.StartDate,
+                    StartDate = campaignDto.StartDate.Value,
                     HasEndDate = campaignDto.HasEndDate,
                     EndDate = campaignDto.HasEndDate ? campaignDto.EndDate : null,
                     CurrencyTypeId = campaignDto.CurrencyTypeId,
@@ -118,6 +120,26 @@ namespace ViharaFund.Infrastructure.Services
 
         public async Task<CampaignDTO> GetCampaignByIdAsync(int id)
         {
+            if (id == 0)
+            {
+                var defaultCurrencyTypeRecord = await tenantDbContext.AppSettings.FirstOrDefaultAsync(x => x.Name == CompanySettingConstants.DefaultCurrencyId);
+                int defaultCurrencyTypeId = Convert.ToInt32(defaultCurrencyTypeRecord.Value);
+                return new CampaignDTO()
+                {
+                    Id = 0,
+                    Name = string.Empty,
+                    Description = string.Empty,
+                    CurrencyTypeId = tenantDbContext.CurrencyTypes.FirstOrDefault(x => x.Id == defaultCurrencyTypeId).Id,
+                    CampaignCategoryId = tenantDbContext.CampaignCategories.FirstOrDefault().Id,
+                    CompaignImageUrl = string.Empty,
+                    Visibility = CampaignVisibility.Public,
+                    Status = CampaignStatus.Active,
+                    StartDate = DateTime.UtcNow,
+                    HasEndDate = true,
+                    EndDate = DateTime.UtcNow.AddDays(30),
+                    TargetAmount = 0,
+                };
+            }
             var campaign = await tenantDbContext.Campaigns
                 .Include(c => c.CampaignCategory)
                 .Include(c => c.CurrencyType)
@@ -146,14 +168,21 @@ namespace ViharaFund.Infrastructure.Services
 
         public async Task<CampaignMasterDataDTO> GetCampaignMasterDataAsync()
         {
+            var masterData = new CampaignMasterDataDTO();
+            masterData.CampaignStatuses.Add(new DropDownDTO() { Id = 0, Name = "All Campaigns" });
+            masterData.CampaignCategories.Add(new DropDownDTO() { Id = 0, Name = "All Categories" });
+
             // Step 1: Get CurrencyTypes from Db
             var currencyTypes = await tenantDbContext.CurrencyTypes
+                .OrderBy(x => x.Name)
                 .Select(ct => new DropDownDTO
                 {
                     Id = ct.Id,
                     Name = ct.Name
                 })
+                .OrderBy(x => x.Name)
                 .ToListAsync();
+            masterData.CurrencyTypes.AddRange(currencyTypes);
 
             // Step 2: Get CampaignCategories from Db
             var campaignCategories = await tenantDbContext.CampaignCategories
@@ -163,6 +192,7 @@ namespace ViharaFund.Infrastructure.Services
                     Name = cc.Name
                 })
                 .ToListAsync();
+            masterData.CampaignCategories.AddRange(campaignCategories);
 
             // Step 3: Get CampaignVisibilities from Enum
             var campaignVisibilities = Enum.GetValues(typeof(CampaignVisibility))
@@ -173,6 +203,7 @@ namespace ViharaFund.Infrastructure.Services
                     Name = EnumHelper.GetEnumDescription(v)
                 })
                 .ToList();
+            masterData.CampaignVisibilities.AddRange(campaignVisibilities);
 
             // Step 4: Get CampaignStatuses from Enum
             var campaignStatuses = Enum.GetValues(typeof(CampaignStatus))
@@ -182,16 +213,11 @@ namespace ViharaFund.Infrastructure.Services
                     Id = (int)s,
                     Name = EnumHelper.GetEnumDescription(s)
                 })
+                .OrderBy(x => x.Name)
                 .ToList();
+            masterData.CampaignStatuses.AddRange(campaignStatuses);
 
-            // Step 5: Compose DTO
-            return new CampaignMasterDataDTO
-            {
-                CurrencyTypes = currencyTypes,
-                CampaignCategories = campaignCategories,
-                CampaignVisibilities = campaignVisibilities,
-                CampaignStatuses = campaignStatuses
-            };
+            return masterData;
         }
 
         public async Task<CampaignsSummaryDTO> GetCampaignsSummaryAsync(CampaignFilterDTO campaignFilter)
@@ -200,6 +226,18 @@ namespace ViharaFund.Infrastructure.Services
             var query = tenantDbContext.Campaigns.AsQueryable();
 
             query = ApplyCampaignFilters(query, campaignFilter);
+
+            var totalItems = await query.CountAsync();
+
+            var page = campaignFilter.CurrentPage;
+            var pageSize = campaignFilter.PageSize;
+            var skip = (page - 1) * pageSize;
+
+            var campaignsList = await query
+                .OrderByDescending(u => u.CreatedDate)
+                .Skip(skip)
+                .Take(pageSize)
+                .ToListAsync();
 
             // Get all filtered campaigns
             var campaigns = await query
@@ -234,15 +272,22 @@ namespace ViharaFund.Infrastructure.Services
             DateTime endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
             var statistics = new CampaignStatisticsDTO
             {
-                TotalRaised = tenantDbContext.Donations.Sum(c => c.Amount),
+                TotalRaised = tenantDbContext.Donations
+                .Sum(c => c.Amount)
+                .ToString("N2", CultureInfo.InvariantCulture),
                 ActiveCampaign = tenantDbContext.Campaigns.Count(cs => cs.Status == CampaignStatus.Active),
-                ThisMonth = tenantDbContext.Donations.Where(x => x.CreatedDate <= endOfMonth && x.CreatedDate >= startOfMonth).Sum(c => c.Amount),
+                ThisMonth = tenantDbContext.Donations.Where(x => x.CreatedDate <= endOfMonth && x.CreatedDate >= startOfMonth)
+                .Sum(c => c.Amount)
+                .ToString("N2", CultureInfo.InvariantCulture),
                 TotalDonors = tenantDbContext.Donors.Count()
                 // Add other statistics as needed
             };
 
             return new CampaignsSummaryDTO
             {
+                Page = page,
+                PageSize = pageSize,
+                TotalPages = totalItems,
                 Statistics = statistics,
                 Campaigns = campaigns
             };
@@ -272,7 +317,7 @@ namespace ViharaFund.Infrastructure.Services
                 campaign.CampaignCategoryId = campaignDto.CampaignCategoryId;
                 campaign.Visibility = campaignDto.Visibility;
                 campaign.Status = campaignDto.Status;
-                campaign.StartDate = campaignDto.StartDate;
+                campaign.StartDate = campaignDto.StartDate.Value;
                 campaign.HasEndDate = campaignDto.HasEndDate;
                 campaign.EndDate = campaignDto.HasEndDate ? campaignDto.EndDate : null;
                 campaign.CurrencyTypeId = campaignDto.CurrencyTypeId;

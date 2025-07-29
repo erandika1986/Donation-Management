@@ -9,7 +9,7 @@ namespace ViharaFund.Shared.DTOs.Campaign
         public string Description { get; set; }
         public decimal TargetAmount { get; set; }
         public int CurrencyTypeId { get; set; }
-        public DateTime StartDate { get; set; }
+        public DateTime? StartDate { get; set; }
         public bool HasEndDate { get; set; }
         public DateTime? EndDate { get; set; }
         public int CampaignCategoryId { get; set; }

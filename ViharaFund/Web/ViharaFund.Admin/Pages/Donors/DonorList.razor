@@ -55,17 +55,9 @@
 
                     <PropertyColumn Property="x => x.Address" Title="Address" />
 
-@*                     <TemplateColumn Title="Status" Sortable="false">
-                        <CellTemplate>
-                            <MudChip Color="@(context.Item.IsActive? Color.Success: Color.Error)"
-                                     Size="Size.Small"
-                                     Variant="Variant.Filled">
-                                @(context.Item.IsActive ? "Active" : "Inactive")
-                            </MudChip>
-                        </CellTemplate>
-                    </TemplateColumn> *@
 
-                                         <TemplateColumn Title="Created On" Sortable="true" SortBy="@(x => x.CreatedOn)">
+
+                    <TemplateColumn Title="Created On" Sortable="true" SortBy="@(x => x.CreatedOn)">
                         <CellTemplate>
                             <MudText Typo="Typo.caption">
                                 @context.Item.CreatedOn.ToString("MMM dd, yyyy")

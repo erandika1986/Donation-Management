@@ -1,0 +1,201 @@
+﻿@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Domain.Enums
+@using ViharaFund.Shared.DTOs.Campaign
+@inherits MudComponentBase
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+<!-- Create Campaign Dialog -->
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@(IsEdit? Icons.Material.Filled.Edit : Icons.Material.Filled.Campaign)" Class="mr-3" />
+            @(IsEdit ? "Edit CampaignI" : "Add New CampaignI")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@isFormValid">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Campaign.Name"
+                                  Label="Campaign Name"
+                                  Required="true"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="e.g., Clean Water Initiative 2025" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Campaign.Description"
+                                  Label="Description"
+                                  Lines="3"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="Describe your campaign goals and impact..." />
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudNumericField @bind-Value="Campaign.TargetAmount"
+                                     Label="Target Amount"
+                                     Required="true"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Min="1" />
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudSelect T="DropDownDTO"
+                               Label="Currency"
+                               ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
+                               MultiSelection="false" @bind-Value="SelectedCurrencyType"
+                               Required="true"
+                               RequiredError="Currency is required!">
+                        @foreach (var currencyType in CurrencyTypes)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@currencyType">@currencyType.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudDatePicker @bind-Date="Campaign.StartDate"
+                                   Label="Start Date"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense" />
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudDatePicker @bind-Date="Campaign.EndDate"
+                                   Label="End Date"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudSelect 
+                        T="DropDownDTO" 
+                        Label="Category" 
+                        ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
+                               MultiSelection="false" @bind-Value="SelectedCatagery"
+                               Required="true" 
+                               RequiredError="Category is required!">
+                        @foreach (var category in Categories)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@category">@category.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Campaign.CompaignImageUrl"
+                                  Label="Campaign Image URL"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="https://example.com/image.jpg" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudSelect T="DropDownDTO"
+                               Label="Public Sharing"
+                               ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
+                               MultiSelection="false" @bind-Value="SelectedVisibility"
+                               Required="true"
+                               RequiredError="Category is required!">
+                        @foreach (var visibility in Visibilities)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@visibility">@visibility.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseCreateModal" Color="Color.Default">Cancel</MudButton>
+        <MudButton 
+                   Color="Color.Success"
+                   Variant="Variant.Filled"
+                   OnClick="Submit"
+                   Disabled="!isFormValid">
+            @(IsEdit ? "Update" : "Create")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private bool isFormValid = false;
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public int CampaignId { get; set; }
+
+    [Parameter]
+    public CampaignMasterDataDTO CampaignMasterData { get; set; } = new();
+
+    private MudForm form = null!;
+    private bool isValid;
+
+    private CampaignDTO Campaign = new();
+
+    private IEnumerable<DropDownDTO> CurrencyTypes = new List<DropDownDTO>();
+    public DropDownDTO SelectedCurrencyType { get; set; }
+
+    private IEnumerable<DropDownDTO> Categories = new List<DropDownDTO>();
+    public DropDownDTO SelectedCatagery { get; set; }
+
+    private IEnumerable<DropDownDTO> Visibilities = new List<DropDownDTO>();
+    public DropDownDTO SelectedVisibility { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        CurrencyTypes = CampaignMasterData.CurrencyTypes;
+        Categories = CampaignMasterData.CampaignCategories.Where(i => i.Id > 0);
+        Visibilities = CampaignMasterData.CampaignVisibilities;
+
+        Campaign = await HttpClient.GetFromJsonAsync<CampaignDTO>($"api/Campaign/get-campaign-by-id/{CampaignId}") ?? new();
+
+        SelectedCurrencyType = CampaignMasterData.CurrencyTypes.FirstOrDefault(c => c.Id == Campaign.CurrencyTypeId) ?? new DropDownDTO();
+        SelectedCatagery = CampaignMasterData.CampaignCategories.FirstOrDefault(c => c.Id == Campaign.CampaignCategoryId) ?? new DropDownDTO();
+        SelectedVisibility = CampaignMasterData.CampaignVisibilities.FirstOrDefault(c => c.Id == (int)Campaign.Visibility) ?? new DropDownDTO();
+    }
+
+    // Separate nullable DateTime properties for the date pickers
+    private DateTime? startDate = DateTime.Today;
+    private DateTime? endDate = DateTime.Today.AddMonths(3);
+
+    private void CloseCreateModal()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task CreateCampaign()
+    {
+        await form.Validate();
+        if (isFormValid)
+        {
+            CloseCreateModal();
+        }
+    }
+
+    async Task Submit()
+    {
+        await form.Validate();
+        if (isFormValid)
+        {
+            Campaign.CurrencyTypeId = SelectedCurrencyType?.Id ?? 0;
+            Campaign.CampaignCategoryId = SelectedCatagery?.Id ?? 0;
+            Campaign.Visibility = (CampaignVisibility)SelectedVisibility?.Id;
+            MudDialog.Close(DialogResult.Ok(Campaign));
+        }
+    }
+}
+
+

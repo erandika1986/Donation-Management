@@ -68,7 +68,7 @@ namespace ViharaFund.WebAPI.Controllers
         }
 
         [HttpGet("get-campaign-master-data")]
-        public async Task<ActionResult<CampaignMasterDataDTO>> GetCampaignMasterData()
+        public async Task<ActionResult> GetCampaignMasterData()
         {
             var masterData = await _campaignService.GetCampaignMasterDataAsync();
             return Ok(masterData);
