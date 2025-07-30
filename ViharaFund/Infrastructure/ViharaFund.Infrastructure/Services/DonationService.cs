@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Globalization;
+using ViharaFund.Application.Contracts;
 using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.DTOs.Donation;
 using ViharaFund.Application.DTOs.Donor;
@@ -9,7 +9,10 @@ using ViharaFund.Infrastructure.Data;
 
 namespace ViharaFund.Infrastructure.Services
 {
-    public class DonationService(TenantDbContext tenantDbContext, IDonorService donorService) : IDonationService
+    public class DonationService(
+        TenantDbContext tenantDbContext,
+        IDonorService donorService,
+        ICurrentUserService currentUserService) : IDonationService
     {
         public async Task<ResultDto> DeleteAsync(int donationId)
         {
@@ -76,7 +79,7 @@ namespace ViharaFund.Infrastructure.Services
                 DonorId = donation.DonorId,
                 CampaignId = donation.CampaignId,
                 Amount = donation.Amount,
-                Date = donation.Date.ToString("yyyy-MM-dd"),
+                Date = donation.Date,
                 Note = donation.Note
             };
         }
@@ -124,11 +127,10 @@ namespace ViharaFund.Infrastructure.Services
         {
             Donation? entity; // Use nullable type to handle potential null values
 
-            var result = await donorService.SaveAsync(donation.Donor);
-            if (!result.Succeeded)
-                return ResultDto.Failure(new List<string>() { $"Failed to save donor information : {string.Join(", ", result)}" });
-
-            donation.DonorId = result.Id;
+            //var result = await donorService.SaveAsync(donation.Donor);
+            //if (!result.Succeeded)
+            //    return ResultDto.Failure(new List<string>() { $"Failed to save donor information : {string.Join(", ", result)}" });
+            donation.DonorId = donation.DonorId;
 
             if (donation.Id > 0)
             {
@@ -139,8 +141,11 @@ namespace ViharaFund.Infrastructure.Services
                 entity.DonorId = donation.DonorId;
                 entity.CampaignId = donation.CampaignId;
                 entity.Amount = donation.Amount;
-                entity.Date = DateTime.ParseExact(donation.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                //entity.Date = DateTime.ParseExact(donation.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                entity.Date = donation.Date.Value;
                 entity.Note = donation.Note;
+                entity.UpdatedByUserId = currentUserService.UserId;
+                entity.UpdatedDate = DateTime.UtcNow;
                 tenantDbContext.Donations.Update(entity);
             }
             else
@@ -150,8 +155,14 @@ namespace ViharaFund.Infrastructure.Services
                     DonorId = donation.DonorId,
                     CampaignId = donation.CampaignId,
                     Amount = donation.Amount,
-                    Date = DateTime.ParseExact(donation.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture),
-                    Note = donation.Note
+                    //Date = DateTime.ParseExact(donation.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    Date = donation.Date.Value,
+                    Note = donation.Note,
+                    CreatedByUserId = currentUserService.UserId,
+                    CreatedDate = DateTime.UtcNow,
+                    IsActive = true,
+                    UpdatedByUserId = currentUserService.UserId,
+                    UpdatedDate = DateTime.UtcNow
                 };
                 await tenantDbContext.Donations.AddAsync(entity);
             }

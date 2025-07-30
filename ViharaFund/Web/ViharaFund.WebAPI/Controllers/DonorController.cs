@@ -42,7 +42,7 @@ namespace ViharaFund.WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("getById/{donorId}")]
+        [HttpGet("get-by-id/{donorId}")]
         public async Task<IActionResult> GetById(int donorId)
         {
             var donor = await _donorService.GetByIdAsync(donorId);

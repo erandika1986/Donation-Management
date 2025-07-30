@@ -5,6 +5,7 @@
         public int Page { get; set; }
         public int PageSize { get; set; }
         public int TotalPages { get; set; }
+        public string CurrencyType { get; set; }
         public CampaignStatisticsDTO Statistics { get; set; } = new();
         public List<CampaignSummaryDTO> Campaigns { get; set; } = new();
     }

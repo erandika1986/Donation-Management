@@ -17,7 +17,7 @@ namespace ViharaFund.WebAPI.Controllers
             _donationService = donationService;
         }
 
-        [HttpGet("getAll")]
+        [HttpGet("get-all")]
         public async Task<IActionResult> GetAll([FromQuery] DonationFilterDTO filter)
         {
             var response = await _donationService.GetAllAsync(filter);
@@ -25,7 +25,7 @@ namespace ViharaFund.WebAPI.Controllers
             return Ok(response);
         }
 
-        [HttpGet("getById/{id}")]
+        [HttpGet("get-by-id/{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             var response = await _donationService.GetByIdAsync(id);
@@ -54,7 +54,7 @@ namespace ViharaFund.WebAPI.Controllers
             return Ok(response);
         }
 
-        [HttpGet("getDonationMasterData")]
+        [HttpGet("get-donation-master-data")]
         public async Task<IActionResult> GetDonationMasterData()
         {
             var response = await _donationService.GetDonationMasterDataAsync();

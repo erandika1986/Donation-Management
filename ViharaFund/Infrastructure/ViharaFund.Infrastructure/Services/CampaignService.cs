@@ -85,6 +85,21 @@ namespace ViharaFund.Infrastructure.Services
             }
         }
 
+        public async Task<List<DropDownDTO>> GetActiveCampaignsAsync()
+        {
+            var campaigns = await tenantDbContext.Campaigns
+                .Where(c => c.IsActive && c.Status == CampaignStatus.Active)
+                .OrderBy(c => c.Name)
+                .Select(c => new DropDownDTO
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
+                .ToListAsync();
+
+            return campaigns;
+        }
+
         public async Task<List<CampaignDTO>> GetAllCampaignsAsync(CampaignFilterDTO campaignFilter)
         {
             var query = tenantDbContext.Campaigns.AsQueryable();
@@ -222,8 +237,11 @@ namespace ViharaFund.Infrastructure.Services
 
         public async Task<CampaignsSummaryDTO> GetCampaignsSummaryAsync(CampaignFilterDTO campaignFilter)
         {
+            var defaultCurrencyTypeId = tenantDbContext.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.DefaultCurrencyId);
+            var defaultCurrencyType = await tenantDbContext.CurrencyTypes
+                .FirstOrDefaultAsync(x => x.Id == Convert.ToInt32(defaultCurrencyTypeId.Value));
             // Reuse filtering logic from GetAllCampaignsAsync
-            var query = tenantDbContext.Campaigns.AsQueryable();
+            var query = tenantDbContext.Campaigns.Where(x => x.IsActive).AsQueryable();
 
             query = ApplyCampaignFilters(query, campaignFilter);
 
@@ -269,14 +287,15 @@ namespace ViharaFund.Infrastructure.Services
             // Start of the month
             DateTime startOfMonth = new DateTime(today.Year, today.Month, 1);
             // End of the month
-            DateTime endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+            DateTime endOfMonth = startOfMonth.AddMonths(1).AddSeconds(-1);
+
             var statistics = new CampaignStatisticsDTO
             {
                 TotalRaised = tenantDbContext.Donations
                 .Sum(c => c.Amount)
                 .ToString("N2", CultureInfo.InvariantCulture),
-                ActiveCampaign = tenantDbContext.Campaigns.Count(cs => cs.Status == CampaignStatus.Active),
-                ThisMonth = tenantDbContext.Donations.Where(x => x.CreatedDate <= endOfMonth && x.CreatedDate >= startOfMonth)
+                ActiveCampaign = tenantDbContext.Campaigns.Count(cs => cs.Status == CampaignStatus.Active && cs.IsActive),
+                ThisMonth = tenantDbContext.Donations.Where(x => x.Date <= endOfMonth && x.Date >= startOfMonth)
                 .Sum(c => c.Amount)
                 .ToString("N2", CultureInfo.InvariantCulture),
                 TotalDonors = tenantDbContext.Donors.Count()
@@ -289,7 +308,8 @@ namespace ViharaFund.Infrastructure.Services
                 PageSize = pageSize,
                 TotalPages = totalItems,
                 Statistics = statistics,
-                Campaigns = campaigns
+                Campaigns = campaigns,
+                CurrencyType = defaultCurrencyType.Name,
             };
         }
 

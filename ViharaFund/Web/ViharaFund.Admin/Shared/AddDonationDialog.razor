@@ -1,0 +1,389 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using ViharaFund.Admin.Common
+@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Application.DTOs.Donation
+@using ViharaFund.Application.DTOs.Donor
+@using ViharaFund.Shared.DTOs.Donor
+@using ViharaFund.Shared.DTOs.Campaign
+@inherits MudComponentBase
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+
+<!-- Add Donation Dialog -->
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            @if (IsViewOnly)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Visibility" Class="mr-3" />
+                @("Donation Detail")
+            }
+            else
+            {
+                <MudIcon Icon="@(IsEdit? Icons.Material.Filled.Edit : Icons.Material.Filled.AttachMoney)" Class="mr-3" />
+                @(IsEdit ? "Edit Donation" : "Add New Donation")
+            }
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@isFormValid">
+            <MudGrid>
+                <!-- Campaign Selection -->
+                <MudItem xs="12">
+                    <MudSelect T="DropDownDTO"
+                               Label="Campaign"
+                               ReadOnly="IsViewOnly"
+                               ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
+                               MultiSelection="false"
+                               @bind-Value="SelectedCampaign"
+                               Required="true"
+                               RequiredError="Campaign is required!"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var campaign in Campaigns)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@campaign">@campaign.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudSwitch @bind-Value="IsExistingDonor"
+                               Label="Is Existing Donor"
+                               Color="Color.Primary" />
+                </MudItem>
+
+                @if(IsExistingDonor)
+                {
+                    <!-- Donor Search -->
+                    <MudItem xs="12">
+                        <MudAutocomplete T="DropDownDTO"
+                                         Label="Donor"
+                                         @bind-Value="SelectedDonor"
+                                         SearchFunc="@SearchDonors"
+                                         ToStringFunc="@(donor => donor != null ? $"{donor.Name}" : "")"
+                                         ReadOnly="IsViewOnly"
+                                         Required="true"
+                                         RequiredError="Donor is required!"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         HelperText="Search by name or email"
+                                         ShowProgressIndicator="true"
+                                         MinCharacters="2"
+                                         MaxItems="10"
+                                         DebounceInterval="300">
+                            <ItemTemplate Context="donor">
+                                <MudText Typo="Typo.body1">@donor.Name</MudText>
+                                @*                             <MudText Typo="Typo.body2" Class="mud-text-secondary">@donor.Email</MudText> *@
+                            </ItemTemplate>
+                            <NoItemsTemplate>
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">No donors found</MudText>
+                            </NoItemsTemplate>
+                        </MudAutocomplete>
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="12" sm="6" md="6" lg="6">
+                        <MudTextField @bind-Value="Donor.Name"
+                                      Label="Donor Name"
+                                      Required="true"
+                                      Margin="Margin.Dense"
+                                      RequiredError="Name is required"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="6" lg="6">
+                        <MudTextField @bind-Value="Donor.Email"
+                                      Label="Donor Email"
+                                      Validation="@(new EmailAddressAttribute() { ErrorMessage = "Invalid email format" })"
+                                      Margin="Margin.Dense"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="6" lg="6">
+                        <MudTextField @bind-Value="Donor.Phone"
+                                      Label="Donor Phone"
+                                      Margin="Margin.Dense"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="6" lg="6">
+                        <MudTextField @bind-Value="Donor.Address"
+                                      Label="Donor Address"
+                                      Margin="Margin.Dense"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="6" lg="6">
+                        <MudSwitch @bind-Value="Donor.RequestedAsUnknownDonor"
+                                   Label="Requested As Unknown Donor"
+                                   Color="Color.Primary" />
+                    </MudItem>
+                }
+
+
+                <!-- Amount -->
+                <MudItem xs="6">
+                    <MudNumericField @bind-Value="Donation.Amount"
+                                     Label="Amount"
+                                     ReadOnly="IsViewOnly"
+                                     Required="true"
+                                     RequiredError="Amount is required!"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Min="0.01m"
+                                     Step="0.01m"
+                                     Format="N2"
+                                     HideSpinButtons="true"
+                                     HelperText="Enter donation amount" />
+                </MudItem>
+
+                <!-- Date -->
+                <MudItem xs="6">
+                    <MudDatePicker @bind-Date="Donation.Date"
+                                   Label="Donation Date"
+                                   ReadOnly="IsViewOnly"
+                                   Required="true"
+                                   RequiredError="Date is required!"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   MaxDate="DateTime.Today"
+                                   HelperText="Select donation date" />
+                </MudItem>
+
+                <!-- Note -->
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Donation.Note"
+                                  Label="Note"
+                                  ReadOnly="IsViewOnly"
+                                  Lines="3"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="Optional note about the donation..." />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog" Color="Color.Default">Cancel</MudButton>
+        @if (!IsViewOnly)
+        {
+            <MudButton Color="Color.Success"
+                       Variant="Variant.Filled"
+                       OnClick="Submit"
+                       Disabled="!isFormValid || isSubmitting"
+                       StartIcon="@Icons.Material.Filled.Save">
+                @if (isSubmitting)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Saving...</MudText>
+                }
+                else
+                {
+                    @(IsEdit ? "Update" : "Create")
+                }
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public bool IsViewOnly { get; set; }
+
+    [Parameter]
+    public int DonationId { get; set; }
+
+    [Parameter]
+    public int PreSelectedCampaignId { get; set; }
+
+    public bool IsExistingDonor { get; set; }
+
+    public DonorDTO Donor { get; set; } = new();
+
+    private MudForm form = null!;
+    private bool isFormValid = false;
+    private bool isSubmitting = false;
+
+    private DonationDTO Donation = new();
+
+    public IEnumerable<DropDownDTO> Campaigns { get; set; } = new List<DropDownDTO>();
+    private DropDownDTO SelectedCampaign { get; set; } = new();
+
+    private DropDownDTO SelectedDonor { get; set; } = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        if (IsEdit && DonationId > 0)
+        {
+            await LoadDonation();
+        }
+        else
+        {
+            Donation.Date = DateTime.Now;
+        }
+
+        await LoadAllActiveCampaigns();
+    }
+
+    private async Task LoadAllActiveCampaigns()
+    {
+        try
+        {
+            Campaigns = await HttpClient.GetFromJsonAsync<IEnumerable<DropDownDTO>>("api/Campaign/get-active-campaigns") ?? new List<DropDownDTO>();
+            // If editing, ensure the selected campaign is valid
+            if (PreSelectedCampaignId > 0)
+            {
+                SelectedCampaign = Campaigns.FirstOrDefault(c => c.Id == PreSelectedCampaignId) ?? new DropDownDTO();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading campaigns: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task LoadDonation()
+    {
+        try
+        {
+            Donation = await HttpClient.GetFromJsonAsync<DonationDTO>($"api/Donation/get-by-id/{DonationId}") ?? new();
+            PreSelectedCampaignId = Donation.CampaignId;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading donation: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task<IEnumerable<DropDownDTO>> SearchDonors(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(value) || value.Length < 2)
+            return new List<DropDownDTO>();
+
+        try
+        {
+            var response = await HttpClient.GetFromJsonAsync<IEnumerable<DropDownDTO>>($"api/Donor/search?searchText={Uri.EscapeDataString(value)}", cancellationToken);
+
+            // Convert DonorDTO to DropDownDTO
+            return response?.Select(donor => new DropDownDTO
+            {
+                Id = donor.Id,
+                Name = $"{donor.Name}",
+                //Description = donor.Email
+            }) ?? new List<DropDownDTO>();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error searching donors: {ex.Message}", Severity.Error);
+            return new List<DropDownDTO>();
+        }
+    }
+
+    private void CloseDialog()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task Submit()
+    {
+        await form.Validate();
+        if (!isFormValid)
+            return;
+
+        isSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            if (!IsExistingDonor)
+            {
+                var result = await SaveDonor();
+                if (!result)
+                    return;
+            }
+            // Map form values to DTO
+            Donation.CampaignId = SelectedCampaign?.Id ?? 0;
+            Donation.DonorId = SelectedDonor?.Id ?? 0;
+
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/Donation/save", Donation);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (result is not null && result.Succeeded)
+                {
+                    Snackbar.Add(result.SuccessMessage, Severity.Success);
+                    MudDialog.Close(DialogResult.Ok(Donation));
+                }
+                else if (result is not null && !result.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", result.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create donation.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error processing donation: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<bool> SaveDonor()
+    {
+        try
+        {
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/Donor/save", Donor);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (result is not null && result.Succeeded)
+                {
+                    Snackbar.Add(result.SuccessMessage, Severity.Success);
+                    SelectedDonor = new DropDownDTO
+                    {
+                        Id = result.Id,
+                        Name = Donor.Name
+                    };
+                    return true;
+                }
+                else if (result is not null && !result.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", result.Errors), Severity.Error);
+                    return false;
+                }
+                return false;
+            }
+            else
+            {
+                Snackbar.Add("Failed to create Donor.", Severity.Error);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating donor: {ex.Message}", Severity.Error);
+            return false;
+        }
+    }
+}

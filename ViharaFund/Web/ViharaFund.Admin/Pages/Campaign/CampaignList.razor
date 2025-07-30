@@ -3,6 +3,7 @@
 @using ViharaFund.Admin.Common
 @using ViharaFund.Admin.Helper
 @using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Application.DTOs.Donation
 @using ViharaFund.Shared.DTOs.Campaign
 @inject HttpClient HttpClient
 @inject ISnackbar Snackbar
@@ -46,13 +47,13 @@
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
             <MudPaper Elevation="4" Class="pa-4 text-center mud-height-full" Style="border-radius: 15px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);">
-                <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-2">@CampaignsSummary.Statistics.TotalRaised</MudText>
+                <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-2">@CampaignsSummary.CurrencyType @CampaignsSummary.Statistics.TotalRaised</MudText>
                 <MudText Typo="Typo.caption" Style="text-transform: uppercase; letter-spacing: 1px;">Total Raised</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
             <MudPaper Elevation="4" Class="pa-4 text-center mud-height-full" Style="border-radius: 15px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);">
-                <MudText Typo="Typo.h4" Color="Color.Warning" Class="mb-2">@CampaignsSummary.Statistics.ThisMonth</MudText>
+                <MudText Typo="Typo.h4" Color="Color.Warning" Class="mb-2">@CampaignsSummary.CurrencyType @CampaignsSummary.Statistics.ThisMonth</MudText>
                 <MudText Typo="Typo.caption" Style="text-transform: uppercase; letter-spacing: 1px;">This Month</MudText>
             </MudPaper>
         </MudItem>
@@ -120,10 +121,10 @@
                         <MudCardContent>
                             <MudGrid AlignItems="Center" Justify="Justify.SpaceBetween" Class="mb-3">
                                 <MudItem>
-                                    <MudText Typo="Typo.h5" Color="Color.Success">$@campaign.RaisedAmount.ToString("N0")</MudText>
+                                    <MudText Typo="Typo.h5" Color="Color.Success">@CampaignsSummary.CurrencyType @campaign.RaisedAmount.ToString("N0")</MudText>
                                 </MudItem>
                                 <MudItem>
-                                    <MudText Typo="Typo.body2" Color="Color.Secondary">of $@campaign.TargetAmount.ToString("N0")</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">of @CampaignsSummary.CurrencyType @campaign.TargetAmount.ToString("N0")</MudText>
                                 </MudItem>
                             </MudGrid>
 
@@ -147,20 +148,84 @@
                         </MudCardContent>
 
                         <!-- Card Actions -->
-                        <MudCardActions Class="pa-4" Style="background: #fafafa;">
+                        <MudCardActions Class="pa-4 d-flex flex-wrap align-items-center" Style="background: #fafafa;">
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Secondary"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.AttachMoney"
+                                       Class="me-2 mb-2"
+                                       OnClick="@(() => OpenAddDonationModel(campaign))">
+                                Add
+                            </MudButton>
                             <MudSpacer />
                             @if (campaign.Status == "Draft")
                             {
-                                <MudButton Size="Size.Small" Color="Color.Default">Edit</MudButton>
-                                <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">Launch</MudButton>
+                                <MudTooltip Text="Edit" Color="Color.Warning" Placement="Placement.Top">
+                                    <MudIconButton 
+                                        Variant="Variant.Filled" 
+                                        Icon="@Icons.Material.Filled.Edit" 
+                                        Size="Size.Small" 
+                                        Color="Color.Warning"
+                                        Class="m-1"
+                                        OnClick="@(() => OpenEditCampaignModel(campaign))"></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Launch" Color="Color.Primary" Placement="Placement.Top">
+                                    <MudIconButton 
+                                        Variant="Variant.Filled" 
+                                        Icon="@Icons.Material.Filled.Launch" 
+                                        Size="Size.Small" 
+                                        Color="Color.Primary"
+                                        Class="m-1" 
+                                        OnClick="@(() => DeleteCampaign(campaign))"></MudIconButton>
+                                </MudTooltip>
                             }
                             else
                             {
-                                <MudButton Size="Size.Small" Color="Color.Default">Edit</MudButton>
-                                <MudButton Size="Size.Small" Color="Color.Info">Share</MudButton>
-                                <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">View Details</MudButton>
+                                <MudTooltip Text="Edit" Color="Color.Warning" Placement="Placement.Top">
+                                    <MudIconButton 
+                                        Variant="Variant.Filled" 
+                                        Icon="@Icons.Material.Filled.Edit" 
+                                        Size="Size.Small" 
+                                        Color="Color.Warning"
+                                        Class="m-1"
+                                        OnClick="@(() => OpenEditCampaignModel(campaign))"></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Share" Color="Color.Info" Placement="Placement.Top">
+                                    <MudIconButton 
+                                        Variant="Variant.Filled" 
+                                        Icon="@Icons.Material.Filled.Share" 
+                                        Size="Size.Small" 
+                                        Color="Color.Info"
+                                        Class="m-1"
+                                        OnClick="@(() => ShareCampaign(campaign))"></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="View Details" Color="Color.Primary" Placement="Placement.Top">
+                                    <MudIconButton 
+                                        Variant="Variant.Filled" 
+                                        Icon="@Icons.Material.Filled.Visibility" 
+                                        Size="Size.Small" 
+                                        Color="Color.Primary" 
+                                        Class="m-1"
+                                        OnClick="@(() => OpenViewCampaignModel(campaign))"></MudIconButton>
+                                </MudTooltip>
                             }
+                            <MudTooltip Text="Delete" Color="Color.Error" Placement="Placement.Top">
+                                <MudIconButton 
+                                    Variant="Variant.Filled" 
+                                    Icon="@Icons.Material.Filled.Delete" 
+                                    Size="Size.Small" 
+                                    Color="Color.Error" 
+                                    Class="m-1" 
+                                    OnClick="@(() => DeleteCampaign(campaign))"></MudIconButton>
+                            </MudTooltip>
                         </MudCardActions>
+
+                        @code {
+                            private void ShowCampaignInfo(CampaignSummaryDTO campaign)
+                            {
+                                Snackbar.Add($"Campaign: {campaign.Title}", Severity.Info);
+                            }
+                        }
                     </MudCard>
                 </MudItem>
             }
@@ -293,6 +358,7 @@
         var parameters = new DialogParameters<AddEditCampaign>
         {
             { x => x.IsEdit, false },
+            { x => x.IsViewOnly, false },
             { x => x.CampaignId, 0 },
             { x => x.CampaignMasterData, CampaignMasterData}
         };
@@ -315,11 +381,12 @@
     }
 
 
-    private async Task OpenEditCampaignModel(CampaignDTO campaignDto)
+    private async Task OpenEditCampaignModel(CampaignSummaryDTO campaignDto)
     {
         var parameters = new DialogParameters<AddEditCampaign>
         {
-            { x => x.IsEdit, false },
+            { x => x.IsEdit, true },
+            { x => x.IsViewOnly, false },
             { x => x.CampaignId, campaignDto.Id },
             { x => x.CampaignMasterData, CampaignMasterData}
         };
@@ -341,11 +408,70 @@
         }
     }
 
-    private async Task DeleteDonor(CampaignDTO campaignDto)
+    private async Task OpenViewCampaignModel(CampaignSummaryDTO campaignSummary)
+    {
+        var parameters = new DialogParameters<AddEditCampaign>
+        {
+            { x => x.IsEdit, true },
+            { x => x.IsViewOnly, true },
+            { x => x.CampaignId, campaignSummary.Id },
+            { x => x.CampaignMasterData, CampaignMasterData}
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddEditCampaign>("Edit Existing Campaign", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is CampaignDTO campaign)
+        {
+
+        }
+    }
+
+    private async Task OpenAddDonationModel(CampaignSummaryDTO campaignSummary)
+    {
+        var parameters = new DialogParameters<AddDonationDialog>
+        {
+            { x => x.IsEdit, false },
+            { x => x.IsViewOnly, false },
+            { x => x.DonationId, 0 },
+            { x => x.PreSelectedCampaignId, campaignSummary.Id }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddDonationDialog>("Add New Donation", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is DonationDTO campaign)
+        {
+            await GetCampaignsSummaryAsync();
+        }
+    }
+
+    private async Task ShareCampaign(CampaignSummaryDTO campaignSummary)
+    {
+
+    }
+
+    private async Task DeleteCampaign(CampaignSummaryDTO campaignDto)
     {
         var parameters = new DialogParameters<ConfirmationDialog>
         {
-            { "ContentText", $"Are you sure you want to delete campaign '{campaignDto.Name}'? This action cannot be undone." },
+            { "ContentText", $"Are you sure you want to delete campaign '{campaignDto.Title}'? This action cannot be undone." },
             { "ButtonText", "Delete" },
             { "Color", Color.Error }
         };
@@ -365,19 +491,20 @@
                 {
                     await GetCampaignsSummaryAsync();
                     StateHasChanged();
-                    Snackbar.Add("Donor deleted successfully!", Severity.Success);
+                    Snackbar.Add("Campaign deleted successfully!", Severity.Success);
                 }
                 else
                 {
-                    Snackbar.Add("Failed to delete Donor.", Severity.Error);
+                    Snackbar.Add("Failed to delete campaign.", Severity.Error);
                 }
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Error deleting donor: {ex.Message}", Severity.Error);
+                Snackbar.Add($"Error deleting campaign: {ex.Message}", Severity.Error);
             }
         }
     }
+
 
     private async Task SaveCampaign(CampaignDTO campaign)
     {
@@ -402,12 +529,12 @@
             }
             else
             {
-                Snackbar.Add("Failed to create Donor.", Severity.Error);
+                Snackbar.Add("Failed to create Campaign.", Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error creating donor: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error creating campaign: {ex.Message}", Severity.Error);
         }
     }
 
@@ -435,12 +562,12 @@
             }
             else
             {
-                Snackbar.Add("Failed to create Donor.", Severity.Error);
+                Snackbar.Add("Failed to update campaign.", Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error creating donor: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error updating campaign: {ex.Message}", Severity.Error);
         }
     }
 
@@ -456,26 +583,4 @@
             _ => Color.Default
         };
     }
-
-    // private List<Campaign> FilterCampaigns()
-    // {
-    //     var filtered = campaigns.AsEnumerable();
-
-    //     if (selectedStatus != "All")
-    //     {
-    //         filtered = filtered.Where(c => c.Status == selectedStatus);
-    //     }
-
-    //     if (selectedCategory != "All")
-    //     {
-    //         filtered = filtered.Where(c => c.Category == selectedCategory);
-    //     }
-
-    //     if (!string.IsNullOrWhiteSpace(searchTerm))
-    //     {
-    //         filtered = filtered.Where(c => c.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
-    //     }
-
-    //     return filtered.ToList();
-    // }
 }

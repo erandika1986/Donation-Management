@@ -1,6 +1,4 @@
-﻿using ViharaFund.Application.DTOs.Donor;
-
-namespace ViharaFund.Application.DTOs.Donation
+﻿namespace ViharaFund.Application.DTOs.Donation
 {
     public class DonationDTO
     {
@@ -8,10 +6,10 @@ namespace ViharaFund.Application.DTOs.Donation
         public int DonorId { get; set; }
         public int CampaignId { get; set; }
         public decimal Amount { get; set; }
-        public string Date { get; set; }
+        public DateTime? Date { get; set; }
         public string Note { get; set; }
 
-        public DonorDTO Donor { get; set; }
+        //public DonorDTO Donor { get; set; }
     }
 
     public class DonationSummaryDTO

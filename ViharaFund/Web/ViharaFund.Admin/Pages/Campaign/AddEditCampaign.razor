@@ -8,8 +8,19 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
-            <MudIcon Icon="@(IsEdit? Icons.Material.Filled.Edit : Icons.Material.Filled.Campaign)" Class="mr-3" />
-            @(IsEdit ? "Edit CampaignI" : "Add New CampaignI")
+
+            @if (IsViewOnly)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Visibility" Class="mr-3" />
+                @("Campaign Detail")
+                
+            }
+            else
+            {
+                <MudIcon Icon="@(IsEdit? Icons.Material.Filled.Edit : Icons.Material.Filled.Campaign)" Class="mr-3" />
+                @(IsEdit ? "Edit Campaign" : "Add New Campaign")
+            }
+
         </MudText>
     </TitleContent>
     <DialogContent>
@@ -18,6 +29,7 @@
                 <MudItem xs="12">
                     <MudTextField @bind-Value="Campaign.Name"
                                   Label="Campaign Name"
+                                  ReadOnly="IsViewOnly"
                                   Required="true"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
@@ -27,6 +39,7 @@
                 <MudItem xs="12">
                     <MudTextField @bind-Value="Campaign.Description"
                                   Label="Description"
+                                  ReadOnly="IsViewOnly"
                                   Lines="3"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
@@ -36,6 +49,7 @@
                 <MudItem xs="6">
                     <MudNumericField @bind-Value="Campaign.TargetAmount"
                                      Label="Target Amount"
+                                     ReadOnly="IsViewOnly"
                                      Required="true"
                                      Variant="Variant.Outlined"
                                      Margin="Margin.Dense"
@@ -45,6 +59,7 @@
                 <MudItem xs="6">
                     <MudSelect T="DropDownDTO"
                                Label="Currency"
+                               ReadOnly="true"
                                ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
                                MultiSelection="false" @bind-Value="SelectedCurrencyType"
                                Required="true"
@@ -59,6 +74,7 @@
                 <MudItem xs="6">
                     <MudDatePicker @bind-Date="Campaign.StartDate"
                                    Label="Start Date"
+                                   ReadOnly="IsViewOnly"
                                    Required="true"
                                    Variant="Variant.Outlined"
                                    Margin="Margin.Dense" />
@@ -67,6 +83,7 @@
                 <MudItem xs="6">
                     <MudDatePicker @bind-Date="Campaign.EndDate"
                                    Label="End Date"
+                                   ReadOnly="IsViewOnly"
                                    Required="true"
                                    Variant="Variant.Outlined"
                                    Margin="Margin.Dense" />
@@ -74,7 +91,8 @@
 
                 <MudItem xs="12">
                     <MudSelect 
-                        T="DropDownDTO" 
+                        T="DropDownDTO"
+                               ReadOnly="IsViewOnly"
                         Label="Category" 
                         ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
                                MultiSelection="false" @bind-Value="SelectedCatagery"
@@ -90,6 +108,7 @@
                 <MudItem xs="12">
                     <MudTextField @bind-Value="Campaign.CompaignImageUrl"
                                   Label="Campaign Image URL"
+                                  ReadOnly="IsViewOnly"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   HelperText="https://example.com/image.jpg" />
@@ -97,6 +116,7 @@
 
                 <MudItem xs="12">
                     <MudSelect T="DropDownDTO"
+                               ReadOnly="IsViewOnly"
                                Label="Public Sharing"
                                ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
                                MultiSelection="false" @bind-Value="SelectedVisibility"
@@ -114,13 +134,16 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="CloseCreateModal" Color="Color.Default">Cancel</MudButton>
-        <MudButton 
-                   Color="Color.Success"
-                   Variant="Variant.Filled"
-                   OnClick="Submit"
-                   Disabled="!isFormValid">
-            @(IsEdit ? "Update" : "Create")
-        </MudButton>
+        @if (!IsViewOnly)
+        {
+            <MudButton Color="Color.Success"
+                       Variant="Variant.Filled"
+                       OnClick="Submit"
+                       Disabled="!isFormValid">
+                @(IsEdit ? "Update" : "Create")
+            </MudButton>
+        }
+
     </DialogActions>
 </MudDialog>
 
@@ -133,6 +156,9 @@
 
     [Parameter]
     public bool IsEdit { get; set; }
+
+    [Parameter]
+    public bool IsViewOnly { get; set; }
 
     [Parameter]
     public int CampaignId { get; set; }
