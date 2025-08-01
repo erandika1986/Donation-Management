@@ -1,4 +1,4 @@
-﻿using ViharaFund.Domain.Enums;
+﻿using ViharaFund.Application.DTOs.Common;
 
 namespace ViharaFund.Application.DTOs.JobCard
 {
@@ -7,8 +7,9 @@ namespace ViharaFund.Application.DTOs.JobCard
         public int Id { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public JobPriority Priority { get; set; }
-        public JobCardStatus Status { get; set; }
+        public DropDownDTO Priority { get; set; }
+        public DropDownDTO Status { get; set; }
+        public DropDownDTO AssignedRoleGroup { get; set; }
         public decimal? EstimatedTotalAmount { get; set; }
         public decimal? ActualTotalAmount { get; set; }
         public string? AdditionalNote { get; set; }

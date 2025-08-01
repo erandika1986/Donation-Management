@@ -1,0 +1,18 @@
+﻿<h3>EditDonation</h3>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public int DonationId { get; set; } = new();
+
+    [Parameter]
+    public bool IsViewOnly { get; set; }
+
+    private MudForm form = null!;
+    private bool isValid;
+}

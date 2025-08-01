@@ -36,6 +36,11 @@ namespace ViharaFund.Infrastructure.Services
                 .Include(d => d.Campaign)
                 .AsNoTracking();
 
+            if (filter.CampaignId > 0)
+            {
+                query = query.Where(x => x.CampaignId == filter.CampaignId);
+            }
+
             if (!string.IsNullOrEmpty(filter.SearchTerm))
             {
                 query = query.Where(x => x.Donor.Name.Contains(filter.SearchTerm) || x.Campaign.Name.Contains(filter.SearchTerm));
@@ -52,6 +57,7 @@ namespace ViharaFund.Infrastructure.Services
                     Id = d.Id,
                     DonorName = d.Donor != null ? d.Donor.Name : "",
                     CampaignName = d.Campaign != null ? d.Campaign.Name : "",
+                    CampaignId = d.CampaignId,
                     Amount = d.Amount,
                     Date = d.Date.ToString("yyyy-MM-dd"),
                     Note = d.Note
@@ -80,7 +86,12 @@ namespace ViharaFund.Infrastructure.Services
                 CampaignId = donation.CampaignId,
                 Amount = donation.Amount,
                 Date = donation.Date,
-                Note = donation.Note
+                Note = donation.Note,
+                SelectedDonor = new DropDownDTO
+                {
+                    Id = donation.DonorId,
+                    Name = donation.Donor != null ? donation.Donor.Name : ""
+                },
             };
         }
 

@@ -36,7 +36,7 @@ namespace ViharaFund.WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("getById/{id}")]
+        [HttpGet("get-by-id/{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             var jobCard = await _jobCardService.GetByIdAsync(id);
@@ -54,7 +54,7 @@ namespace ViharaFund.WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("getAll")]
+        [HttpGet("get-all")]
         public async Task<IActionResult> GetAll([FromQuery] JobCardFilterDTO filter)
         {
             var pagedResult = await _jobCardService.GetAllAsync(filter);

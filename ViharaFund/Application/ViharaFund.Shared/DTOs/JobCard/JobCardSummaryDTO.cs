@@ -10,5 +10,6 @@
         public decimal? EstimatedTotalAmount { get; set; }
         public decimal? ActualTotalAmount { get; set; }
         public string? AdditionalNote { get; set; }
+        public string AssignedRoleGroup { get; set; }
     }
 }

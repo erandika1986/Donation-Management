@@ -1,5 +1,353 @@
-﻿<h3>AddEditJobCardDialog</h3>
+﻿@using ViharaFund.Admin.Common
+@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Application.DTOs.JobCard
+@using ViharaFund.Domain.Enums
+@inherits MudComponentBase
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+
+<!-- Add/Edit JobCard Dialog -->
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            @if (IsViewOnly)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Visibility" Class="mr-3" />
+                @("JobCard Detail")
+            }
+            else
+            {
+                <MudIcon Icon="@(IsEdit? Icons.Material.Filled.Edit : Icons.Material.Filled.Assignment)" Class="mr-3" />
+                @(IsEdit ? "Edit JobCard" : "Add New JobCard")
+            }
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@isFormValid">
+            <MudGrid>
+                <!-- Title -->
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="JobCard.Title"
+                                  Label="Job Title"
+                                  ReadOnly="IsViewOnly"
+                                  Required="true"
+                                  RequiredError="Job title is required!"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="Enter a descriptive job title" />
+                </MudItem>
+
+                <!-- Description -->
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="JobCard.Description"
+                                  Label="Description"
+                                  ReadOnly="IsViewOnly"
+                                  Required="true"
+                                  RequiredError="Description is required!"
+                                  Lines="4"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="Provide detailed job description" />
+                </MudItem>
+
+                <!-- Priority -->
+                <MudItem xs="12" sm="6" md="4" lg="4">
+                    <MudSelect T="DropDownDTO"
+                               Label="Priority"
+                               ReadOnly="IsViewOnly"
+                               @bind-Value="JobCard.Priority"
+                               Required="true"
+                               RequiredError="Priority is required!"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var priority in Priorities)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@priority">@priority.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- Status -->
+                <MudItem xs="12" sm="6" md="4" lg="4">
+                    <MudSelect T="DropDownDTO"
+                               Label="Status"
+                               ReadOnly="IsViewOnly"
+                               @bind-Value="JobCard.Status"
+                               Required="true"
+                               RequiredError="Status is required!"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var priority in Priorities)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@priority">@priority.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- Assigned Role Group -->
+                <MudItem xs="12" sm="12" md="4" lg="4">
+                    <MudSelect T="DropDownDTO"
+                               Label="Assigned Role Group"
+                               ReadOnly="IsViewOnly"
+                               ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
+                               MultiSelection="false"
+                               @bind-Value="JobCard.AssignedRoleGroup"
+                               Required="true"
+                               RequiredError="Role group is required!"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var role in Roles)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@role">@role.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- Estimated Total Amount -->
+                <MudItem xs="12" sm="6" md="6" lg="6">
+                    <MudNumericField @bind-Value="JobCard.EstimatedTotalAmount"
+                                     Label="Estimated Total Amount"
+                                     ReadOnly="IsViewOnly"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Min="0.01m"
+                                     Step="0.01m"
+                                     Format="N2"
+                                     HideSpinButtons="true"
+                                     HelperText="Enter estimated cost (optional)" />
+                </MudItem>
+
+                <!-- Actual Total Amount -->
+                <MudItem xs="12" sm="6" md="6" lg="6">
+                    <MudNumericField @bind-Value="JobCard.ActualTotalAmount"
+                                     Label="Actual Total Amount"
+                                     ReadOnly="IsViewOnly"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Min="0.01m"
+                                     Step="0.01m"
+                                     Format="N2"
+                                     HideSpinButtons="true"
+                                     HelperText="Enter actual cost (optional)"
+                                     Disabled="@(JobCard.Status!= null && JobCard.Status.Id != (int)JobCardStatus.OnGoing)" />
+                </MudItem>
+
+                <!-- Additional Note -->
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="JobCard.AdditionalNote"
+                                  Label="Additional Notes"
+                                  ReadOnly="IsViewOnly"
+                                  Lines="3"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="Optional additional notes..." />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog" Color="Color.Default">Cancel</MudButton>
+        @if (!IsViewOnly)
+        {
+            <MudButton Color="Color.Success"
+                       Variant="Variant.Filled"
+                       OnClick="CreateJobCard"
+                       Disabled="!isFormValid || isSubmitting"
+                       StartIcon="@Icons.Material.Filled.Save">
+                @if (isSubmitting)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Saving...</MudText>
+                }
+                else
+                {
+                    @(IsEdit ? "Update" : "Create")
+                }
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
 
 @code {
 
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!; 
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public bool IsViewOnly { get; set; }
+
+    [Parameter]
+    public JobCardMasterDataDTO MasterData { get; set; } = new();
+    private IEnumerable<DropDownDTO> Priorities = new List<DropDownDTO>();
+    private IEnumerable<DropDownDTO> Statuses = new List<DropDownDTO>();
+    private IEnumerable<DropDownDTO> Roles = new List<DropDownDTO>();
+
+    [Parameter]
+    public int JobCardId { get; set; } = new();
+
+    public JobCardDTO JobCard { get; set; } = new();
+
+    private MudForm form = null!;
+    private bool isFormValid = false;
+    private bool isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        Priorities = MasterData.JobPriorities.Where(x => x.Id>0) ?? new List<DropDownDTO>();
+        Statuses = MasterData.Statuses.Where(x => x.Id > 0) ?? new List<DropDownDTO>();
+        Roles = MasterData.AvailableRoles.Where(x => x.Id > 0) ?? new List<DropDownDTO>();
+
+        if (IsEdit && JobCardId > 0)
+        {
+            await LoadJobCards();
+        }
+        else
+        {
+            JobCard = new JobCardDTO
+            {
+                Status = MasterData.Statuses.FirstOrDefault(s => s.Id == 1) ?? new(),
+                Priority = MasterData.JobPriorities.FirstOrDefault(s => s.Id == 1) ?? new(),
+                AssignedRoleGroup = MasterData.AvailableRoles.FirstOrDefault(s => s.Id == 1) ?? new()
+            };
+        }
+    }
+
+    private async Task LoadJobCards()
+    {
+        try
+        {
+            JobCard = await HttpClient.GetFromJsonAsync<JobCardDTO>($"api/JobCard/get-by-id/{JobCardId}") ?? new();
+            JobCard.Status = Statuses.FirstOrDefault(s => s.Id == JobCard.Status.Id);
+            JobCard.Priority = Priorities.FirstOrDefault(s => s.Id == JobCard.Priority.Id);
+            JobCard.AssignedRoleGroup = Roles.FirstOrDefault(s => s.Id == JobCard.AssignedRoleGroup.Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading donation: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void CloseDialog()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task CreateJobCard()
+    {
+        await form.Validate();
+        if (!isFormValid)
+            return;
+
+        isSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCard/create", JobCard);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (result is not null && result.Succeeded)
+                {
+                    Snackbar.Add(result.SuccessMessage, Severity.Success);
+                    MudDialog.Close(DialogResult.Ok(JobCard));
+                }
+                else if (result is not null && !result.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", result.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create job card.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error processing job card: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateJobCard()
+    {
+        await form.Validate();
+        if (!isFormValid)
+            return;
+
+        isSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCard/update", JobCard);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (result is not null && result.Succeeded)
+                {
+                    Snackbar.Add(result.SuccessMessage, Severity.Success);
+                    MudDialog.Close(DialogResult.Ok(JobCard));
+                }
+                else if (result is not null && !result.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", result.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to update job card.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error processing job card: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    // Helper methods for styling
+    // private string GetPriorityIcon(JobPriority priority) => priority switch
+    // {
+    //     JobPriority.Low => Icons.Material.Filled.KeyboardArrowDown,
+    //     JobPriority.Medium => Icons.Material.Filled.Remove,
+    //     JobPriority.High => Icons.Material.Filled.KeyboardArrowUp,
+    //     JobPriority.Critical => Icons.Material.Filled.PriorityHigh,
+    //     _ => Icons.Material.Filled.Circle
+    // };
+
+    // private Color GetPriorityColor(JobPriority priority) => priority switch
+    // {
+    //     JobPriority.Low => Color.Success,
+    //     JobPriority.Medium => Color.Warning,
+    //     JobPriority.High => Color.Error,
+    //     JobPriority.Critical => Color.Error,
+    //     _ => Color.Default
+    // };
+
+    // private Color GetStatusColor(JobCardStatus status) => status switch
+    // {
+    //     JobCardStatus.Pending => Color.Warning,
+    //     JobCardStatus.InProgress => Color.Info,
+    //     JobCardStatus.Completed => Color.Success,
+    //     JobCardStatus.Cancelled => Color.Error,
+    //     JobCardStatus.OnHold => Color.Secondary,
+    //     _ => Color.Default
+    // };
 }

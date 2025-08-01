@@ -82,11 +82,16 @@ namespace ViharaFund.Infrastructure.Services
                     Id = x.Id,
                     Title = x.Title,
                     Description = x.Description,
-                    Priority = x.Priority,
-                    Status = x.Status,
+                    Priority = new DropDownDTO() { Id = (int)x.Priority },
+                    Status = new DropDownDTO() { Id = (int)x.Status },
                     EstimatedTotalAmount = x.EstimatedTotalAmount,
                     ActualTotalAmount = x.ActualTotalAmount,
-                    AdditionalNote = x.AdditionalNote
+                    AdditionalNote = x.AdditionalNote,
+                    AssignedRoleGroup = new DropDownDTO
+                    {
+                        Id = x.AssignRoleGroupId,
+                        Name = x.AssignRoleGroup.Name
+                    }
                 })
                 .FirstOrDefaultAsync();
 
@@ -111,13 +116,14 @@ namespace ViharaFund.Infrastructure.Services
 
             entity.Title = jobCard.Title;
             entity.Description = jobCard.Description;
-            entity.Priority = jobCard.Priority;
-            entity.Status = jobCard.Status;
+            entity.Priority = (JobPriority)jobCard.Priority.Id;
+            entity.Status = (JobCardStatus)jobCard.Status.Id;
             entity.EstimatedTotalAmount = jobCard.EstimatedTotalAmount;
             entity.ActualTotalAmount = jobCard.ActualTotalAmount;
             entity.AdditionalNote = jobCard.AdditionalNote;
             entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
+            entity.AssignRoleGroupId = jobCard.AssignedRoleGroup.Id;
 
             tenantDbContext.JobCards.Update(entity);
 
@@ -157,10 +163,10 @@ namespace ViharaFund.Infrastructure.Services
 
             var entity = new JobCard
             {
-                AssignRoleGroupId = (int)RoleName.TempleFinancialManagementCommittee,
+                AssignRoleGroupId = jobCard.AssignedRoleGroup.Id,
                 Title = jobCard.Title,
                 Description = jobCard.Description,
-                Priority = jobCard.Priority,
+                Priority = (JobPriority)jobCard.Priority.Id,
                 Status = Domain.Enums.JobCardStatus.Draft,
                 EstimatedTotalAmount = jobCard.EstimatedTotalAmount,
                 ActualTotalAmount = jobCard.ActualTotalAmount,
@@ -175,7 +181,7 @@ namespace ViharaFund.Infrastructure.Services
             tenantDbContext.JobCards.Add(entity);
             await tenantDbContext.SaveChangesAsync();
 
-            return ResultDto.Success("Job Card created successfully", entity.Id);
+            return ResultDto.Success("Job Card created successfully.", entity.Id);
         }
 
         public async Task<ResultDto> SubmitForApproval(int jobCardId, string comment)
@@ -535,6 +541,17 @@ namespace ViharaFund.Infrastructure.Services
         public async Task<JobCardMasterDataDTO> GetJobCardMasterDataAsync()
         {
             var masterData = new JobCardMasterDataDTO();
+            masterData.JobPriorities.Add(new DropDownDTO
+            {
+                Id = 0,
+                Name = "All Priorities"
+            });
+
+            masterData.Statuses.Add(new DropDownDTO
+            {
+                Id = 0,
+                Name = "All Statuses"
+            });
 
             foreach (JobPriority jobPriority in Enum.GetValues(typeof(JobPriority)))
             {
@@ -544,6 +561,26 @@ namespace ViharaFund.Infrastructure.Services
                     Name = EnumHelper.GetEnumDescription(jobPriority)
                 });
             }
+
+            foreach (JobCardStatus jobCardStatus in Enum.GetValues(typeof(JobCardStatus)))
+            {
+                masterData.Statuses.Add(new DropDownDTO
+                {
+                    Id = (int)jobCardStatus,
+                    Name = EnumHelper.GetEnumDescription(jobCardStatus)
+                });
+            }
+
+            var roles = await tenantDbContext.Roles
+                .Where(x => x.Name != RoleName.Admin.ToString())
+                .Select(x => new DropDownDTO
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                })
+                .ToListAsync();
+
+            masterData.AvailableRoles = roles;
 
             return masterData;
         }

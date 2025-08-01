@@ -80,5 +80,12 @@ namespace ViharaFund.WebAPI.Controllers
             var masterData = await _campaignService.GetActiveCampaignsAsync();
             return Ok(masterData);
         }
+
+        [HttpGet("get-all-published-campaigns")]
+        public async Task<ActionResult> GetPublishedCampaigns()
+        {
+            var masterData = await _campaignService.GetPublishedCampaignsAsync();
+            return Ok(masterData);
+        }
     }
 }

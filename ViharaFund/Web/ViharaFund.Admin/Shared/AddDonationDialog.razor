@@ -68,6 +68,8 @@
                                          Variant="Variant.Outlined"
                                          Margin="Margin.Dense"
                                          HelperText="Search by name or email"
+                                         CoerceText="true"
+                                         ResetValueOnEmptyText="true"
                                          ShowProgressIndicator="true"
                                          MinCharacters="2"
                                          MaxItems="10"
@@ -235,6 +237,15 @@
         await LoadAllActiveCampaigns();
     }
 
+    private bool _rendered = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        _rendered = true;
+        await Task.Yield(); // Wait for rendering to finish
+        await form.Validate(); // Trigger validation
+    }
+
     private async Task LoadAllActiveCampaigns()
     {
         try
@@ -257,6 +268,8 @@
         try
         {
             Donation = await HttpClient.GetFromJsonAsync<DonationDTO>($"api/Donation/get-by-id/{DonationId}") ?? new();
+            IsExistingDonor = true;
+            SelectedDonor = Donation.SelectedDonor ?? new DropDownDTO();
             PreSelectedCampaignId = Donation.CampaignId;
         }
         catch (Exception ex)
@@ -314,6 +327,11 @@
             // Map form values to DTO
             Donation.CampaignId = SelectedCampaign?.Id ?? 0;
             Donation.DonorId = SelectedDonor?.Id ?? 0;
+            Donation.SelectedDonor = new DropDownDTO()
+            {
+                Id = SelectedDonor?.Id ?? 0,
+                Name = SelectedDonor?.Name ?? string.Empty
+            };
 
             // Replace with your actual API endpoint
             var response = await HttpClient.PostAsJsonAsync("api/Donation/save", Donation);

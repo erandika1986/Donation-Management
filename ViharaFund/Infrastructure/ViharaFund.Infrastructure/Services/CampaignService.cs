@@ -100,6 +100,26 @@ namespace ViharaFund.Infrastructure.Services
             return campaigns;
         }
 
+        public async Task<List<DropDownDTO>> GetPublishedCampaignsAsync()
+        {
+            var response = new List<DropDownDTO>();
+            response.Add(new DropDownDTO() { Id = 0, Name = "All Campaigns" });
+
+            var campaigns = await tenantDbContext.Campaigns
+                .Where(c => c.IsActive && (c.Status == CampaignStatus.Active || c.Status == CampaignStatus.Completed || c.Status == CampaignStatus.Paused))
+                .OrderBy(c => c.Name)
+                .Select(c => new DropDownDTO
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
+                .ToListAsync();
+
+            response.AddRange(campaigns);
+
+            return response;
+        }
+
         public async Task<List<CampaignDTO>> GetAllCampaignsAsync(CampaignFilterDTO campaignFilter)
         {
             var query = tenantDbContext.Campaigns.AsQueryable();
@@ -312,6 +332,8 @@ namespace ViharaFund.Infrastructure.Services
                 CurrencyType = defaultCurrencyType.Name,
             };
         }
+
+
 
         public async Task<ResultDto> UpdateCampaignAsync(CampaignDTO campaignDto)
         {

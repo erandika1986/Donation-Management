@@ -111,7 +111,7 @@
                                         <MudChip T="string" Color="@GetStatusColor(campaign.Status)" Size="Size.Small" Text="@campaign.Status.ToUpper()" />
                                     </MudItem>
                                     <MudItem>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@campaign.StartDate.ToString("MMM d") - @campaign.EndDate.HasValue ? @campaign.EndDate.Value.ToString("MMM d, yyyy") : ""</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@campaign.StartDate.ToString("MMM d, yyyy") - @(@campaign.EndDate.HasValue? @campaign.EndDate.Value.ToString("MMM d, yyyy") : "")</MudText>
                                     </MudItem>
                                 </MudGrid>
                             </CardHeaderContent>
@@ -149,14 +149,17 @@
 
                         <!-- Card Actions -->
                         <MudCardActions Class="pa-4 d-flex flex-wrap align-items-center" Style="background: #fafafa;">
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Secondary"
-                                       Size="Size.Small"
-                                       StartIcon="@Icons.Material.Filled.AttachMoney"
-                                       Class="me-2 mb-2"
-                                       OnClick="@(() => OpenAddDonationModel(campaign))">
-                                Add
-                            </MudButton>
+                            <MudTooltip Text="Add New Donation" Color="Color.Secondary" Placement="Placement.Top">
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Secondary"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.AttachMoney"
+                                           Class="me-2 mb-2"
+                                           OnClick="@(() => OpenAddDonationModel(campaign))">
+                                    Add
+                                </MudButton>
+                                                 </MudTooltip>
+
                             <MudSpacer />
                             @if (campaign.Status == "Draft")
                             {

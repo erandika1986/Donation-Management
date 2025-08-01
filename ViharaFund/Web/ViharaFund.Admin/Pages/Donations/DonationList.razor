@@ -1,6 +1,297 @@
 ﻿@page "/donations"
-<h3>DonationList</h3>
+@using ViharaFund.Admin.Helper
+@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Application.DTOs.Donation
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudGrid>
+    <MudItem xs="12" sm="12" md="12" lg="12">
+        @if (!_isMasterDataLoaded)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText>Loading master data...</MudText>
+        }
+        else
+        {
+            <!-- Data Table -->
+            <MudDataGrid @ref="_dataGrid"
+                         T="DonationSummaryDTO"
+                         ServerData="@(LoadData)" Sortable="true"
+                         Filterable="false"
+                         Hideable="true"
+                         Hover="true"
+                         Striped="true"
+                         Elevation="25"
+                         Loading="@_loading">
+                <ToolBarContent>
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="6" lg="6">
+                            <MudText Typo="Typo.h6">Manage Donations</MudText>
+                            <MudSpacer />
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="6" lg="6">
+
+                            <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+                                <MudSelect T="DropDownDTO" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" Label="Category" Variant="Variant.Outlined" Margin="Margin.Dense" Value="SelectedCampaign" ValueChanged="@CampaignChanged">
+                                    @foreach (var campaign in Campaigns)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@campaign">@campaign.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudTextField T="string" Label="Search" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+
+                                <MudTooltip Text="Add New Donation" Color="Color.Primary" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.PersonAddAlt1" Color="Color.Primary" Variant="Variant.Filled" OnClick="@(() => OpenAddDonationDialog())"></MudIconButton>
+                                </MudTooltip>
+
+                            </MudPaper>
+
+                        </MudItem>
+                    </MudGrid>
+                </ToolBarContent>
+
+                <Columns>
+                    <PropertyColumn Property="x => x.Id" Title="ID" />
+
+                    <PropertyColumn Property="x => x.DonorName" Title="Donor Name" />
+
+                    <PropertyColumn Property="x => x.CampaignName" Title="Campaign Name" />
+
+                    <PropertyColumn Property="x => x.Amount" Title="Amount" />
+
+                    <PropertyColumn Property="x => x.Date" Title="Date" />
+
+                    <TemplateColumn CellClass="d-flex justify-end">
+                        <CellTemplate Context="donation">
+                            <MudStack Row>
+                                <MudTooltip Text="View User" Color="Color.Info" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                   Color="Color.Info"
+                                                   Variant="Variant.Filled"
+                                                   Title="View Details"
+                                                   OnClick="@(() => ViewDonationDetails(donation.Item))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Edit User" Color="Color.Success" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Success"
+                                                   Variant="Variant.Filled"
+                                                   Title="Edit User"
+                                                   OnClick="@(() => EditDonation(donation.Item))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Delete User" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Variant="Variant.Filled"
+                                                   Title="Delete User"
+                                                   OnClick="@(() => DeleteDonation(donation.Item))" />
+                                </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+
+                <PagerContent>
+                    <MudDataGridPager T="DonationSummaryDTO" />
+                </PagerContent>
+            </MudDataGrid>
+        }
+
+
+
+    </MudItem>
+</MudGrid>
 
 @code {
+    private List<DonationSummaryDTO> Donations = new();
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+    private string searchString = "";
+    //private string statusFilter = "All";
 
+    private MudDataGrid<DonationSummaryDTO> _dataGrid;
+
+    private IEnumerable<DropDownDTO> Campaigns = new List<DropDownDTO>();
+    private DropDownDTO SelectedCampaign = new DropDownDTO();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isMasterDataLoaded = false;
+        await LoadMasterData();
+    }
+
+    private async Task LoadMasterData()
+    {
+        Campaigns = await HttpClient.GetFromJsonAsync<List<DropDownDTO>>($"api/Campaign/get-all-published-campaigns") ?? new();
+        SelectedCampaign = Campaigns.FirstOrDefault();
+        _isMasterDataLoaded = true;
+        StateHasChanged();
+    }
+
+    private Task OnSearch(string text)
+    {
+        searchString = text;
+        return _dataGrid.ReloadServerData();
+    }
+
+    private Task CampaignChanged(DropDownDTO campaign)
+    {
+        SelectedCampaign = campaign;
+        return _dataGrid.ReloadServerData();
+    }
+
+    private async Task<GridData<DonationSummaryDTO>> LoadData(GridState<DonationSummaryDTO> state)
+    {
+        try
+        {
+            _loading = true;
+
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            var parameters = new DonationFilterDTO
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                SearchTerm = searchString,
+                CampaignId = SelectedCampaign?.Id ?? 0,
+            };
+
+            var queryString = QueryStringHelper.ToQueryString(parameters);
+            var url = $"api/Donation/get-all?{queryString}";
+
+            var response = await HttpClient.GetFromJsonAsync<PaginatedResultDTO<DonationSummaryDTO>>(url) ?? new();
+
+            // Return the result in GridData format
+            return new GridData<DonationSummaryDTO>
+            {
+                Items = response.Items,
+                TotalItems = response.TotalItems
+            };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenAddDonationDialog()
+    {
+        var parameters = new DialogParameters<AddDonationDialog>
+        {
+            { x => x.IsEdit, false },
+            { x => x.IsViewOnly, false },
+            { x => x.DonationId, 0 },
+            { x => x.PreSelectedCampaignId, SelectedCampaign.Id }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddDonationDialog>("Add New Donation", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is DonationDTO donation)
+        {
+
+        }
+    }
+
+    private async Task EditDonation(DonationSummaryDTO donation)
+    {
+        var parameters = new DialogParameters<AddDonationDialog>
+        {
+            { x => x.IsEdit, true },
+            { x => x.IsViewOnly, false },
+            { x => x.DonationId, donation.Id },
+            { x => x.PreSelectedCampaignId, donation.CampaignId }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = false
+        };
+
+        var dialog = await DialogService.ShowAsync<AddDonationDialog>("Edit Donation", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is DonationDTO updateDonation)
+        {
+
+        }
+    }
+
+    private async Task ViewDonationDetails(DonationSummaryDTO donation)
+    {
+        var parameters = new DialogParameters<AddDonationDialog>
+        {
+            { x => x.IsEdit, true },
+            { x => x.IsViewOnly, true },
+            { x => x.DonationId, donation.Id },
+            { x => x.PreSelectedCampaignId, donation.CampaignId }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        await DialogService.ShowAsync<AddDonationDialog>("Donation Details", parameters, options);
+    }
+
+    private async Task DeleteDonation(DonationSummaryDTO donation)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "ContentText", $"Are you sure you want to delete donation with Id '{donation.Id}'? This action cannot be undone." },
+            { "ButtonText", "Delete" },
+            { "Color", Color.Error }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                // Replace with your actual API endpoint
+                var response = await HttpClient.DeleteAsync($"api/Donation/delete/{donation.Id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _dataGrid?.ReloadServerData();
+                    StateHasChanged();
+                    Snackbar.Add("Donation deleted successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete Donation.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting Donation: {ex.Message}", Severity.Error);
+            }
+        }
+    }
 }

@@ -1,6 +1,489 @@
 ﻿@page "/job-cards"
-<h3>JobCardList</h3>
+@using System.ComponentModel.DataAnnotations
+@using ViharaFund.Admin.Helper
+@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Application.DTOs.JobCard
+@using ViharaFund.Domain.Enums
+
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="padding:4px !important;">
+    @if (!_isMasterDataLoaded)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText>Loading master data...</MudText>
+    }
+    else
+    {
+
+        <!-- Page Header -->
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <div class="d-flex justify-space-between align-center flex-wrap">
+                <div>
+                    <MudText Typo="Typo.h4" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Assignment" Class="mr-3" />
+                        Job Cards Management
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                        Manage and track job cards across different priorities and statuses
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddDonationDialog"
+                           Class="mt-2 mt-sm-0">
+                    Add New Job Card
+                </MudButton>
+            </div>
+        </MudPaper>
+
+        <!-- Filters Section -->
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid AlignItems="Center">
+                <!-- Search -->
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudTextField @bind-Value="searchString"
+                                  Label="Search"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Placeholder="Search by title or description..."
+                                  Immediate="true"
+                                  DebounceInterval="300"
+                                  OnDebounceIntervalElapsed="OnSearch" />
+                </MudItem>
+
+                <!-- Priority Filter -->
+                <MudItem xs="12" sm="6" md="3" lg="2">
+                    <MudSelect T="DropDownDTO" Label="Priority" Class="mt-0" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Value="SelectedPriority" ValueChanged="@PriorityChanged" Style="padding-right:2px;">
+                        @foreach (var priority in Priorities)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@priority">@priority.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- Status Filter -->
+                <MudItem xs="12" sm="6" md="3" lg="2">
+                    <MudSelect T="DropDownDTO" Label="Status" Class="mt-0" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Value="SelectedStatus" ValueChanged="@StatusChanged" Style="padding-right:2px;">
+                        @foreach (var status in Statuses)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@status">@status.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- Actions -->
+                <MudItem xs="12" md="12" lg="5" Class="d-flex justify-end">
+                    <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Class="d-flex justify-content-end">
+   @*                      <MudButton StartIcon="@Icons.Material.Filled.FilterAlt"
+                                   OnClick="FilterJobCards"
+                                   Color="Color.Primary">
+                            Filter
+                        </MudButton> *@
+                        <MudButton StartIcon="@Icons.Material.Filled.Clear"
+                                   OnClick="ClearFilters"
+                                   Color="Color.Secondary">
+                            Clear
+                        </MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Refresh"
+                                   OnClick="RefreshData"
+                                   Color="Color.Default">
+                            Refresh
+                        </MudButton>
+                    </MudButtonGroup>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <!-- Job Cards Table -->
+        <MudPaper Class="pa-0" Elevation="1">
+            <MudDataGrid @ref="_dataGrid"
+                         T="JobCardSummaryDTO"
+                         ServerData="@(LoadData)"
+                         Sortable="true"
+                         Filterable="false"
+                         SortMode="@SortMode.Multiple"
+                         Groupable="false"
+                         Hover="true"
+                         Striped="true"
+                         Loading="@_loading"
+                         LoadingProgressColor="Color.Info"
+                         Elevation="25"
+                         Class="mud-data-grid-custom">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6" Class="mr-4">Job Cards</MudText>
+                    <MudSpacer />
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                        Total: @filteredJobCards.Count() items
+                    </MudText>
+                </ToolBarContent>
+
+                <Columns>
+                    <PropertyColumn Property="x => x.Title" Title="Title" Sortable="true">
+                        <CellTemplate>
+                            <div class="d-flex flex-column">
+                                <MudText Typo="Typo.body1" Class="font-weight-medium">
+                                    @context.Item.Title
+                                </MudText>
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary text-truncate" Style="max-width: 200px;">
+                                    @context.Item.Description
+                                </MudText>
+                            </div>
+                        </CellTemplate>
+                    </PropertyColumn>
+
+                    <PropertyColumn Property="x => x.Priority" Title="Priority" Sortable="true">
+                        <CellTemplate>
+                            <div class="d-flex align-center">
+@*                                 <MudIcon Icon="@GetPriorityIcon(context.Item.Priority)"
+                                         Color="@GetPriorityColor(context.Item.Priority)"
+                                         Size="Size.Small"
+                                         Class="mr-2" /> *@
+                                <MudText Typo="Typo.body2">@context.Item.Priority</MudText>
+                            </div>
+                        </CellTemplate>
+                    </PropertyColumn>
+
+                    <PropertyColumn Property="x => x.Status" Title="Status" Sortable="true">
+                        <CellTemplate>
+@*                             <MudChip Size="Size.Small"
+                                     Color="@GetStatusColor(context.Item.Status)"
+                                     Variant="Variant.Filled">
+                                @context.Item.Status
+                            </MudChip> *@
+                            <div class="d-flex align-center">
+                                <MudText Typo="Typo.body2">@context.Item.Status</MudText>
+                            </div>
+                        </CellTemplate>
+                    </PropertyColumn>
+
+                    <PropertyColumn Property="x => x.AssignedRoleGroup" Title="Assigned To" Sortable="true">
+                        <CellTemplate>
+                            <MudText Typo="Typo.body2">
+                                @(context.Item.AssignedRoleGroup ?? "Not Assigned")
+                            </MudText>
+                        </CellTemplate>
+                    </PropertyColumn>
+
+                    <PropertyColumn Property="x => x.EstimatedTotalAmount" Title="Estimated Amount" Sortable="true">
+                        <CellTemplate>
+                            <MudText Typo="Typo.body2">
+                                @(context.Item.EstimatedTotalAmount?.ToString("C") ?? "-")
+                            </MudText>
+                        </CellTemplate>
+                    </PropertyColumn>
+
+                    <PropertyColumn Property="x => x.ActualTotalAmount" Title="Actual Amount" Sortable="true">
+                        <CellTemplate>
+                            <MudText Typo="Typo.body2"
+                                     Class="@(context.Item.ActualTotalAmount > context.Item.EstimatedTotalAmount ? "mud-error-text" : "")">
+                                @(context.Item.ActualTotalAmount?.ToString("C") ?? "-")
+                            </MudText>
+                        </CellTemplate>
+                    </PropertyColumn>
+
+                    <TemplateColumn Title="Actions" Sortable="false" Filterable="false">
+                        <CellTemplate>
+                            <div class="d-flex">
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                               Size="Size.Small"
+                                               Color="Color.Info"
+                                               OnClick="@(() => ViewJobCard(context.Item))"
+                                               Title="View Details" />
+
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Size="Size.Small"
+                                               Color="Color.Primary"
+                                               OnClick="@(() => EditJobCard(context.Item))"
+                                               Title="Edit" />
+
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Size="Size.Small"
+                                               Color="Color.Error"
+                                               OnClick="@(() => DeleteJobCard(context.Item))"
+                                               Title="Delete" />
+                            </div>
+                        </CellTemplate>
+                    </TemplateColumn>
+
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="JobCardSummaryDTO" />
+                </PagerContent>
+                <NoRecordsContent>
+                    <div class="d-flex flex-column align-center justify-center pa-8">
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Class="mb-4 mud-text-secondary" />
+                        <MudText Typo="Typo.h6" Class="mb-2">No Job Cards Found</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary text-center">
+                            @if (HasActiveFilters())
+                            {
+                                <span>No job cards match your current filters. Try adjusting your search criteria.</span>
+                            }
+                            else
+                            {
+                                <span>No job cards have been created yet. Click "Add New Job Card" to get started.</span>
+                            }
+                        </MudText>
+                    </div>
+                </NoRecordsContent>
+
+                <LoadingContent>
+                    <div class="d-flex flex-column align-center justify-center pa-8">
+                        <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+                        <MudText Typo="Typo.body1" Class="mt-4">Loading job cards...</MudText>
+                    </div>
+                </LoadingContent>
+            </MudDataGrid>
+        </MudPaper>
+
+    }
+</MudContainer>
 
 @code {
+    // Data properties
+    private List<JobCardSummaryDTO> jobCards = new();
+    private IEnumerable<JobCardSummaryDTO> filteredJobCards = new List<JobCardSummaryDTO>();
+    private List<DropDownDTO> RoleGroups = new();
 
+    // UI state
+    private MudDataGrid<JobCardSummaryDTO> _dataGrid;
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+
+    //Master Data
+    public JobCardMasterDataDTO MasterData { get; set; } = new();
+
+    // Filter properties
+    private IEnumerable<DropDownDTO> Priorities = new List<DropDownDTO>();
+    public DropDownDTO SelectedPriority { get; set; } = new();
+
+    private IEnumerable<DropDownDTO> Statuses = new List<DropDownDTO>();
+    public DropDownDTO SelectedStatus { get; set; } = new();
+
+    private string searchString = "";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterDataAsync();
+    }
+
+    private async Task LoadMasterDataAsync()
+    {
+        MasterData = await HttpClient.GetFromJsonAsync<JobCardMasterDataDTO>("api/JobCard/get-job-card-master-data") ?? new();
+
+        Priorities = MasterData.JobPriorities;
+        SelectedPriority = Priorities.FirstOrDefault() ?? new DropDownDTO();
+
+        Statuses = MasterData.Statuses;
+        SelectedStatus = Statuses.FirstOrDefault() ?? new DropDownDTO();
+
+        _isMasterDataLoaded = true;
+
+        StateHasChanged();
+    }
+
+    private async Task<GridData<JobCardSummaryDTO>> LoadData(GridState<JobCardSummaryDTO> state)
+    {
+        try
+        {
+            _loading = true;
+
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            var parameters = new JobCardFilterDTO
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                SearchTerm = searchString,
+                Priority = SelectedPriority?.Id??0,
+                Status = SelectedStatus?.Id ?? 0,
+            };
+
+            var queryString = QueryStringHelper.ToQueryString(parameters);
+            var url = $"api/JobCard/get-all?{queryString}";
+
+            var response = await HttpClient.GetFromJsonAsync<PaginatedResultDTO<JobCardSummaryDTO>>(url) ?? new();
+
+            // Return the result in GridData format
+            return new GridData<JobCardSummaryDTO>
+            {
+                Items = response.Items,
+                TotalItems = response.TotalItems
+            };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void PriorityChanged(DropDownDTO priority)
+    {
+        SelectedPriority = priority;
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+
+    private void StatusChanged(DropDownDTO priority)
+    {
+        SelectedPriority = priority;
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+
+    private Task OnSearch(string text)
+    {
+        searchString = text;
+        return _dataGrid.ReloadServerData();
+    }
+
+
+    private void FilterJobCards()
+    {
+        var filtered = jobCards.AsEnumerable();
+
+        // Apply search filter
+        // if (!string.IsNullOrWhiteSpace(searchString))
+        // {
+        //     filtered = filtered.Where(x => 
+        //         x.Title.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+        //         x.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase));
+        // }
+
+        // // Apply status filter
+        // if (selectedStatus.HasValue)
+        // {
+        //     filtered = filtered.Where(x => x.Status == selectedStatus.Value);
+        // }
+
+        // // Apply priority filter
+        // if (selectedPriority.HasValue)
+        // {
+        //     filtered = filtered.Where(x => x.Priority == selectedPriority.Value);
+        // }
+
+        // // Apply role group filter
+        // if (selectedRoleGroup != null)
+        // {
+        //     filtered = filtered.Where(x => x.AssignedRoleGroup?.Id == selectedRoleGroup.Id);
+        // }
+
+        filteredJobCards = filtered.ToList();
+        StateHasChanged();
+    }
+
+
+    private void ClearFilters()
+    {
+        SelectedPriority = Priorities.FirstOrDefault() ?? new DropDownDTO();
+        SelectedStatus = Statuses.FirstOrDefault() ?? new DropDownDTO();
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+
+    private async Task RefreshData()
+    {
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+
+    private bool HasActiveFilters()
+    {
+        // return !string.IsNullOrWhiteSpace(searchString) ||
+        //        selectedStatus.HasValue ||
+        //        selectedPriority.HasValue ||
+        //        selectedRoleGroup != null;
+
+        return true;
+    }
+
+    // Action handlers
+    private async Task OpenAddDonationDialog()
+    {
+        var parameters = new DialogParameters<AddEditJobCardDialog>
+        {
+            { x => x.IsEdit, false },
+            { x => x.IsViewOnly, false },
+            { x => x.JobCardId, 0 },
+            { x => x.MasterData, MasterData }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddEditJobCardDialog>("Add New Donation", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is JobCardDTO jobCard)
+        {
+
+        }
+    }
+
+    private void ViewJobCard(JobCardSummaryDTO jobCard)
+    {
+        // Open view dialog
+    }
+
+    private void EditJobCard(JobCardSummaryDTO jobCard)
+    {
+        // Open edit dialog
+    }
+
+    private void DeleteJobCard(JobCardSummaryDTO jobCard)
+    {
+        // Show confirmation dialog and delete
+    }
+
+    // Helper methods for styling
+    private string GetPriorityIcon(JobPriority priority) => priority switch
+    {
+        JobPriority.Low => Icons.Material.Filled.KeyboardArrowDown,
+        JobPriority.Medium => Icons.Material.Filled.Remove,
+        JobPriority.High => Icons.Material.Filled.KeyboardArrowUp,
+        JobPriority.Critical => Icons.Material.Filled.PriorityHigh,
+        _ => Icons.Material.Filled.Circle
+    };
+
+    private Color GetPriorityColor(JobPriority priority) => priority switch
+    {
+        JobPriority.Low => Color.Success,
+        JobPriority.Medium => Color.Warning,
+        JobPriority.High => Color.Error,
+        JobPriority.Critical => Color.Error,
+        _ => Color.Default
+    };
+
+    private Color GetStatusColor(JobCardStatus status) => status switch
+    {
+        JobCardStatus.PendingCancellation => Color.Warning,
+        JobCardStatus.PendingCompletion => Color.Info,
+        JobCardStatus.Completed => Color.Success,
+        JobCardStatus.Cancelled => Color.Error,
+        JobCardStatus.OnHold => Color.Secondary,
+        _ => Color.Default
+    };
 }

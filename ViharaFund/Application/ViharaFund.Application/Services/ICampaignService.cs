@@ -13,5 +13,6 @@ namespace ViharaFund.Application.Services
         Task<ResultDto> DeleteCampaignAsync(int id);
         Task<CampaignMasterDataDTO> GetCampaignMasterDataAsync();
         Task<List<DropDownDTO>> GetActiveCampaignsAsync();
+        Task<List<DropDownDTO>> GetPublishedCampaignsAsync();
     }
 }
