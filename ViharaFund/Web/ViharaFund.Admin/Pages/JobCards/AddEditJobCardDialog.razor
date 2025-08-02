@@ -77,9 +77,9 @@
                                RequiredError="Status is required!"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense">
-                        @foreach (var priority in Priorities)
+                        @foreach (var status in Statuses)
                         {
-                            <MudSelectItem T="DropDownDTO" Value="@priority">@priority.Name</MudSelectItem>
+                            <MudSelectItem T="DropDownDTO" Value="@status">@status.Name</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>
@@ -103,8 +103,27 @@
                     </MudSelect>
                 </MudItem>
 
+                <!-- Assigned Role Group -->
+                <MudItem xs="12" sm="12" md="4" lg="4">
+                    <MudSelect T="DropDownDTO"
+                               Label="Assigned Campaign"
+                               ReadOnly="IsViewOnly"
+                               ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
+                               MultiSelection="false"
+                               @bind-Value="JobCard.AssignCampaign"
+                               Required="true"
+                               RequiredError="Assigned Campaign is required!"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var campaign in ActiveCampaigns)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@campaign">@campaign.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
                 <!-- Estimated Total Amount -->
-                <MudItem xs="12" sm="6" md="6" lg="6">
+                <MudItem xs="12" sm="6" md="6" lg="4">
                     <MudNumericField @bind-Value="JobCard.EstimatedTotalAmount"
                                      Label="Estimated Total Amount"
                                      ReadOnly="IsViewOnly"
@@ -118,7 +137,7 @@
                 </MudItem>
 
                 <!-- Actual Total Amount -->
-                <MudItem xs="12" sm="6" md="6" lg="6">
+                <MudItem xs="12" sm="6" md="6" lg="4">
                     <MudNumericField @bind-Value="JobCard.ActualTotalAmount"
                                      Label="Actual Total Amount"
                                      ReadOnly="IsViewOnly"
@@ -151,7 +170,7 @@
         {
             <MudButton Color="Color.Success"
                        Variant="Variant.Filled"
-                       OnClick="CreateJobCard"
+                       OnClick="SaveJobCard"
                        Disabled="!isFormValid || isSubmitting"
                        StartIcon="@Icons.Material.Filled.Save">
                 @if (isSubmitting)
@@ -184,6 +203,7 @@
     private IEnumerable<DropDownDTO> Priorities = new List<DropDownDTO>();
     private IEnumerable<DropDownDTO> Statuses = new List<DropDownDTO>();
     private IEnumerable<DropDownDTO> Roles = new List<DropDownDTO>();
+    private IEnumerable<DropDownDTO> ActiveCampaigns = new List<DropDownDTO>();
 
     [Parameter]
     public int JobCardId { get; set; } = new();
@@ -200,6 +220,7 @@
         Priorities = MasterData.JobPriorities.Where(x => x.Id>0) ?? new List<DropDownDTO>();
         Statuses = MasterData.Statuses.Where(x => x.Id > 0) ?? new List<DropDownDTO>();
         Roles = MasterData.AvailableRoles.Where(x => x.Id > 0) ?? new List<DropDownDTO>();
+        ActiveCampaigns = MasterData.ActiveCampaigns;
 
         if (IsEdit && JobCardId > 0)
         {
@@ -209,9 +230,10 @@
         {
             JobCard = new JobCardDTO
             {
-                Status = MasterData.Statuses.FirstOrDefault(s => s.Id == 1) ?? new(),
-                Priority = MasterData.JobPriorities.FirstOrDefault(s => s.Id == 1) ?? new(),
-                AssignedRoleGroup = MasterData.AvailableRoles.FirstOrDefault(s => s.Id == 1) ?? new()
+                Status = Statuses.FirstOrDefault(s => s.Id == 1) ?? new(),
+                Priority = Priorities.FirstOrDefault(s => s.Id == 1) ?? new(),
+                AssignedRoleGroup = Roles.FirstOrDefault(s => s.Id == 1) ?? new(),
+                AssignCampaign = ActiveCampaigns.Skip(1).FirstOrDefault() ?? new(),
             };
         }
     }
@@ -234,6 +256,18 @@
     private void CloseDialog()
     {
         MudDialog.Cancel();
+    }
+
+    private async Task SaveJobCard()
+    {
+        if (IsEdit)
+        {
+            await UpdateJobCard();
+        }
+        else
+        {
+            await CreateJobCard();
+        }
     }
 
     private async Task CreateJobCard()

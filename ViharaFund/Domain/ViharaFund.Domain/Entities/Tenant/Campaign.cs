@@ -21,5 +21,6 @@ namespace ViharaFund.Domain.Entities.Tenant
         public virtual CampaignCategory CampaignCategory { get; set; }
 
         public virtual ICollection<Donation> Donations { get; set; } = new HashSet<Donation>();
+        public virtual ICollection<JobCard> JobCards { get; set; } = new HashSet<JobCard>();
     }
 }

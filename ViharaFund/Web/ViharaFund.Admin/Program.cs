@@ -13,6 +13,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7044") });
+//builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(" https://api.donationmanager.xyz") });
 
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<AuthenticationStateProvider, ApiAuthenticationStateProvider>();

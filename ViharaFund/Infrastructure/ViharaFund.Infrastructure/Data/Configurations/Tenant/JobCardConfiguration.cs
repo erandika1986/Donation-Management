@@ -23,6 +23,12 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
             builder.Property(p => p.AdditionalNote)
                 .IsRequired(false);
 
+            builder.HasOne<Campaign>(a => a.Campaign)
+                   .WithMany(u => u.JobCards)
+                   .HasForeignKey(a => a.CampaignId)
+                   .OnDelete(DeleteBehavior.Restrict)
+                   .IsRequired(false);
+
             builder.HasOne<Role>(a => a.AssignRoleGroup)
                    .WithMany(u => u.AssignedJobCards)
                    .HasForeignKey(a => a.AssignRoleGroupId)

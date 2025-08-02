@@ -11,5 +11,6 @@
         public decimal? ActualTotalAmount { get; set; }
         public string? AdditionalNote { get; set; }
         public string AssignedRoleGroup { get; set; }
+        public string AssignedCampaign { get; set; }
     }
 }

@@ -189,8 +189,42 @@
 
                     <TemplateColumn Title="Actions" Sortable="false" Filterable="false">
                         <CellTemplate>
-                            <div class="d-flex">
-                                <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                           <MudStack Row>
+                                <MudTooltip Text="View Job Card Detail" Color="Color.Info" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                   Color="Color.Info"
+                                                   Size="Size.Small"
+                                                   Variant="Variant.Filled"
+                                                   Title="View Details" OnClick="@(() => ViewJobCard(context.Item))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Edit Job Card" Color="Color.Success" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Size="Size.Small"
+                                                   Color="Color.Success"
+                                                   Variant="Variant.Filled"
+                                                   Title="Edit Job Card"
+                                                   OnClick="@(() => EditJobCard(context.Item))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Delete Job Card" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Size="Size.Small"
+                                                   Color="Color.Error"
+                                                   Variant="Variant.Filled"
+                                                   Title="Delete Job Card"
+                                                   OnClick="@(() => DeleteJobCard(context.Item))" />
+                                </MudTooltip>
+
+                                <MudTooltip Text="Submit For Approval" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Size="Size.Small"
+                                                   Color="Color.Error"
+                                                   Variant="Variant.Filled"
+                                                   Title="Delete Job Card"
+                                                   OnClick="@(() => DeleteJobCard(context.Item))" />
+                                </MudTooltip>
+
+
+@*                                 <MudIconButton Icon="@Icons.Material.Filled.Visibility"
                                                Size="Size.Small"
                                                Color="Color.Info"
                                                OnClick="@(() => ViewJobCard(context.Item))"
@@ -206,8 +240,8 @@
                                                Size="Size.Small"
                                                Color="Color.Error"
                                                OnClick="@(() => DeleteJobCard(context.Item))"
-                                               Title="Delete" />
-                            </div>
+                                               Title="Delete" /> *@
+                            </MudStack>
                         </CellTemplate>
                     </TemplateColumn>
 

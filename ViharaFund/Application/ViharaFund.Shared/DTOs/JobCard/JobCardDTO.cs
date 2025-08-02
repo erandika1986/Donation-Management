@@ -10,6 +10,7 @@ namespace ViharaFund.Application.DTOs.JobCard
         public DropDownDTO Priority { get; set; }
         public DropDownDTO Status { get; set; }
         public DropDownDTO AssignedRoleGroup { get; set; }
+        public DropDownDTO AssignCampaign { get; set; }
         public decimal? EstimatedTotalAmount { get; set; }
         public decimal? ActualTotalAmount { get; set; }
         public string? AdditionalNote { get; set; }

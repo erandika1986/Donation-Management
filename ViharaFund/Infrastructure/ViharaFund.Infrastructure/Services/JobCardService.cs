@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ViharaFund.Application.Constants;
 using ViharaFund.Application.Contracts;
 using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.DTOs.JobCard;
@@ -13,7 +14,7 @@ namespace ViharaFund.Infrastructure.Services
     public class JobCardService(
         TenantDbContext tenantDbContext,
         IJobCardHistoryService jobCardHistoryService,
-        ICurrentUserService currentUserService) : IJobCardService
+        ICurrentUserService currentUserService, ICampaignService campaignService) : IJobCardService
     {
         public async Task<ResultDto> DeleteAsync(int jobCardId)
         {
@@ -58,7 +59,9 @@ namespace ViharaFund.Infrastructure.Services
                     Status = EnumHelper.GetEnumDescription(x.Status),
                     EstimatedTotalAmount = x.EstimatedTotalAmount,
                     ActualTotalAmount = x.ActualTotalAmount,
-                    AdditionalNote = x.AdditionalNote
+                    AdditionalNote = x.AdditionalNote,
+                    AssignedCampaign = x.CampaignId.HasValue ? x.Campaign.Name : "Not Assigned",
+                    AssignedRoleGroup = x.AssignRoleGroup != null ? x.AssignRoleGroup.Name : "Not Assigned"
 
                 })
 
@@ -91,7 +94,14 @@ namespace ViharaFund.Infrastructure.Services
                     {
                         Id = x.AssignRoleGroupId,
                         Name = x.AssignRoleGroup.Name
-                    }
+                    },
+                    AssignCampaign = x.CampaignId.HasValue
+                        ? new DropDownDTO
+                        {
+                            Id = x.CampaignId.Value,
+                            Name = x.Campaign.Name
+                        }
+                        : new DropDownDTO { Id = NumberConstant.MinusOne, Name = "Not Assigned" }
                 })
                 .FirstOrDefaultAsync();
 
@@ -124,6 +134,7 @@ namespace ViharaFund.Infrastructure.Services
             entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.AssignRoleGroupId = jobCard.AssignedRoleGroup.Id;
+            entity.CampaignId = jobCard.AssignCampaign.Id > 0 ? jobCard.AssignCampaign.Id : (int?)null;
 
             tenantDbContext.JobCards.Update(entity);
 
@@ -175,7 +186,8 @@ namespace ViharaFund.Infrastructure.Services
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
-                CreatedByUserId = currentUserService.UserId
+                CreatedByUserId = currentUserService.UserId,
+                CampaignId = jobCard.AssignCampaign.Id > 0 ? jobCard.AssignCampaign.Id : (int?)null
             };
 
             tenantDbContext.JobCards.Add(entity);
@@ -543,15 +555,30 @@ namespace ViharaFund.Infrastructure.Services
             var masterData = new JobCardMasterDataDTO();
             masterData.JobPriorities.Add(new DropDownDTO
             {
-                Id = 0,
+                Id = NumberConstant.Zero,
                 Name = "All Priorities"
             });
 
             masterData.Statuses.Add(new DropDownDTO
             {
-                Id = 0,
+                Id = NumberConstant.Zero,
                 Name = "All Statuses"
             });
+
+
+
+            masterData.ActiveCampaigns.AddRange(new List<DropDownDTO>()
+            {
+                new DropDownDTO
+                {
+                    Id = NumberConstant.Zero,
+                    Name = "All"
+                },
+                new DropDownDTO
+                {
+                    Id = NumberConstant.MinusOne,
+                    Name = "Not Assigned"
+                }});
 
             foreach (JobPriority jobPriority in Enum.GetValues(typeof(JobPriority)))
             {
@@ -581,6 +608,9 @@ namespace ViharaFund.Infrastructure.Services
                 .ToListAsync();
 
             masterData.AvailableRoles = roles;
+
+            var campaigns = await campaignService.GetActiveCampaignsAsync();
+            masterData.ActiveCampaigns.AddRange(campaigns);
 
             return masterData;
         }
