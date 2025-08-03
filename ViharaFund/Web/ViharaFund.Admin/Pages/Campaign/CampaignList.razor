@@ -14,7 +14,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <!-- Header Section -->
-    <MudPaper Elevation="8" Class="pa-8 mb-6" Style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%); backdrop-filter: blur(15px); border-radius: 20px;">
+@*     <MudPaper Elevation="8" Class="pa-8 mb-6" Style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%); backdrop-filter: blur(15px); border-radius: 20px;">
         <MudGrid AlignItems="Center" Justify="Justify.SpaceBetween">
             <MudItem xs="12" md="8">
                 <MudText Typo="Typo.h3" Class="mb-2" Style="background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">
@@ -35,6 +35,28 @@
                 </MudButton>
             </MudItem>
         </MudGrid>
+    </MudPaper> *@
+
+    <!-- Page Header -->
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <div class="d-flex justify-space-between align-center flex-wrap">
+            <div>
+                <MudText Typo="Typo.h4" Class="mb-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Campaign" Class="mr-3" />
+                    Campaign Management
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    Create, manage and track your fundraising campaigns
+                </MudText>
+            </div>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateNewCampaignModal"
+                       Class="mt-2 mt-sm-0">
+                New Campaign
+            </MudButton>
+        </div>
     </MudPaper>
 
     <!-- Statistics Cards -->

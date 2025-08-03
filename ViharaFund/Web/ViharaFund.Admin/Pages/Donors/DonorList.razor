@@ -8,11 +8,78 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<MudGrid>
-    <MudItem xs="12" sm="12" md="12" lg="12">
-  
-       <!-- Data Table -->
-       <MudDataGrid @ref="_dataGrid"
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="padding:4px !important;">
+    @if (!_isMasterDataLoaded)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText>Loading master data...</MudText>
+    }
+    else
+    {
+        <!-- Page Header -->
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <div class="d-flex justify-space-between align-center flex-wrap">
+                <div>
+                    <MudText Typo="Typo.h4" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.VolunteerActivism" Class="mr-3" />
+                        Donor Management
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                        Manage and track donors and donation history
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddDonorDialog"
+                           Class="mt-2 mt-sm-0">
+                    New Donor
+                </MudButton>
+            </div>
+        </MudPaper>
+
+        <!-- Filters Section -->
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid AlignItems="Center">
+                <!-- Search -->
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudTextField @bind-Value="searchString"
+                                  Label="Search"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Placeholder="Search by donor name, email or phone..."
+                                  Immediate="true"
+                                  DebounceInterval="300"
+                                  OnDebounceIntervalElapsed="OnSearch" />
+                </MudItem>
+
+                <!-- Actions -->
+                <MudItem xs="12" sm="6" md="12" lg="9" Class="d-flex justify-end">
+                    <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Class="d-flex justify-content-end">
+                        @*                      <MudButton StartIcon="@Icons.Material.Filled.FilterAlt"
+                                   OnClick="FilterJobCards"
+                                   Color="Color.Primary">
+                            Filter
+                        </MudButton> *@
+                        <MudButton StartIcon="@Icons.Material.Filled.Clear"
+                                   OnClick="ClearFilters"
+                                   Color="Color.Secondary">
+                            Clear
+                        </MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Refresh"
+                                   OnClick="RefreshData"
+                                   Color="Color.Default">
+                            Refresh
+                        </MudButton>
+                    </MudButtonGroup>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+        <MudPaper Class="pa-0" Elevation="1">
+            <!-- Data Table -->
+            <MudDataGrid @ref="_dataGrid"
                          T="DonorDTO"
                          ServerData="@(LoadData)" Sortable="true"
                          Filterable="false"
@@ -22,26 +89,11 @@
                          Elevation="25"
                          Loading="@_loading">
                 <ToolBarContent>
-                    <MudGrid>
-                        <MudItem xs="12" sm="12" md="6" lg="6">
-                            <MudText Typo="Typo.h6">Manage Donors</MudText>
-                            <MudSpacer />
-                        </MudItem>
-                        <MudItem xs="12" sm="12" md="6" lg="6">
-
-                            <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
-
-                                <MudTextField T="string" Label="Search" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
-                                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-
-                                <MudTooltip Text="Create New Donor" Color="Color.Primary" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.PersonAddAlt1" Color="Color.Primary" Variant="Variant.Filled" OnClick="@(() => OpenAddDonorDialog())"></MudIconButton>
-                                </MudTooltip>
-
-                            </MudPaper>
-
-                        </MudItem>
-                    </MudGrid>
+                    <MudText Typo="Typo.h6" Class="mr-4">Donors</MudText>
+                    <MudSpacer />
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                        Total: @TotalRecords items
+                    </MudText>
                 </ToolBarContent>
 
                 <Columns>
@@ -63,7 +115,7 @@
                                 @context.Item.CreatedOn.ToString("MMM dd, yyyy")
                             </MudText>
                         </CellTemplate>
-                    </TemplateColumn> 
+                    </TemplateColumn>
                     <TemplateColumn CellClass="d-flex justify-end">
                         <CellTemplate Context="user">
                             <MudStack Row>
@@ -98,9 +150,10 @@
                 </PagerContent>
             </MudDataGrid>
 
+        </MudPaper>
+    }
+</MudContainer>
 
-    </MudItem>
-</MudGrid>
 
 @code {
     private List<DonorDTO> donors = new();
@@ -109,11 +162,12 @@
     private string searchString = "";
     //private string statusFilter = "All";
 
+    private int TotalRecords = 0;
     private MudDataGrid<DonorDTO> _dataGrid;
 
     protected override async Task OnInitializedAsync()
     {
-        _isMasterDataLoaded = false;
+        _isMasterDataLoaded = true;
     }
 
     private Task OnSearch(string text)
@@ -147,6 +201,7 @@
             var url = $"api/Donor/getAll?{queryString}";
 
             var response = await HttpClient.GetFromJsonAsync<PaginatedResultDTO<DonorDTO>>(url) ?? new();
+            TotalRecords = response.TotalItems;
 
             // Return the result in GridData format
             return new GridData<DonorDTO>
@@ -306,5 +361,21 @@
         {
             Snackbar.Add($"Error creating donor: {ex.Message}", Severity.Error);
         }
+    }
+
+    private void ClearFilters()
+    {
+        // SelectedPriority = Priorities.FirstOrDefault() ?? new DropDownDTO();
+        // SelectedStatus = Statuses.FirstOrDefault() ?? new DropDownDTO();
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+
+    private async Task RefreshData()
+    {
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
     }
 }

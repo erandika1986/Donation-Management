@@ -8,18 +8,90 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<MudGrid>
-        <MudItem xs="12" sm="12" md="12" lg="12">
-        @if (!_isMasterDataLoaded)
-        {
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-            <MudText>Loading master data...</MudText>
-        }
-        else
-        {
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="padding:4px !important;">
+    @if (!_isMasterDataLoaded)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText>Loading master data...</MudText>
+    }
+    else
+    {
+        <!-- Page Header -->
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <div class="d-flex justify-space-between align-center flex-wrap">
+                <div>
+                    <MudText Typo="Typo.h4" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Person" Class="mr-3" />
+                        System User Management
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                        Manage system user
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddUserDialog"
+                           Class="mt-2 mt-sm-0">
+                    New User
+                </MudButton>
+            </div>
+        </MudPaper>
+
+        <!-- Filters Section -->
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid AlignItems="Center">
+                <!-- Search -->
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudTextField @bind-Value="searchString"
+                                  Label="Search"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Placeholder="Search by user name, email or phone..."
+                                  Immediate="true"
+                                  DebounceInterval="300"
+                                  OnDebounceIntervalElapsed="OnSearch" />
+                </MudItem>
+
+                <!-- Category Filter -->
+                <MudItem xs="12" sm="6" md="3" lg="2">
+                    <MudSelect T="DropDownDTO" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" Label="User Role" Variant="Variant.Outlined" Margin="Margin.Dense" Value="SelectedRole" ValueChanged="@RoleChanged">
+                        @foreach (var role in Roles)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@role">@role.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- Actions -->
+                <MudItem xs="12" sm="6" md="12" lg="7" Class="d-flex justify-end">
+                    <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Class="d-flex justify-content-end">
+                        @*                      <MudButton StartIcon="@Icons.Material.Filled.FilterAlt"
+                                   OnClick="FilterJobCards"
+                                   Color="Color.Primary">
+                            Filter
+                        </MudButton> *@
+                        <MudButton StartIcon="@Icons.Material.Filled.Clear"
+                                   OnClick="ClearFilters"
+                                   Color="Color.Secondary">
+                            Clear
+                        </MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Refresh"
+                                   OnClick="RefreshData"
+                                   Color="Color.Default">
+                            Refresh
+                        </MudButton>
+                    </MudButtonGroup>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudPaper Class="pa-0" Elevation="1">
             <!-- Data Table -->
             <MudDataGrid @ref="_dataGrid"
-                T="UserDTO"
+                         T="UserDTO"
                          ServerData="@(LoadData)" Sortable="true"
                          Filterable="false"
                          Hideable="true"
@@ -28,32 +100,11 @@
                          Elevation="25"
                          Loading="@_loading">
                 <ToolBarContent>
-                    <MudGrid>
-                        <MudItem xs="12" sm="12" md="6" lg="6">
-                            <MudText Typo="Typo.h6">Manage Application Users</MudText>
-                            <MudSpacer />
-                        </MudItem>
-                        <MudItem xs="12" sm="12" md="6" lg="6">
-
-                            <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
-
-                                <MudTextField T="string" Label="Search" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
-                                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-
-                                <MudSelect T="DropDownDTO" Label="User Role" Class="mt-0" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Value="SelectedRole" ValueChanged="@RoleChanged" Style="padding-right:2px;">
-                                    @foreach (var role in Roles)
-                                    {
-                                        <MudSelectItem T="DropDownDTO" Value="@role">@role.Name</MudSelectItem>
-                                    }
-                                </MudSelect>
-                                <MudTooltip Text="Create New User" Color="Color.Primary" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.PersonAddAlt1" Color="Color.Primary" Variant="Variant.Filled" OnClick="@(() => OpenAddUserDialog())"></MudIconButton>
-                                </MudTooltip>
-
-                            </MudPaper>
-
-                        </MudItem>
-                    </MudGrid>
+                    <MudText Typo="Typo.h6" Class="mr-4">Donations</MudText>
+                    <MudSpacer />
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                        Total: @TotalRecords items
+                    </MudText>
                 </ToolBarContent>
 
                 <Columns>
@@ -79,7 +130,7 @@
                         </CellTemplate>
                     </TemplateColumn>
 
-@*                     <TemplateColumn Title="Created On" Sortable="true" SortBy="@(x => x.CreatedOn)">
+                    @*                     <TemplateColumn Title="Created On" Sortable="true" SortBy="@(x => x.CreatedOn)">
                         <CellTemplate>
                             <MudText Typo="Typo.caption">
                                 @context.Item.CreatedOn.ToString("MMM dd, yyyy")
@@ -121,7 +172,7 @@
                         </CellTemplate>
                     </TemplateColumn>
 
-@*                     <TemplateColumn Title="Actions" Sortable="false" Filterable="false">
+                    @*                     <TemplateColumn Title="Actions" Sortable="false" Filterable="false">
                         <CellTemplate>
                             <MudStack Row Spacing="1">
                                 <MudIconButton Icon="Icons.Material.Filled.Visibility"
@@ -156,10 +207,10 @@
                     <MudDataGridPager T="UserDTO" />
                 </PagerContent>
             </MudDataGrid>
-        }
+        </MudPaper>
 
-        </MudItem>
-</MudGrid>
+    }
+</MudContainer>
 
 @code {
     private List<UserDTO> users = new();
@@ -173,6 +224,7 @@
     private DropDownDTO SelectedRole= new DropDownDTO();
 
     private MudDataGrid<UserDTO> _dataGrid;
+    private int TotalRecords = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -238,7 +290,7 @@
             var url = $"api/user/getAll?{queryString}";
 
             var response = await HttpClient.GetFromJsonAsync<PaginatedResultDTO<UserDTO>>(url) ?? new();
-
+            TotalRecords = response.TotalItems;
             // Return the result in GridData format
             return new GridData<UserDTO>
             {
@@ -456,5 +508,21 @@
         {
             Snackbar.Add($"Error creating user: {ex.Message}", Severity.Error);
         }
+    }
+
+    private void ClearFilters()
+    {
+        // SelectedPriority = Priorities.FirstOrDefault() ?? new DropDownDTO();
+        // SelectedStatus = Statuses.FirstOrDefault() ?? new DropDownDTO();
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+
+    private async Task RefreshData()
+    {
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
     }
 }
