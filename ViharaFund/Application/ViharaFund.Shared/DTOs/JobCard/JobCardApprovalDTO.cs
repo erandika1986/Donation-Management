@@ -10,7 +10,7 @@ namespace ViharaFund.Application.DTOs.JobCard
         public int ApprovalLevelId { get; set; }
         public string ApproverUser { get; set; }
         public string ApprovedDate { get; set; }
-        public JobCardApprovalStatus Status { get; set; }
+        public ApprovalStatus Status { get; set; }
         public string? Remarks { get; set; }
     }
 }

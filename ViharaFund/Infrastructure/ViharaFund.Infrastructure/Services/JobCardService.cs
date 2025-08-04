@@ -8,6 +8,7 @@ using ViharaFund.Application.Services;
 using ViharaFund.Domain.Entities.Tenant;
 using ViharaFund.Domain.Enums;
 using ViharaFund.Infrastructure.Data;
+using ViharaFund.Shared.DTOs.JobCard;
 
 namespace ViharaFund.Infrastructure.Services
 {
@@ -41,6 +42,21 @@ namespace ViharaFund.Infrastructure.Services
                  .Where(x => x.IsActive)
                  .AsQueryable();
 
+            if (filter.Priority > 0)
+            {
+                query = query.Where(x => x.Priority == (JobPriority)filter.Priority);
+            }
+
+            if (filter.Status > 0)
+            {
+                query = query.Where(x => x.Status == (JobCardStatus)filter.Status);
+            }
+
+            if (filter.CampaignId > 0)
+            {
+                query = query.Where(x => x.CampaignId == filter.CampaignId);
+            }
+
             if (!string.IsNullOrEmpty(filter.SearchTerm))
             {
                 query = query.Where(x => x.Title.Contains(filter.SearchTerm) || x.Description.Contains(filter.SearchTerm));
@@ -55,14 +71,35 @@ namespace ViharaFund.Infrastructure.Services
                     Id = x.Id,
                     Title = x.Title,
                     Description = x.Description,
-                    Priority = EnumHelper.GetEnumDescription(x.Priority),
-                    Status = EnumHelper.GetEnumDescription(x.Status),
-                    EstimatedTotalAmount = x.EstimatedTotalAmount,
-                    ActualTotalAmount = x.ActualTotalAmount,
-                    AdditionalNote = x.AdditionalNote,
+                    Priority = x.Priority,
+                    Status = x.Status,
+                    CreatedDate = x.CreatedDate,
+                    CreatedBy = x.CreatedByUser.FullName,
                     AssignedCampaign = x.CampaignId.HasValue ? x.Campaign.Name : "Not Assigned",
-                    AssignedRoleGroup = x.AssignRoleGroup != null ? x.AssignRoleGroup.Name : "Not Assigned"
-
+                    AssignedRoleGroup = x.AssignRoleGroup != null ? x.AssignRoleGroup.Name : "Not Assigned",
+                    EstimatedBudget = x.JobCardTasks
+                        .Where(t => t.IsActive)
+                        .Sum(t => t.EstimateAmount),
+                    ActualCost = x.JobCardTasks.SelectMany(x => x.JobCardTaskPayments).Where(t => t.IsActive)
+                        .Sum(t => t.Amount),
+                    TotalTaskCount = x.JobCardTasks.Count(t => t.IsActive),
+                    CompletedTaskCount = x.JobCardTasks.Count(t => t.IsActive && t.TaskStatus == Domain.Enums.TaskStatus.Completed),
+                    ProgressPercentage = x.JobCardTasks.Count(t => t.IsActive) > 0
+                        ? (decimal)x.JobCardTasks.Count(t => t.IsActive && t.TaskStatus == Domain.Enums.TaskStatus.Completed) / x.JobCardTasks.Count(t => t.IsActive) * 100
+                        : 0,
+                    ApprovalHistory = x.JobCardApprovals
+                        .Where(a => a.IsActive)
+                        .Select(a => new JobCardApprovalDTO
+                        {
+                            Id = a.Id,
+                            ApprovalLevelId = a.ApprovalLevelId,
+                            Status = a.Status,
+                            ApprovedDate = a.ApprovedDate.HasValue ? a.ApprovedDate.Value.ToString("") : string.Empty,
+                            ApproveLevelName = a.ApprovalLevel.LevelName,
+                            ApproverUser = a.ApproverUserId.HasValue ? a.ApprovedUser.FullName : string.Empty,
+                            JobCardId = a.JobCardId,
+                            Remarks = a.Remarks
+                        }).ToList()
                 })
 
                 .ToListAsync();
@@ -154,11 +191,11 @@ namespace ViharaFund.Infrastructure.Services
                     Id = x.Id,
                     Title = x.Title,
                     Description = x.Description,
-                    Priority = EnumHelper.GetEnumDescription(x.Priority),
-                    Status = EnumHelper.GetEnumDescription(x.Status),
-                    EstimatedTotalAmount = x.EstimatedTotalAmount,
-                    ActualTotalAmount = x.ActualTotalAmount,
-                    AdditionalNote = x.AdditionalNote
+                    Priority = x.Priority,
+                    Status = x.Status,
+                    //EstimatedTotalAmount = x.EstimatedTotalAmount,
+                    //ActualTotalAmount = x.ActualTotalAmount,
+                    //AdditionalNote = x.AdditionalNote
                 })
                 .ToListAsync();
 
@@ -196,10 +233,10 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Job Card created successfully.", entity.Id);
         }
 
-        public async Task<ResultDto> SubmitForApproval(int jobCardId, string comment)
+        public async Task<ResultDto> SubmitForApproval(JobCardStatusUpdateDTO request)
         {
             var entity = await tenantDbContext.JobCards
-                .FirstOrDefaultAsync(x => x.Id == jobCardId && x.IsActive);
+                .FirstOrDefaultAsync(x => x.Id == request.JobCardId && x.IsActive);
 
             if (entity == null)
             {
@@ -220,7 +257,7 @@ namespace ViharaFund.Infrastructure.Services
 
             entity.JobCardComments.Add(new JobCardComment
             {
-                Comment = comment,
+                Comment = request.Comment,
                 UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
@@ -238,7 +275,7 @@ namespace ViharaFund.Infrastructure.Services
                     {
                         JobCardId = entity.Id,
                         ApprovalLevelId = approvalLevel.Id,
-                        Status = Domain.Enums.JobCardApprovalStatus.Pending,
+                        Status = Domain.Enums.ApprovalStatus.Pending,
                         UpdatedDate = DateTime.UtcNow,
                         UpdatedByUserId = currentUserService.UserId,
                         CreatedDate = DateTime.UtcNow,
@@ -254,10 +291,51 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Job Card submitted for approval successfully.", entity.Id);
         }
 
-        public async Task<ResultDto> MarkAsOnGoing(int jobCardId, string comment)
+        public async Task<ResultDto> Approve(JobCardApprovalDTO approval)
+        {
+            var historyEntity = await tenantDbContext.JobCardApprovals
+                .FirstOrDefaultAsync(x => x.Id == approval.Id && x.IsActive);
+            historyEntity.Remarks = approval.Remarks;
+            historyEntity.Status = ApprovalStatus.Approved;
+            historyEntity.ApprovedDate = DateTime.UtcNow;
+            historyEntity.ApproverUserId = currentUserService.UserId;
+
+            tenantDbContext.JobCardApprovals.Update(historyEntity);
+            await tenantDbContext.SaveChangesAsync();
+
+            var approvalRecordCount = tenantDbContext.JobCardApprovals.Count();
+            var approvedCount = tenantDbContext.JobCardApprovals.Count(x => x.JobCardId == approval.JobCardId && x.Status == Domain.Enums.ApprovalStatus.Approved);
+            var pendingCount = tenantDbContext.JobCardApprovals.Count(x => x.JobCardId == approval.JobCardId && x.Status == Domain.Enums.ApprovalStatus.Pending);
+
+            var entity = await tenantDbContext.JobCards
+                .FirstOrDefaultAsync(x => x.Id == approval.JobCardId && x.IsActive);
+
+            if (approvalRecordCount == approvedCount)
+            {
+                entity.Status = Domain.Enums.JobCardStatus.Approved;
+            }
+            else if (pendingCount > 0 && pendingCount < approvalRecordCount)
+            {
+                entity.Status = Domain.Enums.JobCardStatus.PartiallyApproved;
+            }
+            else if (pendingCount == 0 && approvedCount < approvalRecordCount)
+            {
+                entity.Status = Domain.Enums.JobCardStatus.Rejected;
+            }
+
+            entity.UpdatedDate = DateTime.UtcNow;
+            entity.UpdatedByUserId = currentUserService.UserId;
+            tenantDbContext.JobCards.Update(entity);
+            await tenantDbContext.SaveChangesAsync();
+
+
+            return ResultDto.Success("Job Card status updated successfully.", entity.Id);
+        }
+
+        public async Task<ResultDto> MarkAsOnGoing(JobCardStatusUpdateDTO request)
         {
             var entity = await tenantDbContext.JobCards
-                .FirstOrDefaultAsync(x => x.Id == jobCardId && x.IsActive);
+                .FirstOrDefaultAsync(x => x.Id == request.JobCardId && x.IsActive);
 
             if (entity == null)
             {
@@ -277,7 +355,7 @@ namespace ViharaFund.Infrastructure.Services
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
-                Comment = comment,
+                Comment = request.Comment,
                 UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
@@ -291,10 +369,10 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Job Card marked as OnGoing successfully.", entity.Id);
         }
 
-        public async Task<ResultDto> MarkAsCompleted(int jobCardId, string comment)
+        public async Task<ResultDto> MarkAsCompleted(JobCardStatusUpdateDTO request)
         {
             var entity = await tenantDbContext.JobCards
-                .FirstOrDefaultAsync(x => x.Id == jobCardId && x.IsActive);
+                .FirstOrDefaultAsync(x => x.Id == request.JobCardId && x.IsActive);
 
             if (entity == null)
             {
@@ -314,7 +392,7 @@ namespace ViharaFund.Infrastructure.Services
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
-                Comment = comment,
+                Comment = request.Comment,
                 UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
@@ -328,10 +406,10 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Job Card marked as Completed successfully.", entity.Id);
         }
 
-        public async Task<ResultDto> MarkAsCancelled(int jobCardId, string comment)
+        public async Task<ResultDto> MarkAsCancelled(JobCardStatusUpdateDTO request)
         {
             var entity = await tenantDbContext.JobCards
-                .FirstOrDefaultAsync(x => x.Id == jobCardId && x.IsActive);
+                .FirstOrDefaultAsync(x => x.Id == request.JobCardId && x.IsActive);
 
             if (entity == null)
             {
@@ -351,7 +429,7 @@ namespace ViharaFund.Infrastructure.Services
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
-                Comment = comment,
+                Comment = request.Comment,
                 UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
@@ -365,10 +443,10 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Job Card marked as Completed successfully.", entity.Id);
         }
 
-        public async Task<ResultDto> MarkAsRejected(int jobCardId, string comment)
+        public async Task<ResultDto> MarkAsRejected(JobCardStatusUpdateDTO request)
         {
             var entity = await tenantDbContext.JobCards
-                .FirstOrDefaultAsync(x => x.Id == jobCardId && x.IsActive);
+                .FirstOrDefaultAsync(x => x.Id == request.JobCardId && x.IsActive);
 
             if (entity == null)
             {
@@ -388,7 +466,7 @@ namespace ViharaFund.Infrastructure.Services
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
-                Comment = comment,
+                Comment = request.Comment,
                 UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
@@ -402,10 +480,10 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Job Card marked as Rejected successfully.", entity.Id);
         }
 
-        public async Task<ResultDto> AskForOnHold(int jobCardId, string comment)
+        public async Task<ResultDto> AskForOnHold(JobCardStatusUpdateDTO request)
         {
             var entity = await tenantDbContext.JobCards
-                .FirstOrDefaultAsync(x => x.Id == jobCardId && x.IsActive);
+                .FirstOrDefaultAsync(x => x.Id == request.JobCardId && x.IsActive);
 
             if (entity == null)
             {
@@ -425,7 +503,7 @@ namespace ViharaFund.Infrastructure.Services
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
-                Comment = comment,
+                Comment = request.Comment,
                 UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
@@ -439,10 +517,10 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Job Card marked as Pending on Hold successfully.", entity.Id);
         }
 
-        public async Task<ResultDto> MarkAsOnHold(int jobCardId, string comment)
+        public async Task<ResultDto> MarkAsOnHold(JobCardStatusUpdateDTO request)
         {
             var entity = await tenantDbContext.JobCards
-                .FirstOrDefaultAsync(x => x.Id == jobCardId && x.IsActive);
+                .FirstOrDefaultAsync(x => x.Id == request.JobCardId && x.IsActive);
 
             if (entity == null)
             {
@@ -462,7 +540,7 @@ namespace ViharaFund.Infrastructure.Services
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
-                Comment = comment,
+                Comment = request.Comment,
                 UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
@@ -476,10 +554,10 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Job Card marked as On Hold successfully.", entity.Id);
         }
 
-        public async Task<ResultDto> AskForCancellation(int jobCardId, string comment)
+        public async Task<ResultDto> AskForCancellation(JobCardStatusUpdateDTO request)
         {
             var entity = await tenantDbContext.JobCards
-                .FirstOrDefaultAsync(x => x.Id == jobCardId && x.IsActive);
+                .FirstOrDefaultAsync(x => x.Id == request.JobCardId && x.IsActive);
 
             if (entity == null)
             {
@@ -499,7 +577,7 @@ namespace ViharaFund.Infrastructure.Services
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
-                Comment = comment,
+                Comment = request.Comment,
                 UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,
@@ -513,10 +591,10 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Job Card marked as Pending Cancellation successfully.", entity.Id);
         }
 
-        public async Task<ResultDto> AskForCompletion(int jobCardId, string comment)
+        public async Task<ResultDto> AskForCompletion(JobCardStatusUpdateDTO request)
         {
             var entity = await tenantDbContext.JobCards
-                .FirstOrDefaultAsync(x => x.Id == jobCardId && x.IsActive);
+                .FirstOrDefaultAsync(x => x.Id == request.JobCardId && x.IsActive);
 
             if (entity == null)
             {
@@ -536,7 +614,7 @@ namespace ViharaFund.Infrastructure.Services
             entity.UpdatedByUserId = currentUserService.UserId;
             entity.JobCardComments.Add(new JobCardComment
             {
-                Comment = comment,
+                Comment = request.Comment,
                 UpdatedDate = DateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true,

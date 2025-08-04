@@ -30,7 +30,7 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
                .WithMany(c => c.JobCardApprovals)
                .HasForeignKey(c => c.ApproverUserId)
                .OnDelete(DeleteBehavior.Restrict)
-               .IsRequired(true);
+               .IsRequired(false);
 
             builder
                .HasOne<JobCard>(c => c.JobCard)

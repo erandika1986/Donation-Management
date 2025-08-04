@@ -1,16 +1,25 @@
-﻿namespace ViharaFund.Application.DTOs.JobCard
+﻿using ViharaFund.Domain.Enums;
+
+namespace ViharaFund.Application.DTOs.JobCard
 {
     public class JobCardSummaryDTO
     {
         public int Id { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public string Priority { get; set; }
-        public string Status { get; set; }
-        public decimal? EstimatedTotalAmount { get; set; }
-        public decimal? ActualTotalAmount { get; set; }
-        public string? AdditionalNote { get; set; }
-        public string AssignedRoleGroup { get; set; }
-        public string AssignedCampaign { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public JobPriority Priority { get; set; }
+        public JobCardStatus Status { get; set; }
+        public string CreatedBy { get; set; } = string.Empty;
+        public DateTime CreatedDate { get; set; }
+        public decimal EstimatedBudget { get; set; }
+        public decimal? ActualCost { get; set; }
+        public string AssignedRoleGroup { get; set; } = string.Empty;
+        public string AssignedCampaign { get; set; } = string.Empty;
+
+        public List<JobCardApprovalDTO> ApprovalHistory { get; set; } = new();
+        public decimal TotalTaskCost { get; set; }
+        public int TotalTaskCount { get; set; }
+        public int CompletedTaskCount { get; set; }
+        public decimal ProgressPercentage { get; set; }
     }
 }

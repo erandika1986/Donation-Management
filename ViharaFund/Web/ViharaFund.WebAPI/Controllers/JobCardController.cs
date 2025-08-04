@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ViharaFund.Application.DTOs.JobCard;
 using ViharaFund.Application.Services;
 using ViharaFund.Domain.Enums;
+using ViharaFund.Shared.DTOs.JobCard;
 
 namespace ViharaFund.WebAPI.Controllers
 {
@@ -68,82 +69,91 @@ namespace ViharaFund.WebAPI.Controllers
             return Ok(items);
         }
 
-        [HttpPost("submit-for-approval/{id}")]
-        public async Task<IActionResult> SubmitForApproval(int id, [FromBody] string comment)
+        [HttpPost("submit-for-approval")]
+        public async Task<IActionResult> SubmitForApproval([FromBody] JobCardStatusUpdateDTO request)
         {
-            var result = await _jobCardService.SubmitForApproval(id, comment);
+            var result = await _jobCardService.SubmitForApproval(request);
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
         }
 
-        [HttpPost("mark-as-ongoing/{id}")]
-        public async Task<IActionResult> MarkAsOnGoing(int id, [FromBody] string comment)
+        [HttpPost("approve")]
+        public async Task<IActionResult> Approve([FromBody] JobCardApprovalDTO approval)
         {
-            var result = await _jobCardService.MarkAsOnGoing(id, comment);
+            var result = await _jobCardService.Approve(approval);
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
         }
 
-        [HttpPost("ask-for-onhold/{id}")]
-        public async Task<IActionResult> AskForOnHold(int id, [FromBody] string comments)
+        [HttpPost("mark-as-ongoing")]
+        public async Task<IActionResult> MarkAsOnGoing([FromBody] JobCardStatusUpdateDTO request)
         {
-            var result = await _jobCardService.AskForOnHold(id, comments);
+            var result = await _jobCardService.MarkAsOnGoing(request);
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
         }
 
-        [HttpPost("mark-as-onhold/{id}")]
-        public async Task<IActionResult> MarkAsOnHold(int id, [FromBody] string comment)
+        [HttpPost("ask-for-onhold")]
+        public async Task<IActionResult> AskForOnHold([FromBody] JobCardStatusUpdateDTO request)
         {
-            var result = await _jobCardService.MarkAsOnHold(id, comment);
+            var result = await _jobCardService.AskForOnHold(request);
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
         }
 
-        [HttpPost("ask-for-cancellation/{id}")]
-        public async Task<IActionResult> AskForCancellation(int id, [FromBody] string comments)
+        [HttpPost("mark-as-onhold")]
+        public async Task<IActionResult> MarkAsOnHold([FromBody] JobCardStatusUpdateDTO request)
         {
-            var result = await _jobCardService.AskForCancellation(id, comments);
+            var result = await _jobCardService.MarkAsOnHold(request);
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
         }
 
-        [HttpPost("mark-as-cancelled/{id}")]
-        public async Task<IActionResult> MarkAsCancelled(int id, [FromBody] string comment)
+        [HttpPost("ask-for-cancellation")]
+        public async Task<IActionResult> AskForCancellation([FromBody] JobCardStatusUpdateDTO request)
         {
-            var result = await _jobCardService.MarkAsCancelled(id, comment);
+            var result = await _jobCardService.AskForCancellation(request);
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
         }
 
-        [HttpPost("mark-as-rejected/{id}")]
-        public async Task<IActionResult> MarkAsRejected(int id, [FromBody] string comment)
+        [HttpPost("mark-as-cancelled")]
+        public async Task<IActionResult> MarkAsCancelled([FromBody] JobCardStatusUpdateDTO request)
         {
-            var result = await _jobCardService.MarkAsRejected(id, comment);
+            var result = await _jobCardService.MarkAsCancelled(request);
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
         }
 
-        [HttpPost("ask-for-completion/{id}")]
-        public async Task<IActionResult> AskForCompletion(int id, [FromBody] string comments)
+        [HttpPost("mark-as-rejected")]
+        public async Task<IActionResult> MarkAsRejected([FromBody] JobCardStatusUpdateDTO request)
         {
-            var result = await _jobCardService.AskForCompletion(id, comments);
+            var result = await _jobCardService.MarkAsRejected(request);
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
         }
 
-        [HttpPost("mark-as-completed/{id}")]
-        public async Task<IActionResult> MarkAsCompleted(int id, [FromBody] string comment)
+        [HttpPost("ask-for-completion")]
+        public async Task<IActionResult> AskForCompletion([FromBody] JobCardStatusUpdateDTO request)
         {
-            var result = await _jobCardService.MarkAsCompleted(id, comment);
+            var result = await _jobCardService.AskForCompletion(request);
+            if (result.Succeeded)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPost("mark-as-completed")]
+        public async Task<IActionResult> MarkAsCompleted([FromBody] JobCardStatusUpdateDTO request)
+        {
+            var result = await _jobCardService.MarkAsCompleted(request);
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);

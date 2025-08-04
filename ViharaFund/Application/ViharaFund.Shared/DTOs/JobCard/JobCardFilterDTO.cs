@@ -7,5 +7,6 @@
         public string? SearchTerm { get; set; }
         public int Priority { get; set; }
         public int Status { get; set; }
+        public int CampaignId { get; set; }
     }
 }

@@ -10,31 +10,34 @@ namespace ViharaFund.Domain.Enums
         [Description("Pending Approval")]
         PendingApproval = 2,
 
+        [Description("Partially Approved")]
+        PartiallyApproved = 3,
+
         [Description("Approved")]
-        Approved = 3,
+        Approved = 4,
 
         [Description("On Going")]
-        OnGoing = 4,
+        OnGoing = 5,
 
         [Description("Pending On Hold")]
-        PendingOnHold = 5,
+        PendingOnHold = 6,
 
         [Description("On Hold")]
-        OnHold = 6,
+        OnHold = 7,
 
         [Description("Rejected")]
-        Rejected = 7,
+        Rejected = 8,
 
         [Description("Pending Cancellation")]
-        PendingCancellation = 8,
+        PendingCancellation = 9,
 
         [Description("Cancelled")]
-        Cancelled = 9,
+        Cancelled = 10,
 
         [Description("Pending Completion")]
-        PendingCompletion = 10,
+        PendingCompletion = 11,
 
         [Description("Completed")]
-        Completed = 11
+        Completed = 12
     }
 }

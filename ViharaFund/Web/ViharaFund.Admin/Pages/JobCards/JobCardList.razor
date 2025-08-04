@@ -1,292 +1,468 @@
 ﻿@page "/job-cards"
 @using System.ComponentModel.DataAnnotations
+@using ViharaFund.Admin.Common
 @using ViharaFund.Admin.Helper
 @using ViharaFund.Application.DTOs.Common
 @using ViharaFund.Application.DTOs.JobCard
 @using ViharaFund.Domain.Enums
+@using ViharaFund.Shared.DTOs.JobCard
+@using ViharaFund.Shared.Helpers
 
 @inject HttpClient HttpClient
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="padding:4px !important;">
-    @if (!_isMasterDataLoaded)
-    {
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-        <MudText>Loading master data...</MudText>
-    }
-    else
-    {
+<PageTitle>Campaign Management</PageTitle>
 
-        <!-- Page Header -->
-        <MudPaper Class="pa-4 mb-4" Elevation="2">
-            <div class="d-flex justify-space-between align-center flex-wrap">
-                <div>
-                    <MudText Typo="Typo.h4" Class="mb-2">
-                        <MudIcon Icon="@Icons.Material.Filled.Assignment" Class="mr-3" />
-                        Job Cards Management
-                    </MudText>
-                    <MudText Typo="Typo.body1" Class="mud-text-secondary">
-                        Manage and track job cards across different priorities and statuses
-                    </MudText>
-                </div>
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="OpenAddDonationDialog"
-                           Class="mt-2 mt-sm-0">
-                    Add New Job Card
-                </MudButton>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <!-- Page Header -->
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <div class="d-flex justify-space-between align-center flex-wrap">
+            <div>
+                <MudText Typo="Typo.h4" Class="mb-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Campaign" Class="mr-3" />
+                    Job Cards Management
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    Manage and track job cards across different priorities and statuses
+                </MudText>
             </div>
-        </MudPaper>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Class="mt-2 mt-sm-0">
+                New Job Card
+            </MudButton>
+        </div>
+    </MudPaper>
 
+    <!-- Filters Section -->
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudGrid AlignItems="Center">
+            <!-- Search -->
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudTextField @bind-Value="searchString"
+                              Label="Search"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Placeholder="Search by title or description..."
+                              Immediate="true"
+                              DebounceInterval="300"
+                              OnDebounceIntervalElapsed="OnSearch" />
+            </MudItem>
 
-        <!-- Filters Section -->
-        <MudPaper Class="pa-4 mb-4" Elevation="1">
-            <MudGrid AlignItems="Center">
-                <!-- Search -->
-                <MudItem xs="12" sm="6" md="4" lg="3">
-                    <MudTextField @bind-Value="searchString"
-                                  Label="Search"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.Search"
-                                  Placeholder="Search by title or description..."
-                                  Immediate="true"
-                                  DebounceInterval="300"
-                                  OnDebounceIntervalElapsed="OnSearch" />
-                </MudItem>
+            <!-- Campaign Filter -->
+            <MudItem xs="12" sm="6" md="3" lg="2">
+                <MudSelect T="DropDownDTO" Label="Campaign" Class="mt-0" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Value="SelectedCampaign" ValueChanged="@CampaignChanged" Style="padding-right:2px;">
+                    @foreach (var campaign in ActiveCampaigns)
+                    {
+                        <MudSelectItem T="DropDownDTO" Value="@campaign">@campaign.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
 
-                <!-- Priority Filter -->
-                <MudItem xs="12" sm="6" md="3" lg="2">
-                    <MudSelect T="DropDownDTO" Label="Priority" Class="mt-0" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Value="SelectedPriority" ValueChanged="@PriorityChanged" Style="padding-right:2px;">
-                        @foreach (var priority in Priorities)
-                        {
-                            <MudSelectItem T="DropDownDTO" Value="@priority">@priority.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
+            <!-- Priority Filter -->
+            <MudItem xs="12" sm="6" md="3" lg="2">
+                <MudSelect T="DropDownDTO" Label="Priority" Class="mt-0" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Value="SelectedPriority" ValueChanged="@PriorityChanged" Style="padding-right:2px;">
+                    @foreach (var priority in Priorities)
+                    {
+                        <MudSelectItem T="DropDownDTO" Value="@priority">@priority.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
 
-                <!-- Status Filter -->
-                <MudItem xs="12" sm="6" md="3" lg="2">
-                    <MudSelect T="DropDownDTO" Label="Status" Class="mt-0" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Value="SelectedStatus" ValueChanged="@StatusChanged" Style="padding-right:2px;">
-                        @foreach (var status in Statuses)
-                        {
-                            <MudSelectItem T="DropDownDTO" Value="@status">@status.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
+            <!-- Status Filter -->
+            <MudItem xs="12" sm="6" md="3" lg="2">
+                <MudSelect T="DropDownDTO" Label="Status" Class="mt-0" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Value="SelectedStatus" ValueChanged="@StatusChanged" Style="padding-right:2px;">
+                    @foreach (var status in Statuses)
+                    {
+                        <MudSelectItem T="DropDownDTO" Value="@status">@status.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
 
-                <!-- Actions -->
-                <MudItem xs="12" md="12" lg="5" Class="d-flex justify-end">
-                    <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Class="d-flex justify-content-end">
-   @*                      <MudButton StartIcon="@Icons.Material.Filled.FilterAlt"
+            <!-- Actions -->
+            <MudItem xs="12" md="12" lg="3" Class="d-flex justify-end">
+                <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Class="d-flex justify-content-end">
+                    @*                      <MudButton StartIcon="@Icons.Material.Filled.FilterAlt"
                                    OnClick="FilterJobCards"
                                    Color="Color.Primary">
                             Filter
                         </MudButton> *@
-                        <MudButton StartIcon="@Icons.Material.Filled.Clear"
-                                   OnClick="ClearFilters"
-                                   Color="Color.Secondary">
-                            Clear
-                        </MudButton>
-                        <MudButton StartIcon="@Icons.Material.Filled.Refresh"
-                                   OnClick="RefreshData"
-                                   Color="Color.Default">
-                            Refresh
-                        </MudButton>
-                    </MudButtonGroup>
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
+                    <MudButton StartIcon="@Icons.Material.Filled.Clear"
+                               OnClick="ClearFilters"
+                               Color="Color.Secondary">
+                        Clear
+                    </MudButton>
+                    <MudButton StartIcon="@Icons.Material.Filled.Refresh"
+                               OnClick="RefreshData"
+                               Color="Color.Default">
+                        Refresh
+                    </MudButton>
+                </MudButtonGroup>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
 
-        <!-- Job Cards Table -->
-        <MudPaper Class="pa-0" Elevation="1">
-            <MudDataGrid @ref="_dataGrid"
-                         T="JobCardSummaryDTO"
-                         ServerData="@(LoadData)"
-                         Sortable="true"
-                         Filterable="false"
-                         SortMode="@SortMode.Multiple"
-                         Groupable="false"
-                         Hover="true"
-                         Striped="true"
-                         Loading="@_loading"
-                         LoadingProgressColor="Color.Info"
-                         Elevation="25"
-                         Class="mud-data-grid-custom">
-                <ToolBarContent>
-                    <MudText Typo="Typo.h6" Class="mr-4">Job Cards</MudText>
-                    <MudSpacer />
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                        Total: @filteredJobCards.Count() items
-                    </MudText>
-                </ToolBarContent>
+            <!-- Job Cards Table -->
+    <!-- Campaigns Grid -->
+    <MudGrid>
+        @foreach (var jobCard in AllJobCards)
+        {
+@*             var totalTaskCost = jobCard.Tasks?.Sum(t => t.EstimatedCost) ?? 0;
+            var completedTasks = jobCard.Tasks?.Count(t => t.Status == ViharaFund.Domain.Enums.TaskStatus.Completed) ?? 0;
+            var totalTasks = jobCard.Tasks?.Count ?? 0;
+            var progressPercentage = totalTasks > 0 ? Math.Round((double)completedTasks / totalTasks * 100) : 0; *@
 
-                <Columns>
-                    <PropertyColumn Property="x => x.Title" Title="Title" Sortable="true">
-                        <CellTemplate>
-                            <div class="d-flex flex-column">
-                                <MudText Typo="Typo.body1" Class="font-weight-medium">
-                                    @context.Item.Title
+            <MudItem xs="12" md="6" lg="6">
+                <MudCard Elevation="6" Style="border-radius: 15px; height: 100%; transition: all 0.3s ease;" Class="campaign-card">
+                    <!-- Card Header -->
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Class="mb-3">
+                                <MudText Typo="Typo.h6" Class="font-weight-semibold mud-text-truncate flex-grow-1 mr-2">
+                                    @jobCard.Title
                                 </MudText>
-                                <MudText Typo="Typo.body2" Class="mud-text-secondary text-truncate" Style="max-width: 200px;">
-                                    @context.Item.Description
-                                </MudText>
-                            </div>
-                        </CellTemplate>
-                    </PropertyColumn>
-
-                    <PropertyColumn Property="x => x.Priority" Title="Priority" Sortable="true">
-                        <CellTemplate>
-                            <div class="d-flex align-center">
-@*                                 <MudIcon Icon="@GetPriorityIcon(context.Item.Priority)"
-                                         Color="@GetPriorityColor(context.Item.Priority)"
+                                <MudChip T="string"
+                                         Color="GetJobCardStatusColor(jobCard.Status)"
                                          Size="Size.Small"
-                                         Class="mr-2" /> *@
-                                <MudText Typo="Typo.body2">@context.Item.Priority</MudText>
-                            </div>
-                        </CellTemplate>
-                    </PropertyColumn>
-
-                    <PropertyColumn Property="x => x.Status" Title="Status" Sortable="true">
-                        <CellTemplate>
-@*                             <MudChip Size="Size.Small"
-                                     Color="@GetStatusColor(context.Item.Status)"
-                                     Variant="Variant.Filled">
-                                @context.Item.Status
-                            </MudChip> *@
-                            <div class="d-flex align-center">
-                                <MudText Typo="Typo.body2">@context.Item.Status</MudText>
-                            </div>
-                        </CellTemplate>
-                    </PropertyColumn>
-
-                    <PropertyColumn Property="x => x.AssignedRoleGroup" Title="Assigned To" Sortable="true">
-                        <CellTemplate>
-                            <MudText Typo="Typo.body2">
-                                @(context.Item.AssignedRoleGroup ?? "Not Assigned")
-                            </MudText>
-                        </CellTemplate>
-                    </PropertyColumn>
-
-                    <PropertyColumn Property="x => x.EstimatedTotalAmount" Title="Estimated Amount" Sortable="true">
-                        <CellTemplate>
-                            <MudText Typo="Typo.body2">
-                                @(context.Item.EstimatedTotalAmount?.ToString("C") ?? "-")
-                            </MudText>
-                        </CellTemplate>
-                    </PropertyColumn>
-
-                    <PropertyColumn Property="x => x.ActualTotalAmount" Title="Actual Amount" Sortable="true">
-                        <CellTemplate>
-                            <MudText Typo="Typo.body2"
-                                     Class="@(context.Item.ActualTotalAmount > context.Item.EstimatedTotalAmount ? "mud-error-text" : "")">
-                                @(context.Item.ActualTotalAmount?.ToString("C") ?? "-")
-                            </MudText>
-                        </CellTemplate>
-                    </PropertyColumn>
-
-                    <TemplateColumn Title="Actions" Sortable="false" Filterable="false">
-                        <CellTemplate>
-                           <MudStack Row>
-                                <MudTooltip Text="View Job Card Detail" Color="Color.Info" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
-                                                   Color="Color.Info"
-                                                   Size="Size.Small"
-                                                   Variant="Variant.Filled"
-                                                   Title="View Details" OnClick="@(() => ViewJobCard(context.Item))" />
-                                </MudTooltip>
-                                <MudTooltip Text="Edit Job Card" Color="Color.Success" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                   Size="Size.Small"
-                                                   Color="Color.Success"
-                                                   Variant="Variant.Filled"
-                                                   Title="Edit Job Card"
-                                                   OnClick="@(() => EditJobCard(context.Item))" />
-                                </MudTooltip>
-                                <MudTooltip Text="Delete Job Card" Color="Color.Error" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Size="Size.Small"
-                                                   Color="Color.Error"
-                                                   Variant="Variant.Filled"
-                                                   Title="Delete Job Card"
-                                                   OnClick="@(() => DeleteJobCard(context.Item))" />
-                                </MudTooltip>
-
-                                <MudTooltip Text="Submit For Approval" Color="Color.Error" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Size="Size.Small"
-                                                   Color="Color.Error"
-                                                   Variant="Variant.Filled"
-                                                   Title="Delete Job Card"
-                                                   OnClick="@(() => DeleteJobCard(context.Item))" />
-                                </MudTooltip>
-
-
-@*                                 <MudIconButton Icon="@Icons.Material.Filled.Visibility"
-                                               Size="Size.Small"
-                                               Color="Color.Info"
-                                               OnClick="@(() => ViewJobCard(context.Item))"
-                                               Title="View Details" />
-
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                               Size="Size.Small"
-                                               Color="Color.Primary"
-                                               OnClick="@(() => EditJobCard(context.Item))"
-                                               Title="Edit" />
-
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                               Size="Size.Small"
-                                               Color="Color.Error"
-                                               OnClick="@(() => DeleteJobCard(context.Item))"
-                                               Title="Delete" /> *@
+                                         Class="px-3 py-1 text-xs font-weight-semibold text-uppercase">
+                                    @GetJobCardStatusText(jobCard.Status)
+                                </MudChip>
                             </MudStack>
-                        </CellTemplate>
-                    </TemplateColumn>
 
-                </Columns>
-                <PagerContent>
-                    <MudDataGridPager T="JobCardSummaryDTO" />
-                </PagerContent>
-                <NoRecordsContent>
-                    <div class="d-flex flex-column align-center justify-center pa-8">
-                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Class="mb-4 mud-text-secondary" />
-                        <MudText Typo="Typo.h6" Class="mb-2">No Job Cards Found</MudText>
-                        <MudText Typo="Typo.body2" Class="mud-text-secondary text-center">
-                            @if (HasActiveFilters())
-                            {
-                                <span>No job cards match your current filters. Try adjusting your search criteria.</span>
-                            }
-                            else
-                            {
-                                <span>No job cards have been created yet. Click "Add New Job Card" to get started.</span>
-                            }
+                            <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    @jobCard.CreatedDate.ToString("yyyy-MM-dd")
+                                </MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    by @jobCard.CreatedBy
+                                </MudText>
+                            </MudStack>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+
+                    <!-- Progress Section -->
+                    <MudCardContent Class="py-2">
+                        <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                            <MudText Typo="Typo.h5" Color="Color.Success" Class="font-weight-bold">
+                                @jobCard.TotalTaskCost.ToString("C0")
+                            </MudText>
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                of @jobCard.EstimatedBudget.ToString("C0")
+                            </MudText>
+                        </MudStack>
+
+                        <!-- Progress Bar -->
+                        <MudProgressLinear Color="Color.Success"
+                                           Value="(double)jobCard.ProgressPercentage"
+                                           Class="mb-3"
+                                           Style="height: 8px; border-radius: 4px;" />
+
+                        <MudGrid>
+                            <MudItem xs="4">
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    @((int)jobCard.ProgressPercentage)% Complete
+                                </MudText>
+                            </MudItem>
+                            <MudItem xs="4" Class="text-center">
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    @jobCard.CompletedTaskCount of @jobCard.TotalTaskCount tasks
+                                </MudText>
+                            </MudItem>
+                            <MudItem xs="4" Class="text-right">
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    @jobCard.TotalTaskCount tasks total
+                                </MudText>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                    @if (jobCard.ApprovalHistory.Count>0)
+                    {
+                        <!-- Approval Status Section -->
+                        <MudCardContent Class="py-2">
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-medium mud-text-secondary mb-3">
+                                Approval Status
+                            </MudText>
+
+                            <MudStack Spacing="2">
+                                @foreach (var approval in jobCard.ApprovalHistory)
+                                {
+                                    <!-- First Approver -->
+                                    <MudPaper Class="pa-3" Elevation="0" Style="background-color: var(--mud-palette-background-grey); border-radius: 8px;">
+                                        <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                                                <MudAvatar Size="Size.Small"
+                                                           Color="@GetApprovalAvatarColor(approval.Status)"
+                                                           Style="width: 32px; height: 32px;">
+                                                    <MudIcon Icon="@GetApprovalIcon(approval.Status)" Size="Size.Small" />
+                                                </MudAvatar>
+                                                <div>
+                                                    <MudText Typo="Typo.body2" Class="font-weight-medium">@approval.ApproveLevelName</MudText>
+                                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@approval.ApproverUser</MudText>
+                                                </div>
+                                            </MudStack>
+                                            <MudChip T="string"
+                                                     Size="Size.Small"
+                                                     Color="@GetApprovalStatusColor(approval.Status)"
+                                                     Class="px-2 py-1 text-xs font-weight-medium">
+                                                @GetApprovalStatusText(approval.Status)
+                                            </MudChip>
+                                        </MudStack>
+                                    </MudPaper>
+                                }
+                            </MudStack>
+                        </MudCardContent>
+                    }
+
+
+                    <!-- Description -->
+                    <MudCardContent Class="py-2">
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            @jobCard.Description
                         </MudText>
-                    </div>
-                </NoRecordsContent>
+                    </MudCardContent>
 
-                <LoadingContent>
-                    <div class="d-flex flex-column align-center justify-center pa-8">
-                        <MudProgressCircular Indeterminate="true" Size="Size.Large" />
-                        <MudText Typo="Typo.body1" Class="mt-4">Loading job cards...</MudText>
-                    </div>
-                </LoadingContent>
-            </MudDataGrid>
-        </MudPaper>
+                    <!-- Card Actions -->
+                    <MudCardActions Class="px-6 py-4" Style="background-color: var(--mud-palette-background-grey); border-top: 1px solid var(--mud-palette-divider);">
+                        <MudStack Class="w-100">
+                            <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                <!-- Add Task Button -->
+                                <MudTooltip Text="Add New Task" Color="Color.Secondary" Placement="Placement.Top">
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Secondary"
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.Add"
+                                               Class="me-2 mb-2">
+                                        Add
+                                    </MudButton>
+                                </MudTooltip>
 
-    }
+                                <!-- Action Buttons -->
+                                <MudStack Row Spacing="1">
+                                    <MudTooltip Text="Edit" Color="Color.Warning" Placement="Placement.Top">
+                                        <MudIconButton Variant="Variant.Filled"
+                                                       Icon="@Icons.Material.Filled.Edit"
+                                                       Size="Size.Small"
+                                                       Color="Color.Warning"
+                                                       Class="m-1"></MudIconButton>
+                                    </MudTooltip>
+                                    <MudTooltip Text="View Details" Color="Color.Primary" Placement="Placement.Top">
+                                        <MudIconButton Variant="Variant.Filled"
+                                                       Icon="@Icons.Material.Filled.Visibility"
+                                                       Size="Size.Small"
+                                                       Color="Color.Primary"
+                                                       Class="m-1"></MudIconButton>
+                                    </MudTooltip>
+
+                                    <MudTooltip Text="Delete" Color="Color.Error" Placement="Placement.Top">
+                                        <MudIconButton Variant="Variant.Filled"
+                                                       Icon="@Icons.Material.Filled.Delete"
+                                                       Size="Size.Small"
+                                                       Color="Color.Error"
+                                                       Class="m-1"></MudIconButton>
+                                    </MudTooltip>
+                                </MudStack>
+                            </MudStack>
+                            @if (jobCard.Status == JobCardStatus.Draft)
+                            {
+                                <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.Upload"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               OnClick="@(() => SubmitForApprovalAsync(jobCard))"
+                                               Class="text-sm font-weight-medium">
+                                        Submit For Approval
+                                    </MudButton>
+                                </MudStack>
+                            }
+                            else if (jobCard.Status == JobCardStatus.PendingApproval || jobCard.Status == JobCardStatus.PartiallyApproved)
+                            {
+                                @foreach (var item in jobCard.ApprovalHistory)
+                                {
+                                    if(item.Status == ApprovalStatus.Pending)
+                                    {
+                                        <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
+                                            <MudButton Variant="Variant.Filled"
+                                                       Color="Color.Success"
+                                                       StartIcon="@Icons.Material.Filled.Check"
+                                                       FullWidth="true"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => ApproveAsync(jobCard,item))"
+                                                       Class="text-sm font-weight-medium">
+                                                @(item.ApproveLevelName) Approve
+                                            </MudButton>
+                                            <MudButton Variant="Variant.Filled"
+                                                       Color="Color.Error"
+                                                       StartIcon="@Icons.Material.Filled.Close"
+                                                       FullWidth="true"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => RejectAsync(jobCard))"
+                                                       Class="text-sm font-weight-medium">
+                                                Reject
+                                            </MudButton>
+                                        </MudStack>
+                                        break;
+                                    }
+                                }
+                            }
+                            else if (jobCard.Status == JobCardStatus.Approved)
+                            {
+                                <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.Upload"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               OnClick="@(() => MaskAsOnGoingAsync(jobCard))"
+                                               Class="text-sm font-weight-medium">
+                                        Start Job Card
+                                    </MudButton>
+                                </MudStack>
+                            }
+                            else if (jobCard.Status == JobCardStatus.OnGoing)
+                            {
+                                <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.Upload"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               OnClick="@(() => AskToOnHoldAsync(jobCard))"
+                                               Class="text-sm font-weight-medium">
+                                        Ask To On-Hold
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Error"
+                                               StartIcon="@Icons.Material.Filled.Close"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               OnClick="@(() => AskToCancelAsync(jobCard))"
+                                               Class="text-sm font-weight-medium">
+                                        Ask To Cancel
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Error"
+                                               StartIcon="@Icons.Material.Filled.Close"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               OnClick="@(() => AskToCompleteAsync(jobCard))"
+                                               Class="text-sm font-weight-medium">
+                                        Ask To Complete
+                                    </MudButton>
+                                </MudStack>
+                            }
+                            else if (jobCard.Status == JobCardStatus.PendingOnHold)
+                            {
+                                <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.Upload"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OnHoldAsync(jobCard))"
+                                               Class="text-sm font-weight-medium">
+                                        Mark As On-Hold
+                                    </MudButton>
+                                </MudStack>
+                            }
+                            else if (jobCard.Status == JobCardStatus.PendingCancellation)
+                            {
+                                <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.Upload"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               OnClick="@(() => CancelAsync(jobCard))"
+                                               Class="text-sm font-weight-medium">
+                                        Mark As Canceled
+                                    </MudButton>
+                                </MudStack>
+                            }
+                            else if (jobCard.Status == JobCardStatus.PendingCompletion)
+                            {
+                                <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.Upload"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               OnClick="@(() => CompleteAsync(jobCard))"
+                                               Class="text-sm font-weight-medium">
+                                        Mark As Completed
+                                    </MudButton>
+                                </MudStack>
+                            }
+                            <!-- Approval Actions -->
+@*                             @if (jobCard.Status == JobCardStatus.PendingFirstApproval)
+                            {
+                                <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.Check"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               Class="text-sm font-weight-medium">
+                                        First Approve
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Error"
+                                               StartIcon="@Icons.Material.Filled.Close"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               Class="text-sm font-weight-medium">
+                                        Reject
+                                    </MudButton>
+                                </MudStack>
+                            }
+                            else if (jobCard.Status == JobCardStatus.FirstApproved)
+                            {
+                                <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.Check"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               Class="text-sm font-weight-medium">
+                                        Final Approve
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Error"
+                                               StartIcon="@Icons.Material.Filled.Close"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               Class="text-sm font-weight-medium">
+                                        Reject
+                                    </MudButton>
+                                </MudStack>
+                            } *@
+                        </MudStack>
+                    </MudCardActions>
+            </MudCard>
+        </MudItem>
+                }
+    </MudGrid>
 </MudContainer>
 
 @code {
+
+    private int CurrentPage = 1;
+    private int PageSize = 10;
+    private int TotalItems = 0;
+
+    private List<JobCardSummaryDTO> AllJobCards = new List<JobCardSummaryDTO>();
     // Data properties
     private List<JobCardSummaryDTO> jobCards = new();
     private IEnumerable<JobCardSummaryDTO> filteredJobCards = new List<JobCardSummaryDTO>();
     private List<DropDownDTO> RoleGroups = new();
 
     // UI state
-    private MudDataGrid<JobCardSummaryDTO> _dataGrid;
+
     private bool _loading = false;
     private bool _isMasterDataLoaded = false;
 
@@ -300,12 +476,23 @@
     private IEnumerable<DropDownDTO> Statuses = new List<DropDownDTO>();
     public DropDownDTO SelectedStatus { get; set; } = new();
 
+    private IEnumerable<DropDownDTO> ActiveCampaigns = new List<DropDownDTO>();
+    public DropDownDTO SelectedCampaign { get; set; } = new();
+
     private string searchString = "";
 
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium };
 
     protected override async Task OnInitializedAsync()
     {
         await LoadMasterDataAsync();
+        await GetJobCardsSummaryAsync();
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        CurrentPage = page;
+        await GetJobCardsSummaryAsync();
     }
 
     private async Task LoadMasterDataAsync()
@@ -318,136 +505,75 @@
         Statuses = MasterData.Statuses;
         SelectedStatus = Statuses.FirstOrDefault() ?? new DropDownDTO();
 
+        ActiveCampaigns = MasterData.ActiveCampaigns;
+        SelectedCampaign = ActiveCampaigns.FirstOrDefault() ?? new DropDownDTO();
+
         _isMasterDataLoaded = true;
 
         StateHasChanged();
+
+
     }
 
-    private async Task<GridData<JobCardSummaryDTO>> LoadData(GridState<JobCardSummaryDTO> state)
+    private async Task GetJobCardsSummaryAsync()
     {
-        try
+        var parameters = new JobCardFilterDTO
         {
-            _loading = true;
+            CurrentPage = CurrentPage,
+            PageSize = PageSize,
+            SearchTerm = searchString,
+            CampaignId = SelectedCampaign?.Id ?? 0,
+            Priority = SelectedPriority?.Id ?? 0,
+            Status = SelectedStatus?.Id ?? 0
+        };
 
-            // Extract paging parameters
-            var page = state.Page + 1; // MudBlazor uses 0-based indexing
-            var pageSize = state.PageSize;
+        var queryString = QueryStringHelper.ToQueryString(parameters);
 
-            // Extract sorting parameters
-            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
-            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+        var url = $"api/JobCard/get-all?{queryString}";
 
-            var parameters = new JobCardFilterDTO
-            {
-                CurrentPage = page,
-                PageSize = pageSize,
-                SearchTerm = searchString,
-                Priority = SelectedPriority?.Id??0,
-                Status = SelectedStatus?.Id ?? 0,
-            };
+        var response = await HttpClient.GetFromJsonAsync<PaginatedResultDTO<JobCardSummaryDTO>>(url) ?? new();
+        //CampaignsSummary = await HttpClient.GetFromJsonAsync<CampaignMasterDataDTO>("api/Campaign/get-campaigns-summary") ?? new();
+        AllJobCards = response.Items;
+        TotalItems = response.TotalItems;
 
-            var queryString = QueryStringHelper.ToQueryString(parameters);
-            var url = $"api/JobCard/get-all?{queryString}";
-
-            var response = await HttpClient.GetFromJsonAsync<PaginatedResultDTO<JobCardSummaryDTO>>(url) ?? new();
-
-            // Return the result in GridData format
-            return new GridData<JobCardSummaryDTO>
-            {
-                Items = response.Items,
-                TotalItems = response.TotalItems
-            };
-        }
-        finally
-        {
-            _loading = false;
-            StateHasChanged();
-        }
-    }
-
-    private void PriorityChanged(DropDownDTO priority)
-    {
-        SelectedPriority = priority;
-        _dataGrid?.ReloadServerData();
         StateHasChanged();
     }
 
-
-    private void StatusChanged(DropDownDTO priority)
+    private async Task CampaignChanged(DropDownDTO dropDownDTO)
     {
-        SelectedPriority = priority;
-        _dataGrid?.ReloadServerData();
-        StateHasChanged();
+        SelectedCampaign = dropDownDTO;
+        await GetJobCardsSummaryAsync();
     }
 
+    private async Task PriorityChanged(DropDownDTO priority)
+    {
+        SelectedPriority = priority;
+        await GetJobCardsSummaryAsync();
+    }
 
-    private Task OnSearch(string text)
+    private async Task StatusChanged(DropDownDTO priority)
+    {
+        SelectedPriority = priority;
+        await GetJobCardsSummaryAsync();
+    }
+
+    private async Task OnSearch(string text)
     {
         searchString = text;
-        return _dataGrid.ReloadServerData();
+        await GetJobCardsSummaryAsync();
     }
 
-
-    private void FilterJobCards()
-    {
-        var filtered = jobCards.AsEnumerable();
-
-        // Apply search filter
-        // if (!string.IsNullOrWhiteSpace(searchString))
-        // {
-        //     filtered = filtered.Where(x => 
-        //         x.Title.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-        //         x.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase));
-        // }
-
-        // // Apply status filter
-        // if (selectedStatus.HasValue)
-        // {
-        //     filtered = filtered.Where(x => x.Status == selectedStatus.Value);
-        // }
-
-        // // Apply priority filter
-        // if (selectedPriority.HasValue)
-        // {
-        //     filtered = filtered.Where(x => x.Priority == selectedPriority.Value);
-        // }
-
-        // // Apply role group filter
-        // if (selectedRoleGroup != null)
-        // {
-        //     filtered = filtered.Where(x => x.AssignedRoleGroup?.Id == selectedRoleGroup.Id);
-        // }
-
-        filteredJobCards = filtered.ToList();
-        StateHasChanged();
-    }
-
-
-    private void ClearFilters()
+    private async Task ClearFilters()
     {
         SelectedPriority = Priorities.FirstOrDefault() ?? new DropDownDTO();
         SelectedStatus = Statuses.FirstOrDefault() ?? new DropDownDTO();
-
-        _dataGrid?.ReloadServerData();
-        StateHasChanged();
+        await GetJobCardsSummaryAsync();
     }
-
 
     private async Task RefreshData()
     {
-        _dataGrid?.ReloadServerData();
+        await GetJobCardsSummaryAsync();
         StateHasChanged();
-    }
-
-
-    private bool HasActiveFilters()
-    {
-        // return !string.IsNullOrWhiteSpace(searchString) ||
-        //        selectedStatus.HasValue ||
-        //        selectedPriority.HasValue ||
-        //        selectedRoleGroup != null;
-
-        return true;
     }
 
     // Action handlers
@@ -493,6 +619,483 @@
         // Show confirmation dialog and delete
     }
 
+    private async Task SubmitForApprovalAsync(JobCardSummaryDTO jobCard)
+    {
+
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Submit Job Card For Approval ({jobCard.Title})" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Success },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var request = new JobCardStatusUpdateDTO()
+            {
+                Comment = comment,
+                JobCardId = jobCard.Id
+            };
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCard/submit-for-approval", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var saveResult = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (saveResult is not null && saveResult.Succeeded)
+                {
+                    Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                }
+                else if (result is not null && !saveResult.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", saveResult.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create donation.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task ApproveAsync(JobCardSummaryDTO jobCard, JobCardApprovalDTO approval)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Approve Job Card({jobCard.Title})" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Success },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            approval.Remarks = comment;
+
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCard/approve", approval);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var saveResult = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (saveResult is not null && saveResult.Succeeded)
+                {
+                    Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                }
+                else if (result is not null && !saveResult.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", saveResult.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create donation.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task RejectAsync(JobCardSummaryDTO jobCard)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Reject Job Card({jobCard.Title})" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Error },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var request = new JobCardStatusUpdateDTO()
+            {
+                Comment = comment,
+                JobCardId = jobCard.Id
+            };
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCard/mark-as-rejected", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var saveResult = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (saveResult is not null && saveResult.Succeeded)
+                {
+                    Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                }
+                else if (result is not null && !saveResult.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", saveResult.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create donation.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task MaskAsOnGoingAsync(JobCardSummaryDTO jobCard)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Start Job Card({jobCard.Title})" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Info },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var request = new JobCardStatusUpdateDTO()
+            {
+                Comment = comment,
+                JobCardId = jobCard.Id
+            };
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCard/mark-as-ongoing", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var saveResult = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (saveResult is not null && saveResult.Succeeded)
+                {
+                    Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                }
+                else if (result is not null && !saveResult.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", saveResult.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create donation.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task AskToOnHoldAsync(JobCardSummaryDTO jobCard)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Ask to Hold Job Card({jobCard.Title})" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Warning },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var request = new JobCardStatusUpdateDTO()
+            {
+                Comment = comment,
+                JobCardId = jobCard.Id
+            };
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCard/ask-for-onhold", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var saveResult = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (saveResult is not null && saveResult.Succeeded)
+                {
+                    Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                }
+                else if (result is not null && !saveResult.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", saveResult.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create donation.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task OnHoldAsync(JobCardSummaryDTO jobCard)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Hold Job Card({jobCard.Title})" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Warning },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+            var request = new JobCardStatusUpdateDTO()
+            {
+                Comment = comment,
+                JobCardId = jobCard.Id
+            };
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCard/mark-as-onhold", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var saveResult = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (saveResult is not null && saveResult.Succeeded)
+                {
+                    Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                }
+                else if (result is not null && !saveResult.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", saveResult.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create donation.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task AskToCancelAsync(JobCardSummaryDTO jobCard)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Ask to Cancel Job Card({jobCard.Title})" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Warning },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var request = new JobCardStatusUpdateDTO()
+            {
+                Comment = comment,
+                JobCardId = jobCard.Id
+            };
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCard/ask-for-cancellation", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var saveResult = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (saveResult is not null && saveResult.Succeeded)
+                {
+                    Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                }
+                else if (result is not null && !saveResult.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", saveResult.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create donation.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task CancelAsync(JobCardSummaryDTO jobCard)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Cancel Job Card({jobCard.Title})" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Warning },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var request = new JobCardStatusUpdateDTO()
+            {
+                Comment = comment,
+                JobCardId = jobCard.Id
+            };
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCard/mark-as-cancelled", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var saveResult = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (saveResult is not null && saveResult.Succeeded)
+                {
+                    Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                }
+                else if (result is not null && !saveResult.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", saveResult.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create donation.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task AskToCompleteAsync(JobCardSummaryDTO jobCard)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Ask to Complete Job Card({jobCard.Title})" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Warning },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+            var request = new JobCardStatusUpdateDTO()
+            {
+                Comment = comment,
+                JobCardId = jobCard.Id
+            };
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCard/ask-for-completion", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var saveResult = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (saveResult is not null && saveResult.Succeeded)
+                {
+                    Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                }
+                else if (result is not null && !saveResult.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", saveResult.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create donation.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task CompleteAsync(JobCardSummaryDTO jobCard)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Complete Job Card({jobCard.Title})" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Warning },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+            var request = new JobCardStatusUpdateDTO()
+            {
+                Comment = comment,
+                JobCardId = jobCard.Id
+            };
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCard/mark -as- completed", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var saveResult = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (saveResult is not null && saveResult.Succeeded)
+                {
+                    Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                }
+                else if (result is not null && !saveResult.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", saveResult.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create donation.", Severity.Error);
+            }
+        }
+    }
+
+
+
     // Helper methods for styling
     private string GetPriorityIcon(JobPriority priority) => priority switch
     {
@@ -512,13 +1115,68 @@
         _ => Color.Default
     };
 
-    private Color GetStatusColor(JobCardStatus status) => status switch
+    private Color GetJobCardStatusColor(JobCardStatus status)
     {
-        JobCardStatus.PendingCancellation => Color.Warning,
-        JobCardStatus.PendingCompletion => Color.Info,
-        JobCardStatus.Completed => Color.Success,
-        JobCardStatus.Cancelled => Color.Error,
-        JobCardStatus.OnHold => Color.Secondary,
-        _ => Color.Default
-    };
+        return status switch
+        {
+            JobCardStatus.PendingApproval => Color.Warning,
+            JobCardStatus.PartiallyApproved => Color.Info,
+            JobCardStatus.Approved => Color.Success,
+            JobCardStatus.Rejected => Color.Error,
+            JobCardStatus.PendingCompletion => Color.Info,
+            JobCardStatus.Completed => Color.Success,
+            JobCardStatus.OnGoing => Color.Info,
+            JobCardStatus.PendingOnHold => Color.Warning,
+            JobCardStatus.OnHold => Color.Info,
+            JobCardStatus.PendingCancellation => Color.Warning,
+            JobCardStatus.Cancelled => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private string GetJobCardStatusText(JobCardStatus status)
+    {
+        return EnumHelper.GetEnumDescription(status) ?? status.ToString();
+    }
+
+    private Color GetApprovalAvatarColor(ApprovalStatus status)
+    {
+        return status switch
+        {
+            ApprovalStatus.Approved => Color.Success,
+            ApprovalStatus.Rejected => Color.Error,
+            _ => Color.Warning
+        };
+    }
+
+    private string GetApprovalIcon(ApprovalStatus status)
+    {
+        return status switch
+        {
+            ApprovalStatus.Approved => Icons.Material.Filled.Check,
+            ApprovalStatus.Rejected => Icons.Material.Filled.Close,
+            _ => Icons.Material.Filled.Schedule
+        };
+    }
+
+    private Color GetApprovalStatusColor(ApprovalStatus status)
+    {
+        return status switch
+        {
+            ApprovalStatus.Approved => Color.Success,
+            ApprovalStatus.Rejected => Color.Error,
+            _ => Color.Warning
+        };
+    }
+
+    private string GetApprovalStatusText(ApprovalStatus status)
+    {
+        return status switch
+        {
+            ApprovalStatus.Approved => "Approved",
+            ApprovalStatus.Rejected => "Rejected",
+            _ => "Pending"
+        };
+    }
 }
+

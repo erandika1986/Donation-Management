@@ -1,6 +1,7 @@
 ﻿using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.DTOs.JobCard;
 using ViharaFund.Domain.Enums;
+using ViharaFund.Shared.DTOs.JobCard;
 
 namespace ViharaFund.Application.Services
 {
@@ -12,16 +13,16 @@ namespace ViharaFund.Application.Services
         Task<ResultDto> DeleteAsync(int jobCardId);
         Task<JobCardDTO> GetByIdAsync(int jobCardId);
         Task<PaginatedResultDTO<JobCardSummaryDTO>> GetAllAsync(JobCardFilterDTO filter);
-        Task<ResultDto> SubmitForApproval(int jobCardId, string comment);
-        Task<ResultDto> MarkAsOnGoing(int jobCardId, string comment);
-        Task<ResultDto> AskForOnHold(int jobCardId, string comments);
-        Task<ResultDto> MarkAsOnHold(int jobCardId, string comment);
-        Task<ResultDto> AskForCancellation(int jobCardId, string comment);
-        Task<ResultDto> MarkAsCancelled(int jobCardId, string comment);
-        Task<ResultDto> MarkAsRejected(int jobCardId, string comment);
-        Task<ResultDto> AskForCompletion(int jobCardId, string comment);
-        Task<ResultDto> MarkAsCompleted(int jobCardId, string comment);
-
+        Task<ResultDto> SubmitForApproval(JobCardStatusUpdateDTO request);
+        Task<ResultDto> Approve(JobCardApprovalDTO approval);
+        Task<ResultDto> MarkAsOnGoing(JobCardStatusUpdateDTO request);
+        Task<ResultDto> AskForOnHold(JobCardStatusUpdateDTO request);
+        Task<ResultDto> MarkAsOnHold(JobCardStatusUpdateDTO request);
+        Task<ResultDto> AskForCancellation(JobCardStatusUpdateDTO request);
+        Task<ResultDto> MarkAsCancelled(JobCardStatusUpdateDTO request);
+        Task<ResultDto> MarkAsRejected(JobCardStatusUpdateDTO request);
+        Task<ResultDto> AskForCompletion(JobCardStatusUpdateDTO request);
+        Task<ResultDto> MarkAsCompleted(JobCardStatusUpdateDTO request);
         Task<JobCardMasterDataDTO> GetJobCardMasterDataAsync();
         Task<List<JobCardCommentDTO>> GetJobCardComments(int jobCardId);
 

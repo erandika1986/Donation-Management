@@ -9,7 +9,7 @@ namespace ViharaFund.Domain.Entities.Tenant
         public int ApprovalLevelId { get; set; }
         public int? ApproverUserId { get; set; }
         public DateTime? ApprovedDate { get; set; }
-        public JobCardApprovalStatus Status { get; set; }
+        public ApprovalStatus Status { get; set; }
         public string? Remarks { get; set; }
 
         public virtual JobCardApprovalLevel ApprovalLevel { get; set; }
