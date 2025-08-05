@@ -416,7 +416,7 @@ namespace ViharaFund.Infrastructure.Services
                 return ResultDto.Failure(new[] { "Job Card not found." });
             }
 
-            if (entity.Status != Domain.Enums.JobCardStatus.PendingCancellation && entity.Status != Domain.Enums.JobCardStatus.Draft)
+            if ((entity.Status != Domain.Enums.JobCardStatus.PendingCancellation && entity.Status != Domain.Enums.JobCardStatus.OnHold) && entity.Status != Domain.Enums.JobCardStatus.Draft)
             {
                 return ResultDto.Failure(new[] { "Only Job Cards in Pending Completion status Or Draft status can be marked as Cancelled." });
             }

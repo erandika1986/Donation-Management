@@ -30,6 +30,7 @@
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddJobCardDialog"
                        Class="mt-2 mt-sm-0">
                 New Job Card
             </MudButton>
@@ -235,6 +236,7 @@
                                                Color="Color.Secondary"
                                                Size="Size.Small"
                                                StartIcon="@Icons.Material.Filled.Add"
+                                               Disabled="jobCard.Status != JobCardStatus.Draft && jobCard.Status != JobCardStatus.PendingApproval"
                                                Class="me-2 mb-2">
                                         Add
                                     </MudButton>
@@ -245,8 +247,10 @@
                                     <MudTooltip Text="Edit" Color="Color.Warning" Placement="Placement.Top">
                                         <MudIconButton Variant="Variant.Filled"
                                                        Icon="@Icons.Material.Filled.Edit"
-                                                       Size="Size.Small"
+                                                       Size="Size.Small" 
                                                        Color="Color.Warning"
+                                                       OnClick="@(() => EditJobCard(jobCard))"
+                                                       Disabled="jobCard.Status != JobCardStatus.Draft && jobCard.Status != JobCardStatus.PendingApproval"
                                                        Class="m-1"></MudIconButton>
                                     </MudTooltip>
                                     <MudTooltip Text="View Details" Color="Color.Primary" Placement="Placement.Top">
@@ -254,6 +258,7 @@
                                                        Icon="@Icons.Material.Filled.Visibility"
                                                        Size="Size.Small"
                                                        Color="Color.Primary"
+                                                       OnClick="@(() => ViewJobCard(jobCard))"
                                                        Class="m-1"></MudIconButton>
                                     </MudTooltip>
 
@@ -262,6 +267,8 @@
                                                        Icon="@Icons.Material.Filled.Delete"
                                                        Size="Size.Small"
                                                        Color="Color.Error"
+                                                       OnClick="@(() => DeleteJobCard(jobCard))"
+                                                       Disabled="jobCard.Status != JobCardStatus.Draft && jobCard.Status != JobCardStatus.PendingApproval && jobCard.Status != JobCardStatus.Cancelled"
                                                        Class="m-1"></MudIconButton>
                                     </MudTooltip>
                                 </MudStack>
@@ -315,7 +322,7 @@
                                 <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
                                     <MudButton Variant="Variant.Filled"
                                                Color="Color.Success"
-                                               StartIcon="@Icons.Material.Filled.Upload"
+                                               StartIcon="@Icons.Material.Filled.PlayArrow"
                                                FullWidth="true"
                                                Size="Size.Small"
                                                OnClick="@(() => MaskAsOnGoingAsync(jobCard))"
@@ -328,8 +335,8 @@
                             {
                                 <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
                                     <MudButton Variant="Variant.Filled"
-                                               Color="Color.Success"
-                                               StartIcon="@Icons.Material.Filled.Upload"
+                                               Color="Color.Warning"
+                                               StartIcon="@Icons.Material.Filled.Pause"
                                                FullWidth="true"
                                                Size="Size.Small"
                                                OnClick="@(() => AskToOnHoldAsync(jobCard))"
@@ -338,7 +345,7 @@
                                     </MudButton>
                                     <MudButton Variant="Variant.Filled"
                                                Color="Color.Error"
-                                               StartIcon="@Icons.Material.Filled.Close"
+                                               StartIcon="@Icons.Material.Filled.Cancel"
                                                FullWidth="true"
                                                Size="Size.Small"
                                                OnClick="@(() => AskToCancelAsync(jobCard))"
@@ -346,8 +353,8 @@
                                         Ask To Cancel
                                     </MudButton>
                                     <MudButton Variant="Variant.Filled"
-                                               Color="Color.Error"
-                                               StartIcon="@Icons.Material.Filled.Close"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.Check"
                                                FullWidth="true"
                                                Size="Size.Small"
                                                OnClick="@(() => AskToCompleteAsync(jobCard))"
@@ -360,27 +367,45 @@
                             {
                                 <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
                                     <MudButton Variant="Variant.Filled"
-                                               Color="Color.Success"
-                                               StartIcon="@Icons.Material.Filled.Upload"
+                                               Color="Color.Warning"
+                                               StartIcon="@Icons.Material.Filled.Pause"
                                                FullWidth="true"
                                                Size="Size.Small"
                                                OnClick="@(() => OnHoldAsync(jobCard))"
                                                Class="text-sm font-weight-medium">
                                         Mark As On-Hold
                                     </MudButton>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.PlayArrow"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               OnClick="@(() => MaskAsOnGoingAsync(jobCard))"
+                                               Class="text-sm font-weight-medium">
+                                        Mark As On Going
+                                    </MudButton>
                                 </MudStack>
                             }
-                            else if (jobCard.Status == JobCardStatus.PendingCancellation)
+                            else if (jobCard.Status == JobCardStatus.PendingCancellation || jobCard.Status == JobCardStatus.OnHold)
                             {
                                 <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
                                     <MudButton Variant="Variant.Filled"
-                                               Color="Color.Success"
-                                               StartIcon="@Icons.Material.Filled.Upload"
+                                               Color="Color.Error"
+                                               StartIcon="@Icons.Material.Filled.Cancel"
                                                FullWidth="true"
                                                Size="Size.Small"
                                                OnClick="@(() => CancelAsync(jobCard))"
                                                Class="text-sm font-weight-medium">
                                         Mark As Canceled
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.PlayArrow"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               OnClick="@(() => MaskAsOnGoingAsync(jobCard))"
+                                               Class="text-sm font-weight-medium">
+                                        Mark As On Going
                                     </MudButton>
                                 </MudStack>
                             }
@@ -395,6 +420,15 @@
                                                OnClick="@(() => CompleteAsync(jobCard))"
                                                Class="text-sm font-weight-medium">
                                         Mark As Completed
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.Upload"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                               OnClick="@(() => MaskAsOnGoingAsync(jobCard))"
+                                               Class="text-sm font-weight-medium">
+                                        Mark As On Going
                                     </MudButton>
                                 </MudStack>
                             }
@@ -577,7 +611,7 @@
     }
 
     // Action handlers
-    private async Task OpenAddDonationDialog()
+    private async Task OpenAddJobCardDialog()
     {
         var parameters = new DialogParameters<AddEditJobCardDialog>
         {
@@ -595,7 +629,7 @@
             BackdropClick = true
         };
 
-        var dialog = await DialogService.ShowAsync<AddEditJobCardDialog>("Add New Donation", parameters, options);
+        var dialog = await DialogService.ShowAsync<AddEditJobCardDialog>("Add New Job Card", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is JobCardDTO jobCard)
@@ -604,19 +638,66 @@
         }
     }
 
-    private void ViewJobCard(JobCardSummaryDTO jobCard)
+    private async Task ViewJobCard(JobCardSummaryDTO jobCard)
     {
-        // Open view dialog
+        var parameters = new DialogParameters<AddEditJobCardDialog>
+        {
+            { x => x.IsEdit, true },
+            { x => x.IsViewOnly, true },
+            { x => x.JobCardId, jobCard.Id },
+            { x => x.MasterData, MasterData }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddEditJobCardDialog>("View Job Card", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is JobCardDTO updatedJobCard)
+        {
+
+        }
     }
 
-    private void EditJobCard(JobCardSummaryDTO jobCard)
+    private async Task EditJobCard(JobCardSummaryDTO jobCard)
     {
+        var parameters = new DialogParameters<AddEditJobCardDialog>
+        {
+            { x => x.IsEdit, true },
+            { x => x.IsViewOnly, false },
+            { x => x.JobCardId, jobCard.Id },
+            { x => x.MasterData, MasterData }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddEditJobCardDialog>("Edit Job Card", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is JobCardDTO updatedJobCard)
+        {
+            await GetJobCardsSummaryAsync();
+        }
         // Open edit dialog
+
     }
 
-    private void DeleteJobCard(JobCardSummaryDTO jobCard)
+    private async Task DeleteJobCard(JobCardSummaryDTO jobCard)
     {
         // Show confirmation dialog and delete
+        await GetJobCardsSummaryAsync();
     }
 
     private async Task SubmitForApprovalAsync(JobCardSummaryDTO jobCard)
@@ -655,6 +736,7 @@
                 if (saveResult is not null && saveResult.Succeeded)
                 {
                     Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                    await GetJobCardsSummaryAsync();
                 }
                 else if (result is not null && !saveResult.Succeeded)
                 {
@@ -700,6 +782,7 @@
                 if (saveResult is not null && saveResult.Succeeded)
                 {
                     Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                    await GetJobCardsSummaryAsync();
                 }
                 else if (result is not null && !saveResult.Succeeded)
                 {
@@ -748,6 +831,7 @@
                 if (saveResult is not null && saveResult.Succeeded)
                 {
                     Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                    await GetJobCardsSummaryAsync();
                 }
                 else if (result is not null && !saveResult.Succeeded)
                 {
@@ -796,6 +880,7 @@
                 if (saveResult is not null && saveResult.Succeeded)
                 {
                     Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                    await GetJobCardsSummaryAsync();
                 }
                 else if (result is not null && !saveResult.Succeeded)
                 {
@@ -844,6 +929,7 @@
                 if (saveResult is not null && saveResult.Succeeded)
                 {
                     Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                    await GetJobCardsSummaryAsync();
                 }
                 else if (result is not null && !saveResult.Succeeded)
                 {
@@ -891,6 +977,7 @@
                 if (saveResult is not null && saveResult.Succeeded)
                 {
                     Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                    await GetJobCardsSummaryAsync();
                 }
                 else if (result is not null && !saveResult.Succeeded)
                 {
@@ -939,6 +1026,7 @@
                 if (saveResult is not null && saveResult.Succeeded)
                 {
                     Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                    await GetJobCardsSummaryAsync();
                 }
                 else if (result is not null && !saveResult.Succeeded)
                 {
@@ -987,6 +1075,7 @@
                 if (saveResult is not null && saveResult.Succeeded)
                 {
                     Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                    await GetJobCardsSummaryAsync();
                 }
                 else if (result is not null && !saveResult.Succeeded)
                 {
@@ -1034,6 +1123,7 @@
                 if (saveResult is not null && saveResult.Succeeded)
                 {
                     Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                    await GetJobCardsSummaryAsync();
                 }
                 else if (result is not null && !saveResult.Succeeded)
                 {
@@ -1081,6 +1171,7 @@
                 if (saveResult is not null && saveResult.Succeeded)
                 {
                     Snackbar.Add(saveResult.SuccessMessage, Severity.Success);
+                    await GetJobCardsSummaryAsync();
                 }
                 else if (result is not null && !saveResult.Succeeded)
                 {
@@ -1127,8 +1218,8 @@
             JobCardStatus.Completed => Color.Success,
             JobCardStatus.OnGoing => Color.Info,
             JobCardStatus.PendingOnHold => Color.Warning,
-            JobCardStatus.OnHold => Color.Info,
-            JobCardStatus.PendingCancellation => Color.Warning,
+            JobCardStatus.OnHold => Color.Warning,
+            JobCardStatus.PendingCancellation => Color.Error,
             JobCardStatus.Cancelled => Color.Error,
             _ => Color.Default
         };

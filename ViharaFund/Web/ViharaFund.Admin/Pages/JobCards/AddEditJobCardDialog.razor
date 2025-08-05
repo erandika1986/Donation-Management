@@ -133,7 +133,8 @@
                                      Step="0.01m"
                                      Format="N2"
                                      HideSpinButtons="true"
-                                     HelperText="Enter estimated cost (optional)" />
+                                     HelperText="Enter estimated cost (optional)" 
+                                     Disabled="true" />
                 </MudItem>
 
                 <!-- Actual Total Amount -->
@@ -148,7 +149,7 @@
                                      Format="N2"
                                      HideSpinButtons="true"
                                      HelperText="Enter actual cost (optional)"
-                                     Disabled="@(JobCard.Status!= null && JobCard.Status.Id != (int)JobCardStatus.OnGoing)" />
+                                     Disabled="true" />
                 </MudItem>
 
                 <!-- Additional Note -->
