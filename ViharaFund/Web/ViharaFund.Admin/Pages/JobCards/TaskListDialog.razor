@@ -1,15 +1,21 @@
-﻿
-<MudDialog>
+﻿@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Shared.DTOs.JobCardTask
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IJSRuntime JSRuntime
+
+<MudDialog class="my-xl-dialog">
     <TitleContent>
         <MudPaper Class="pa-4 mb-4" Elevation="2">
             <div class="d-flex justify-space-between align-center flex-wrap">
                 <div>
                     <MudText Typo="Typo.h6" Class="mb-2">
                         <MudIcon Icon="@Icons.Material.Filled.Task" Class="mr-3" />
-                        Manage Tasks for @JobCardTitle
+                        Manage Tasks
                     </MudText>
                     <MudText Typo="Typo.body1" Class="mud-text-secondary">
-                        Manage and track job cards across different priorities and statuses
+                        Manage and track tasks for  @JobCardTitle
                     </MudText>
                 </div>
                 <MudButton Variant="Variant.Filled"
@@ -21,6 +27,51 @@
             </div>
         </MudPaper>
     </TitleContent>
+    <DialogContent>
+        <!-- Filters Section -->
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid AlignItems="Center">
+                <!-- Search -->
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudTextField @bind-Value="searchString"
+                                  Label="Search"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Placeholder="Search by title or description..."
+                                  Immediate="true"
+                                  DebounceInterval="300" />
+                </MudItem>
+
+                <!-- Campaign Filter -->
+                <MudItem xs="12" sm="6" md="3" lg="2">
+                    <MudSelect T="DropDownDTO" Label="Campaign" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Variant="Variant.Outlined" Margin="Margin.Dense" Value="SelectedTaskStatus" ValueChanged="@StatusChanged">
+                        @foreach (var status in TaskStatuses)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@status">@status.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- Actions -->
+                <MudItem xs="12" md="12" lg="7" Class="d-flex justify-end">
+                    <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Class="d-flex justify-content-end">
+                        <MudButton StartIcon="@Icons.Material.Filled.Clear"
+                                   OnClick="ClearFilters"
+                                   Color="Color.Secondary">
+                            Clear
+                        </MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Refresh"
+                                   OnClick="RefreshData"
+                                   Color="Color.Default">
+                            Refresh
+                        </MudButton>
+                    </MudButtonGroup>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </DialogContent>
 </MudDialog>
 
 @code {
@@ -38,5 +89,39 @@
 
     [Parameter]
     public string JobCardTitle { get; set; } = string.Empty;
+
+    private string searchString = "";
+
+    private IEnumerable<DropDownDTO> TaskStatuses = new List<DropDownDTO>();
+    public DropDownDTO SelectedTaskStatus { get; set; } = new();
+
+    private TaskMasterDataDTO MasterData { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterData();
+    }
+
+    private async Task LoadMasterData()
+    {
+        MasterData = await HttpClient.GetFromJsonAsync<TaskMasterDataDTO>("api/JobCardTask/get-task-master-data") ?? new();
+        TaskStatuses = MasterData.TaskStatuses ?? new List<DropDownDTO>();
+        SelectedTaskStatus = TaskStatuses.FirstOrDefault() ?? new DropDownDTO();
+    }
+
+    private async Task StatusChanged(DropDownDTO status)
+    {
+        SelectedTaskStatus = status;
+    }
+
+    private async Task ClearFilters()
+    {
+
+    }
+
+    private async Task RefreshData()
+    {
+
+    }
 
 }

@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.DTOs.JobCardTask;
 using ViharaFund.Application.Services;
 
 namespace ViharaFund.WebAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class JobCardTaskController : ControllerBase
@@ -63,6 +65,13 @@ namespace ViharaFund.WebAPI.Controllers
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
+        }
+
+        [HttpGet("get-task-master-data")]
+        public async Task<IActionResult> GetTaskMasterData()
+        {
+            var result = await _jobCardTaskService.GetTaskMasterData();
+            return Ok(result);
         }
 
         [HttpPost]

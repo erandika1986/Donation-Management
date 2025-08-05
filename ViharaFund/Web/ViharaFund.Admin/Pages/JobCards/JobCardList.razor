@@ -711,7 +711,8 @@
             CloseButton = true,
             MaxWidth = MaxWidth.Medium,
             FullWidth = true,
-            BackdropClick = true
+            BackdropClick = true,
+            Position = DialogPosition.TopCenter
         };
 
         var dialog = await DialogService.ShowAsync<TaskListDialog>("Manage Tasks", parameters, options);

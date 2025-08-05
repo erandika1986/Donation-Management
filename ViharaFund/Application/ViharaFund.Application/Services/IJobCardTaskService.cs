@@ -1,5 +1,6 @@
 ﻿using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.DTOs.JobCardTask;
+using ViharaFund.Shared.DTOs.JobCardTask;
 
 namespace ViharaFund.Application.Services
 {
@@ -13,6 +14,7 @@ namespace ViharaFund.Application.Services
         Task<ResultDto> UploadJobCardTaskAttachment(UploadFileDTO upload);
         Task<ResultDto> DeleteJobCardTaskAttachment(int jobCardTaskId, string fileName);
         Task<ResultDto> UpdateJobCardTaskStatus(int jobCardTaskId, string comment, Domain.Enums.TaskStatus taskStatus);
+        Task<TaskMasterDataDTO> GetTaskMasterData();
 
     }
 }

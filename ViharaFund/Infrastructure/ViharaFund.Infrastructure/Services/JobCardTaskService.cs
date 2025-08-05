@@ -4,9 +4,11 @@ using ViharaFund.Application.Constants;
 using ViharaFund.Application.Contracts;
 using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.DTOs.JobCardTask;
+using ViharaFund.Application.Helpers;
 using ViharaFund.Application.Services;
 using ViharaFund.Domain.Entities.Tenant;
 using ViharaFund.Infrastructure.Data;
+using ViharaFund.Shared.DTOs.JobCardTask;
 
 namespace ViharaFund.Infrastructure.Services
 {
@@ -115,6 +117,22 @@ namespace ViharaFund.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             return task;
+        }
+
+        public async Task<TaskMasterDataDTO> GetTaskMasterData()
+        {
+            var masterData = new TaskMasterDataDTO();
+            masterData.TaskStatuses.Add(new DropDownDTO() { Id = 0, Name = "All Status" });
+            foreach (Domain.Enums.TaskStatus status in Enum.GetValues(typeof(Domain.Enums.TaskStatus)))
+            {
+                masterData.TaskStatuses.Add(new DropDownDTO
+                {
+                    Id = (int)status,
+                    Name = EnumHelper.GetEnumDescription(status)
+                });
+            }
+
+            return masterData;
         }
 
         public async Task<ResultDto> Update(JobCardTaskDTO jobCardTask)
