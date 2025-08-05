@@ -56,7 +56,7 @@
 
             <!-- Campaign Filter -->
             <MudItem xs="12" sm="6" md="3" lg="2">
-                <MudSelect T="DropDownDTO" Label="Campaign" Class="mt-0" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Value="SelectedCampaign" ValueChanged="@CampaignChanged" Style="padding-right:2px;">
+                <MudSelect T="DropDownDTO" Label="Campaign" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Variant="Variant.Outlined" Margin="Margin.Dense" Value="SelectedCampaign" ValueChanged="@CampaignChanged">
                     @foreach (var campaign in ActiveCampaigns)
                     {
                         <MudSelectItem T="DropDownDTO" Value="@campaign">@campaign.Name</MudSelectItem>
@@ -66,7 +66,7 @@
 
             <!-- Priority Filter -->
             <MudItem xs="12" sm="6" md="3" lg="2">
-                <MudSelect T="DropDownDTO" Label="Priority" Class="mt-0" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Value="SelectedPriority" ValueChanged="@PriorityChanged" Style="padding-right:2px;">
+                <MudSelect T="DropDownDTO" Label="Priority" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Variant="Variant.Outlined" Margin="Margin.Dense" Value="SelectedPriority" ValueChanged="@PriorityChanged">
                     @foreach (var priority in Priorities)
                     {
                         <MudSelectItem T="DropDownDTO" Value="@priority">@priority.Name</MudSelectItem>
@@ -76,7 +76,7 @@
 
             <!-- Status Filter -->
             <MudItem xs="12" sm="6" md="3" lg="2">
-                <MudSelect T="DropDownDTO" Label="Status" Class="mt-0" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Value="SelectedStatus" ValueChanged="@StatusChanged" Style="padding-right:2px;">
+                <MudSelect T="DropDownDTO" Label="Status" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="false" Variant="Variant.Outlined" Margin="Margin.Dense" Value="SelectedStatus" ValueChanged="@StatusChanged">
                     @foreach (var status in Statuses)
                     {
                         <MudSelectItem T="DropDownDTO" Value="@status">@status.Name</MudSelectItem>
@@ -109,14 +109,9 @@
 
             <!-- Job Cards Table -->
     <!-- Campaigns Grid -->
-    <MudGrid>
+    <MudGrid Class="pb-2">
         @foreach (var jobCard in AllJobCards)
         {
-@*             var totalTaskCost = jobCard.Tasks?.Sum(t => t.EstimatedCost) ?? 0;
-            var completedTasks = jobCard.Tasks?.Count(t => t.Status == ViharaFund.Domain.Enums.TaskStatus.Completed) ?? 0;
-            var totalTasks = jobCard.Tasks?.Count ?? 0;
-            var progressPercentage = totalTasks > 0 ? Math.Round((double)completedTasks / totalTasks * 100) : 0; *@
-
             <MudItem xs="12" md="6" lg="6">
                 <MudCard Elevation="6" Style="border-radius: 15px; height: 100%; transition: all 0.3s ease;" Class="campaign-card">
                     <!-- Card Header -->
@@ -235,10 +230,11 @@
                                     <MudButton Variant="Variant.Outlined"
                                                Color="Color.Secondary"
                                                Size="Size.Small"
-                                               StartIcon="@Icons.Material.Filled.Add"
+                                               StartIcon="@Icons.Material.Filled.Task"
+                                               OnClick="@(() => ManageTaskAsync(jobCard))"
                                                Disabled="jobCard.Status != JobCardStatus.Draft && jobCard.Status != JobCardStatus.PendingApproval"
                                                Class="me-2 mb-2">
-                                        Add
+                                        Manage Tasks
                                     </MudButton>
                                 </MudTooltip>
 
@@ -634,7 +630,7 @@
 
         if (!result.Canceled && result.Data is JobCardDTO jobCard)
         {
-
+            await GetJobCardsSummaryAsync();
         }
     }
 
@@ -678,7 +674,7 @@
         var options = new DialogOptions
         {
             CloseButton = true,
-            MaxWidth = MaxWidth.Medium,
+            MaxWidth = MaxWidth.ExtraLarge,
             FullWidth = true,
             BackdropClick = true
         };
@@ -698,6 +694,33 @@
     {
         // Show confirmation dialog and delete
         await GetJobCardsSummaryAsync();
+    }
+
+    private async Task ManageTaskAsync(JobCardSummaryDTO jobCard)
+    {
+        var parameters = new DialogParameters<TaskListDialog>
+        {
+            { x => x.IsEdit, true },
+            { x => x.IsViewOnly, false },
+            { x => x.JobCardId, jobCard.Id },
+            { x => x.JobCardTitle, jobCard.Title }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<TaskListDialog>("Manage Tasks", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data != null)
+        {
+            await GetJobCardsSummaryAsync();
+        }
     }
 
     private async Task SubmitForApprovalAsync(JobCardSummaryDTO jobCard)

@@ -10,8 +10,8 @@ namespace ViharaFund.Domain.Enums
         OnGoing = 2,
         [Description("On Hold")]
         OnHold = 3,
-        [Description("Cancelled")]
-        Cancelled = 4,
+        [Description("Canceled")]
+        Canceled = 4,
         [Description("Completed")]
         Completed = 5
     }

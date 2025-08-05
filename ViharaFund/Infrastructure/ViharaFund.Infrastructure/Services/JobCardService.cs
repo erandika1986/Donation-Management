@@ -303,7 +303,7 @@ namespace ViharaFund.Infrastructure.Services
             tenantDbContext.JobCardApprovals.Update(historyEntity);
             await tenantDbContext.SaveChangesAsync();
 
-            var approvalRecordCount = tenantDbContext.JobCardApprovals.Count();
+            var approvalRecordCount = tenantDbContext.JobCardApprovals.Count(x => x.JobCardId == approval.JobCardId);
             var approvedCount = tenantDbContext.JobCardApprovals.Count(x => x.JobCardId == approval.JobCardId && x.Status == Domain.Enums.ApprovalStatus.Approved);
             var pendingCount = tenantDbContext.JobCardApprovals.Count(x => x.JobCardId == approval.JobCardId && x.Status == Domain.Enums.ApprovalStatus.Pending);
 

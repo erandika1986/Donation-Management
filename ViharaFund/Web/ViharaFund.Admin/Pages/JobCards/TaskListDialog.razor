@@ -1,0 +1,42 @@
+﻿
+<MudDialog>
+    <TitleContent>
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <div class="d-flex justify-space-between align-center flex-wrap">
+                <div>
+                    <MudText Typo="Typo.h6" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Task" Class="mr-3" />
+                        Manage Tasks for @JobCardTitle
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                        Manage and track job cards across different priorities and statuses
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           Class="mt-2 mt-sm-0">
+                    New Task
+                </MudButton>
+            </div>
+        </MudPaper>
+    </TitleContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public bool IsViewOnly { get; set; }
+
+    [Parameter]
+    public int JobCardId { get; set; } = new();
+
+    [Parameter]
+    public string JobCardTitle { get; set; } = string.Empty;
+
+}
