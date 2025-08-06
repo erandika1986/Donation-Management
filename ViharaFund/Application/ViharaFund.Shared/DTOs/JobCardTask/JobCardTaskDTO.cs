@@ -1,14 +1,20 @@
-﻿namespace ViharaFund.Application.DTOs.JobCardTask
+﻿using ViharaFund.Application.DTOs.Common;
+
+namespace ViharaFund.Application.DTOs.JobCardTask
 {
     public class JobCardTaskDTO
     {
         public int Id { get; set; }
         public string? JobCardTitle { get; set; }
         public int JobCardId { get; set; }
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public decimal EstimateAmount { get; set; }
         public decimal? ActualAmount { get; set; }
         public string? Comment { get; set; }
-        public ViharaFund.Domain.Enums.TaskStatus TaskStatus { get; set; }
+        public DropDownDTO TaskStatus { get; set; }
+        public string? StartDate { get; set; }
+        public string? EndDate { get; set; }
+        public string? CurrencyType { get; set; }
     }
 }

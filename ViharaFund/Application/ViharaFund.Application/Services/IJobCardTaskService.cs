@@ -10,7 +10,7 @@ namespace ViharaFund.Application.Services
         Task<ResultDto> Update(JobCardTaskDTO jobCardTask);
         Task<ResultDto> Delete(int id);
         Task<JobCardTaskDTO> GetById(int id);
-        Task<IEnumerable<JobCardTaskDTO>> GetAllByJobCardId(int jobCardId);
+        Task<List<JobCardTaskDTO>> GetAllByJobCardId(int jobCardId);
         Task<ResultDto> UploadJobCardTaskAttachment(UploadFileDTO upload);
         Task<ResultDto> DeleteJobCardTaskAttachment(int jobCardTaskId, string fileName);
         Task<ResultDto> UpdateJobCardTaskStatus(int jobCardTaskId, string comment, Domain.Enums.TaskStatus taskStatus);

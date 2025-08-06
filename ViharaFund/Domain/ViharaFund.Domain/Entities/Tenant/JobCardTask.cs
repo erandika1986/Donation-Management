@@ -10,6 +10,7 @@ namespace ViharaFund.Domain.Entities.Tenant
         public decimal EstimateAmount { get; set; }
         public decimal? ActualAmount { get; set; }
         public ViharaFund.Domain.Enums.TaskStatus TaskStatus { get; set; }
+        public DateTime? CompletedDate { get; set; }
 
         public virtual JobCard JobCard { get; set; }
 

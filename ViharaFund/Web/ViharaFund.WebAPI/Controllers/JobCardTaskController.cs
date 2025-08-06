@@ -18,14 +18,14 @@ namespace ViharaFund.WebAPI.Controllers
             _jobCardTaskService = jobCardTaskService;
         }
 
-        [HttpGet("jobcard/{jobCardId}")]
+        [HttpGet("get-all/{jobCardId}")]
         public async Task<IActionResult> GetAllByJobCardId(int jobCardId)
         {
             var result = await _jobCardTaskService.GetAllByJobCardId(jobCardId);
             return Ok(result);
         }
 
-        [HttpGet("getById/{id}")]
+        [HttpGet("get-by-id/{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _jobCardTaskService.GetById(id);

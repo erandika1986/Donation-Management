@@ -1,0 +1,306 @@
+﻿@using ViharaFund.Admin.Common
+@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Application.DTOs.JobCardTask
+
+@inherits MudComponentBase
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+
+<!-- Add/Edit JobCard Dialog -->
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            @if (IsViewOnly)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Visibility" Class="mr-3" />
+                @("Task Detail")
+            }
+            else
+            {
+                <MudIcon Icon="@(IsEdit? Icons.Material.Filled.Edit : Icons.Material.Filled.Task)" Class="mr-3" />
+                @(IsEdit ? "Edit Task" : "Add New Task")
+            }
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@isFormValid">
+            <MudGrid>
+                <!-- Title -->
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="JobTask.Title"
+                                  Label="Task Title"
+                                  ReadOnly="IsViewOnly"
+                                  Required="true"
+                                  RequiredError="Job task is required!"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="Enter a descriptive task title" />
+                </MudItem>
+
+                <!-- Description -->
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="JobTask.Description"
+                                  Label="Description"
+                                  ReadOnly="IsViewOnly"
+                                  Required="true"
+                                  RequiredError="Description is required!"
+                                  Lines="4"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="Provide detailed task description" />
+                </MudItem>
+
+                <!-- Priority -->
+@*                 <MudItem xs="12" sm="6" md="4" lg="4">
+                    <MudSelect T="DropDownDTO"
+                               Label="Priority"
+                               ReadOnly="IsViewOnly"
+                               @bind-Value="JobCard.Priority"
+                               Required="true"
+                               RequiredError="Priority is required!"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var priority in Priorities)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@priority">@priority.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem> *@
+
+                <!-- Status -->
+                <MudItem xs="12" sm="6" md="4" lg="4">
+                    <MudSelect T="DropDownDTO"
+                               Label="Status"
+                               ReadOnly="IsViewOnly"
+                               @bind-Value="JobTask.TaskStatus"
+                               Required="true"
+                               RequiredError="Status is required!"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var status in Statuses)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@status">@status.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+
+
+
+                <!-- Estimated Total Amount -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudNumericField @bind-Value="JobTask.EstimateAmount"
+                                     Label="Estimated  Amount"
+                                     ReadOnly="IsViewOnly"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Min="0.01m"
+                                     Step="0.01m"
+                                     Format="N2"
+                                     HideSpinButtons="true"
+                                     HelperText="Enter estimated cost (optional)"/>
+                </MudItem>
+
+                <!-- Actual Total Amount -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudNumericField @bind-Value="JobTask.ActualAmount"
+                                     Label="Actual Total Amount"
+                                     ReadOnly="IsViewOnly"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Min="0.01m"
+                                     Step="0.01m"
+                                     Format="N2"
+                                     HideSpinButtons="true"
+                                     HelperText="Enter actual cost (optional)"
+                                     Disabled="true" />
+                </MudItem>
+
+                <!-- Additional Note -->
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="JobTask.Comment"
+                                  Label="Additional Notes"
+                                  ReadOnly="IsViewOnly"
+                                  Lines="3"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  HelperText="Optional additional notes..." />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog" Color="Color.Default">Cancel</MudButton>
+        @if (!IsViewOnly)
+        {
+            <MudButton Color="Color.Success"
+                       Variant="Variant.Filled"
+                       OnClick="SaveTaskAsync"
+                       Disabled="!isFormValid || isSubmitting"
+                       StartIcon="@Icons.Material.Filled.Save">
+                @if (isSubmitting)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Saving...</MudText>
+                }
+                else
+                {
+                    @(IsEdit ? "Update" : "Create")
+                }
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public bool IsViewOnly { get; set; }
+
+    [Parameter]
+    public int TaskId { get; set; } = new();
+
+    [Parameter]
+    public int JobCardId { get; set; } = new();
+
+    [Parameter]
+    public string JobCardTitle { get; set; } = string.Empty;
+
+    private string searchString = "";
+
+    private JobCardTaskDTO JobTask { get; set; } = new();
+    private MudForm form = null!;
+    private bool isFormValid = false;
+    private bool isSubmitting = false;
+
+    [Parameter]
+    public IEnumerable<DropDownDTO> Statuses { get; set; } = new List<DropDownDTO>();
+    public DropDownDTO SelectedStatus { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if(TaskId > 0)
+        {
+            await LoadJobTask();
+        }
+        else
+        {
+            JobTask = new JobCardTaskDTO();
+            JobTask.TaskStatus = Statuses.FirstOrDefault() ?? new DropDownDTO();
+            JobTask.JobCardId = JobCardId;
+        }
+    }
+
+    private async Task LoadJobTask()
+    {
+        JobTask = await HttpClient.GetFromJsonAsync<JobCardTaskDTO>($"api/JobCardTask/get-by-id/{TaskId}") ?? new();
+
+        if (JobTask != null)
+        {
+            JobTask.TaskStatus = Statuses.FirstOrDefault(s => s.Id == JobTask.TaskStatus.Id) ?? new DropDownDTO();
+        }
+    }
+
+    private void CloseDialog()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task SaveTaskAsync()
+    {
+        await form.Validate();
+        if (!isFormValid)
+            return;
+
+        isSubmitting = true;
+        StateHasChanged();
+
+        if (TaskId == 0)
+        {
+            await CreateTaskAsync();
+        }
+        else
+        {
+            await UpdateTaskAsync();
+        }
+    }
+
+    private async Task CreateTaskAsync()
+    {
+        try
+        {
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCardTask/create", JobTask);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (result is not null && result.Succeeded)
+                {
+                    JobTask.Id = result.Id;
+                    Snackbar.Add(result.SuccessMessage, Severity.Success);
+                    MudDialog.Close(DialogResult.Ok(JobTask));
+                }
+                else if (result is not null && !result.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", result.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create task.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error processing task: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateTaskAsync()
+    {
+        try
+        {
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCardTask/update", JobTask);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (result is not null && result.Succeeded)
+                {
+                    JobTask.Id = result.Id;
+                    Snackbar.Add(result.SuccessMessage, Severity.Success);
+                    MudDialog.Close(DialogResult.Ok(JobTask));
+                }
+                else if (result is not null && !result.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", result.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to update task.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error processing task: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+}

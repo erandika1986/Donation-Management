@@ -1,4 +1,6 @@
-﻿@using ViharaFund.Application.DTOs.Common
+﻿@using ViharaFund.Admin.Helper
+@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Application.DTOs.JobCardTask
 @using ViharaFund.Shared.DTOs.JobCardTask
 @inject HttpClient HttpClient
 @inject ISnackbar Snackbar
@@ -21,6 +23,7 @@
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddTaskDialog"
                            Class="mt-2 mt-sm-0">
                     New Task
                 </MudButton>
@@ -71,6 +74,112 @@
                 </MudItem>
             </MudGrid>
         </MudPaper>
+        <!-- Job Cards Table -->
+        <!-- Campaigns Grid -->
+        <MudGrid>
+            @foreach (var task in Tasks)
+            {
+                <MudItem xs="12" md="6" lg="4">
+                    <MudCard Elevation="6" Style="border-radius: 15px; height: 100%; transition: all 0.3s ease;" Class="campaign-card">
+                        <!-- Card Header -->
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6" Class="mb-2">@task.Title</MudText>
+                                <MudGrid AlignItems="Center" Justify="Justify.SpaceBetween">
+                                    <MudItem>
+                                        <MudChip T="string" Color="@GetStatusColor(task.TaskStatus.Id)" Size="Size.Small" Text="@task.TaskStatus.Name.ToUpper()" />
+                                    </MudItem>
+                                    <MudItem>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@task.StartDate - @task.EndDate)</MudText>
+                                    </MudItem>
+                                </MudGrid>
+
+                            </CardHeaderContent>
+                        </MudCardHeader>
+
+                        <!-- Progress Section -->
+                        <MudCardContent Class="pt-1 pb-3">
+                            <MudGrid AlignItems="Center" Justify="Justify.SpaceBetween" Class="mb-3">
+                                <MudItem>
+                                    <MudText Typo="Typo.h5" Color="Color.Success">@task.CurrencyType @( @task.ActualAmount.HasValue? @task.ActualAmount.Value.ToString("N0") : "0.00") </MudText>
+                                </MudItem>
+                                <MudItem>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">of @task.CurrencyType  @( @task.EstimateAmount)</MudText>
+                                </MudItem>
+                            </MudGrid>
+
+                            <!-- Card Actions -->
+                            <MudCardActions Class="pa-4 d-flex flex-wrap align-items-center" Style="background: #fafafa;">
+                                <MudTooltip Text="Add New Donation" Color="Color.Secondary" Placement="Placement.Top">
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Secondary"
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.AttachMoney"
+                                               Class="me-2 mb-2">
+                                        Add
+                                    </MudButton>
+                                </MudTooltip>
+
+                                <MudSpacer />
+                                @if ((ViharaFund.Domain.Enums.TaskStatus)task.TaskStatus.Id == ViharaFund.Domain.Enums.TaskStatus.Pending)
+                                {
+                                    <MudTooltip Text="Edit" Color="Color.Warning" Placement="Placement.Top">
+                                        <MudIconButton Variant="Variant.Filled"
+                                                       Icon="@Icons.Material.Filled.Edit"
+                                                       Size="Size.Small"
+                                                       Color="Color.Warning"
+                                                       Class="m-1"></MudIconButton>
+                                    </MudTooltip>
+                                    <MudTooltip Text="Launch" Color="Color.Primary" Placement="Placement.Top">
+                                        <MudIconButton Variant="Variant.Filled"
+                                                       Icon="@Icons.Material.Filled.Launch"
+                                                       Size="Size.Small"
+                                                       Color="Color.Primary"
+                                                       Class="m-1"></MudIconButton>
+                                    </MudTooltip>
+                                }
+                                else
+                                {
+                                    <MudTooltip Text="Edit" Color="Color.Warning" Placement="Placement.Top">
+                                        <MudIconButton Variant="Variant.Filled"
+                                                       Icon="@Icons.Material.Filled.Edit"
+                                                       Size="Size.Small"
+                                                       Color="Color.Warning"
+                                                       Class="m-1"></MudIconButton>
+                                    </MudTooltip>
+                                    <MudTooltip Text="Share" Color="Color.Info" Placement="Placement.Top">
+                                        <MudIconButton Variant="Variant.Filled"
+                                                       Icon="@Icons.Material.Filled.Share"
+                                                       Size="Size.Small"
+                                                       Color="Color.Info"
+                                                       Class="m-1"></MudIconButton>
+                                    </MudTooltip>
+                                    <MudTooltip Text="View Details" Color="Color.Primary" Placement="Placement.Top">
+                                        <MudIconButton Variant="Variant.Filled"
+                                                       Icon="@Icons.Material.Filled.Visibility"
+                                                       Size="Size.Small"
+                                                       Color="Color.Primary"
+                                                       Class="m-1"></MudIconButton>
+                                    </MudTooltip>
+                                }
+                                <MudTooltip Text="Delete" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Variant="Variant.Filled"
+                                                   Icon="@Icons.Material.Filled.Delete"
+                                                   Size="Size.Small"
+                                                   Color="Color.Error"
+                                                   Class="m-1"></MudIconButton>
+                                </MudTooltip>
+                            </MudCardActions>
+                        </MudCardContent>
+
+ 
+
+
+                </MudCard>
+            </MudItem>
+                        }
+        </MudGrid>
+
     </DialogContent>
 </MudDialog>
 
@@ -97,6 +206,11 @@
 
     private TaskMasterDataDTO MasterData { get; set; } = new();
 
+    private IEnumerable<JobCardTaskDTO> Tasks = new List<JobCardTaskDTO>();
+
+    private int CurrentPage = 1;
+    private int PageSize = 10;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadMasterData();
@@ -107,20 +221,129 @@
         MasterData = await HttpClient.GetFromJsonAsync<TaskMasterDataDTO>("api/JobCardTask/get-task-master-data") ?? new();
         TaskStatuses = MasterData.TaskStatuses ?? new List<DropDownDTO>();
         SelectedTaskStatus = TaskStatuses.FirstOrDefault() ?? new DropDownDTO();
+
+        await GetJobCardTaskAsync();
+    }
+
+    private async Task GetJobCardTaskAsync()
+    {
+        Tasks = await HttpClient.GetFromJsonAsync<List<JobCardTaskDTO>>($"api/JobCardTask/get-all/{JobCardId}") ?? new();
+
+        StateHasChanged();
     }
 
     private async Task StatusChanged(DropDownDTO status)
     {
         SelectedTaskStatus = status;
+        await GetJobCardTaskAsync();
     }
 
     private async Task ClearFilters()
     {
-
+        SelectedTaskStatus = TaskStatuses.FirstOrDefault() ?? new DropDownDTO();
+        await GetJobCardTaskAsync();
     }
 
     private async Task RefreshData()
     {
+
+    }
+
+    private Color GetStatusColor(int status)
+    {
+        return (ViharaFund.Domain.Enums.TaskStatus)status switch
+        {
+            ViharaFund.Domain.Enums.TaskStatus.Completed => Color.Success,
+            ViharaFund.Domain.Enums.TaskStatus.OnHold => Color.Warning,
+            ViharaFund.Domain.Enums.TaskStatus.Canceled => Color.Error,
+            ViharaFund.Domain.Enums.TaskStatus.OnGoing => Color.Info,
+            _ => Color.Secondary
+        };
+    }
+
+    private async Task OpenAddTaskDialog()
+    {
+        var parameters = new DialogParameters<AddEditTaskDialog>
+        {
+            { x => x.IsEdit, false },
+            { x => x.IsViewOnly, false },
+            { x => x.TaskId, 0 },
+            { x => x.Statuses, TaskStatuses.Where(x => x.Id>0).ToList() },
+            { x => x.JobCardId, JobCardId }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddEditTaskDialog>("Add New Task", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is JobCardTaskDTO task)
+        {
+            //await GetJobCardsSummaryAsync();
+        }
+    }
+
+    private async Task ViewJobCard(JobCardTaskPaymentDTO task)
+    {
+        var parameters = new DialogParameters<AddEditTaskDialog>
+        {
+            { x => x.IsEdit, true },
+            { x => x.IsViewOnly, true },
+            { x => x.TaskId, task.Id },
+            { x => x.Statuses, TaskStatuses.Where(x => x.Id>0).ToList() },
+            { x => x.JobCardId, JobCardId }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddEditTaskDialog>("View Task", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is JobCardTaskDTO viewTask)
+        {
+
+        }
+    }
+
+    private async Task EditJobCard(JobCardTaskDTO task)
+    {
+        var parameters = new DialogParameters<AddEditTaskDialog>
+        {
+            { x => x.IsEdit, true },
+            { x => x.IsViewOnly, false },
+            { x => x.TaskId, task.Id },
+            { x => x.Statuses, TaskStatuses.Where(x => x.Id>0).ToList() },
+            { x => x.JobCardId, JobCardId }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddEditTaskDialog>("Edit Task", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is JobCardTaskDTO updatedTask)
+        {
+            //await GetJobCardsSummaryAsync();
+        }
+        // Open edit dialog
 
     }
 

@@ -30,6 +30,7 @@ namespace ViharaFund.Infrastructure.Services
             {
                 JobCardId = jobCardTask.JobCardId,
                 Title = jobCardTask.Title,
+                Description = jobCardTask.Description,
                 EstimateAmount = jobCardTask.EstimateAmount,
                 TaskStatus = Domain.Enums.TaskStatus.Pending,
                 CreatedDate = dateTime.UtcNow,
@@ -80,8 +81,12 @@ namespace ViharaFund.Infrastructure.Services
             throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<JobCardTaskDTO>> GetAllByJobCardId(int jobCardId)
+        public async Task<List<JobCardTaskDTO>> GetAllByJobCardId(int jobCardId)
         {
+            var defaultCurrencyTypeId = tenantDbContext.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.DefaultCurrencyId);
+            var defaultCurrencyType = await tenantDbContext.CurrencyTypes
+                .FirstOrDefaultAsync(x => x.Id == Convert.ToInt32(defaultCurrencyTypeId.Value));
+
             var tasks = await tenantDbContext.JobCardTasks
                 .Where(t => t.JobCardId == jobCardId && t.IsActive)
                 .Select(t => new JobCardTaskDTO
@@ -91,8 +96,12 @@ namespace ViharaFund.Infrastructure.Services
                     JobCardTitle = t.JobCard != null ? t.JobCard.Title : null,
                     ActualAmount = t.ActualAmount,
                     EstimateAmount = t.EstimateAmount,
-                    TaskStatus = t.TaskStatus,
-                    Title = t.Title
+                    CurrencyType = defaultCurrencyType.Name,
+                    TaskStatus = new DropDownDTO() { Id = (int)t.TaskStatus, Name = EnumHelper.GetEnumDescription(t.TaskStatus) },
+                    Title = t.Title,
+                    Description = t.Description,
+                    StartDate = t.CreatedDate.ToString("yyyy-MM-dd"),
+                    EndDate = t.CompletedDate.HasValue ? t.CompletedDate.Value.ToString("yyyy-MM-dd") : string.Empty
                 })
                 .ToListAsync();
 
@@ -111,8 +120,9 @@ namespace ViharaFund.Infrastructure.Services
                     JobCardTitle = t.JobCard != null ? t.JobCard.Title : null,
                     ActualAmount = t.ActualAmount,
                     EstimateAmount = t.EstimateAmount,
-                    TaskStatus = t.TaskStatus,
-                    Title = t.Title
+                    TaskStatus = new DropDownDTO() { Id = (int)t.TaskStatus, Name = EnumHelper.GetEnumDescription(t.TaskStatus) },
+                    Title = t.Title,
+                    Description = t.Description
                 })
                 .FirstOrDefaultAsync();
 
@@ -155,7 +165,7 @@ namespace ViharaFund.Infrastructure.Services
             entity.JobCardId = jobCardTask.JobCardId;
             entity.EstimateAmount = jobCardTask.EstimateAmount;
             entity.ActualAmount = jobCardTask.ActualAmount;
-            entity.TaskStatus = jobCardTask.TaskStatus;
+            entity.TaskStatus = (ViharaFund.Domain.Enums.TaskStatus)jobCardTask.TaskStatus.Id;
             entity.UpdatedDate = dateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
 
