@@ -315,6 +315,12 @@ namespace ViharaFund.Infrastructure.Services
             if (approvalRecordCount == approvedCount)
             {
                 entity.Status = Domain.Enums.JobCardStatus.Approved;
+                foreach (var task in entity.JobCardTasks)
+                {
+                    task.TaskStatus = Domain.Enums.TaskStatus.Approved;
+                    task.UpdatedByUserId = currentUserService.UserId;
+                    task.UpdatedDate = dateTime.UtcNow;
+                }
             }
             else if (pendingCount > 0 && pendingCount < approvalRecordCount)
             {
@@ -342,11 +348,6 @@ namespace ViharaFund.Infrastructure.Services
             if (entity == null)
             {
                 return ResultDto.Failure(new[] { "Job Card not found." });
-            }
-
-            if (entity.Status != Domain.Enums.JobCardStatus.Approved && entity.Status != Domain.Enums.JobCardStatus.OnHold)
-            {
-                return ResultDto.Failure(new[] { "Only Job Cards in Approved status can be marked as OnGoing." });
             }
 
             await jobCardHistoryService.SaveAsync(entity);

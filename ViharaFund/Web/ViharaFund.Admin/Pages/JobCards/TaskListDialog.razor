@@ -141,6 +141,15 @@
                                         </MudButton>
                                     </MudTooltip>                           
                                 }
+                                <MudTooltip Text="Add New Donation" Color="Color.Secondary" Placement="Placement.Top">
+                                    <MudButton Variant="Variant.Outlined"
+  
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.AddComment"
+                                               Class="me-2 mb-2">
+                                        Add a Comment
+                                    </MudButton>
+                                </MudTooltip>
                                 <MudSpacer />
                                 @if ((ViharaFund.Domain.Enums.TaskStatus)task.TaskStatus.Id == ViharaFund.Domain.Enums.TaskStatus.Pending)
                                 {
@@ -161,11 +170,11 @@
                                 }
                                 else if ((ViharaFund.Domain.Enums.TaskStatus)task.TaskStatus.Id == ViharaFund.Domain.Enums.TaskStatus.Approved)
                                 {
-                                    <MudTooltip Text="Share" Color="Color.Info" Placement="Placement.Top">
+                                    <MudTooltip Text="Start Task" Color="Color.Info" Placement="Placement.Top">
                                         <MudIconButton Variant="Variant.Filled"
-                                                       Icon="@Icons.Material.Filled.Share"
+                                                       Icon="@Icons.Material.Filled.PlayArrow"
                                                        Size="Size.Small"
-                                                       Color="Color.Info"
+                                                       Color="Color.Success"
                                                        Class="m-1"></MudIconButton>
                                     </MudTooltip>
                                 }
@@ -267,8 +276,8 @@
     {
         return (ViharaFund.Domain.Enums.TaskStatus)status switch
         {
-            ViharaFund.Domain.Enums.TaskStatus.Approved => Color.Primary,
-            ViharaFund.Domain.Enums.TaskStatus.Completed => Color.Success,
+            ViharaFund.Domain.Enums.TaskStatus.Approved => Color.Success,
+            ViharaFund.Domain.Enums.TaskStatus.Completed => Color.Primary,
             // ViharaFund.Domain.Enums.TaskStatus.OnHold => Color.Warning,
             // ViharaFund.Domain.Enums.TaskStatus.Canceled => Color.Error,
             ViharaFund.Domain.Enums.TaskStatus.OnGoing => Color.Info,

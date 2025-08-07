@@ -5,6 +5,7 @@
 @using ViharaFund.Application.DTOs.Common
 @using ViharaFund.Application.DTOs.JobCard
 @using ViharaFund.Domain.Enums
+@using ViharaFund.Shared.DTOs.Common
 @using ViharaFund.Shared.DTOs.JobCard
 @using ViharaFund.Shared.Helpers
 
@@ -407,7 +408,7 @@
                             else if (jobCard.Status == JobCardStatus.PendingCompletion)
                             {
                                 <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
-                                    <MudButton Variant="Variant.Filled"
+@*                                     <MudButton Variant="Variant.Filled"
                                                Color="Color.Success"
                                                StartIcon="@Icons.Material.Filled.Upload"
                                                FullWidth="true"
@@ -415,7 +416,7 @@
                                                OnClick="@(() => CompleteAsync(jobCard))"
                                                Class="text-sm font-weight-medium">
                                         Mark As Completed
-                                    </MudButton>
+                                    </MudButton> *@
                                     <MudButton Variant="Variant.Filled"
                                                Color="Color.Info"
                                                StartIcon="@Icons.Material.Filled.PlayArrow"
@@ -423,7 +424,7 @@
                                                Size="Size.Small"
                                                OnClick="@(() => MaskAsOnGoingAsync(jobCard))"
                                                Class="text-sm font-weight-medium">
-                                        Resume As On Going
+                                        Start Job Card
                                     </MudButton>
                                 </MudStack>
                             }
@@ -743,11 +744,11 @@
 
         if (!result.Canceled)
         {
-            var comment = result.Data as string;
+            var comment = result.Data as CommentDTO;
 
             var request = new JobCardStatusUpdateDTO()
             {
-                Comment = comment,
+                Comment = comment.Comment,
                 JobCardId = jobCard.Id
             };
             // Replace with your actual API endpoint
@@ -792,9 +793,9 @@
 
         if (!result.Canceled)
         {
-            var comment = result.Data as string;
+            var comment = result.Data as CommentDTO;
 
-            approval.Remarks = comment;
+            approval.Remarks = comment.Comment;
 
             // Replace with your actual API endpoint
             var response = await HttpClient.PostAsJsonAsync("api/JobCard/approve", approval);
@@ -838,11 +839,11 @@
 
         if (!result.Canceled)
         {
-            var comment = result.Data as string;
+            var comment = result.Data as CommentDTO;
 
             var request = new JobCardStatusUpdateDTO()
             {
-                Comment = comment,
+                Comment = comment.Comment,
                 JobCardId = jobCard.Id
             };
             // Replace with your actual API endpoint
@@ -887,11 +888,11 @@
 
         if (!result.Canceled)
         {
-            var comment = result.Data as string;
+            var comment = result.Data as CommentDTO;
 
             var request = new JobCardStatusUpdateDTO()
             {
-                Comment = comment,
+                Comment = comment.Comment,
                 JobCardId = jobCard.Id
             };
             // Replace with your actual API endpoint
@@ -936,11 +937,11 @@
 
         if (!result.Canceled)
         {
-            var comment = result.Data as string;
+            var comment = result.Data as CommentDTO;
 
             var request = new JobCardStatusUpdateDTO()
             {
-                Comment = comment,
+                Comment = comment.Comment,
                 JobCardId = jobCard.Id
             };
             // Replace with your actual API endpoint
@@ -985,10 +986,10 @@
 
         if (!result.Canceled)
         {
-            var comment = result.Data as string;
+            var comment = result.Data as CommentDTO;
             var request = new JobCardStatusUpdateDTO()
             {
-                Comment = comment,
+                Comment = comment.Comment,
                 JobCardId = jobCard.Id
             };
             // Replace with your actual API endpoint
@@ -1033,11 +1034,11 @@
 
         if (!result.Canceled)
         {
-            var comment = result.Data as string;
+            var comment = result.Data as CommentDTO;
 
             var request = new JobCardStatusUpdateDTO()
             {
-                Comment = comment,
+                Comment = comment.Comment,
                 JobCardId = jobCard.Id
             };
             // Replace with your actual API endpoint
@@ -1082,11 +1083,11 @@
 
         if (!result.Canceled)
         {
-            var comment = result.Data as string;
+            var comment = result.Data as CommentDTO;
 
             var request = new JobCardStatusUpdateDTO()
             {
-                Comment = comment,
+                Comment = comment.Comment,
                 JobCardId = jobCard.Id
             };
             // Replace with your actual API endpoint
@@ -1131,10 +1132,10 @@
 
         if (!result.Canceled)
         {
-            var comment = result.Data as string;
+            var comment = result.Data as CommentDTO;
             var request = new JobCardStatusUpdateDTO()
             {
-                Comment = comment,
+                Comment = comment.Comment,
                 JobCardId = jobCard.Id
             };
             // Replace with your actual API endpoint
@@ -1179,10 +1180,10 @@
 
         if (!result.Canceled)
         {
-            var comment = result.Data as string;
+            var comment = result.Data as CommentDTO;
             var request = new JobCardStatusUpdateDTO()
             {
-                Comment = comment,
+                Comment = comment.Comment,
                 JobCardId = jobCard.Id
             };
             // Replace with your actual API endpoint
@@ -1207,7 +1208,6 @@
             }
         }
     }
-
 
 
     // Helper methods for styling
