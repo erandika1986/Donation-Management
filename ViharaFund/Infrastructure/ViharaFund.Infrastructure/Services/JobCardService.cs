@@ -15,7 +15,7 @@ namespace ViharaFund.Infrastructure.Services
     public class JobCardService(
         TenantDbContext tenantDbContext,
         IJobCardHistoryService jobCardHistoryService,
-        ICurrentUserService currentUserService, ICampaignService campaignService) : IJobCardService
+        ICurrentUserService currentUserService, ICampaignService campaignService, IDateTime dateTime) : IJobCardService
     {
         public async Task<ResultDto> DeleteAsync(int jobCardId)
         {
@@ -72,6 +72,7 @@ namespace ViharaFund.Infrastructure.Services
                     Title = x.Title,
                     Description = x.Description,
                     Priority = x.Priority,
+                    JobCardNumber = x.JobCardNo,
                     Status = x.Status,
                     CreatedDate = x.CreatedDate,
                     CreatedBy = x.CreatedByUser.FullName,
@@ -213,6 +214,7 @@ namespace ViharaFund.Infrastructure.Services
             {
                 AssignRoleGroupId = jobCard.AssignedRoleGroup.Id,
                 Title = jobCard.Title,
+                JobCardNo = await GenerateJobCardNumberAsync(dateTime.UtcNow),
                 Description = jobCard.Description,
                 Priority = (JobPriority)jobCard.Priority.Id,
                 Status = Domain.Enums.JobCardStatus.Draft,
@@ -864,6 +866,31 @@ namespace ViharaFund.Infrastructure.Services
             await tenantDbContext.SaveChangesAsync();
 
             return ResultDto.Success("Job Card Fund Request archived successfully.", fundRequest.Id);
+        }
+        private async Task<string> GenerateJobCardNumberAsync(DateTime date)
+        {
+            string datePart = date.ToString("yyyyMMdd");
+            string prefix = $"JC{datePart}";
+
+            // Get the max sequence number for today's invoices
+            var lastJobCard = await tenantDbContext.JobCards
+                .Where(i => i.JobCardNo.StartsWith(prefix))
+                .OrderByDescending(i => i.JobCardNo)
+                .FirstOrDefaultAsync();
+
+            int nextSequence = 1;
+
+            if (lastJobCard != null)
+            {
+                string lastNumber = lastJobCard.JobCardNo.Substring(prefix.Length);
+                if (int.TryParse(lastNumber, out int lastSeq))
+                {
+                    nextSequence = lastSeq + 1;
+                }
+            }
+
+            string jobCardNumber = $"{prefix}{nextSequence.ToString("D4")}";
+            return jobCardNumber;
         }
     }
 }

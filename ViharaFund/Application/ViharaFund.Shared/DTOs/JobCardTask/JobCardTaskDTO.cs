@@ -6,6 +6,7 @@ namespace ViharaFund.Application.DTOs.JobCardTask
     {
         public int Id { get; set; }
         public string? JobCardTitle { get; set; }
+        public string? TaskNumber { get; set; }
         public int JobCardId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
@@ -16,5 +17,6 @@ namespace ViharaFund.Application.DTOs.JobCardTask
         public string? StartDate { get; set; }
         public string? EndDate { get; set; }
         public string? CurrencyType { get; set; }
+        public string? CreatedBy { get; set; }
     }
 }

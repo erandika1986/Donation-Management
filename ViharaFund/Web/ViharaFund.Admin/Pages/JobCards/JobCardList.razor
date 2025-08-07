@@ -119,7 +119,7 @@
                         <CardHeaderContent>
                             <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Class="mb-3">
                                 <MudText Typo="Typo.h6" Class="font-weight-semibold mud-text-truncate flex-grow-1 mr-2">
-                                    @jobCard.Title
+                                   @jobCard.AssignedCampaign: @jobCard.Title
                                 </MudText>
                                 <MudChip T="string"
                                          Color="GetJobCardStatusColor(jobCard.Status)"
@@ -131,10 +131,10 @@
 
                             <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
                                 <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                    @jobCard.CreatedDate.ToString("yyyy-MM-dd")
+                                    @(string.IsNullOrEmpty(@jobCard.JobCardNumber) ? "" : $"Job Card No: {@jobCard.JobCardNumber}") @($"Date: {@jobCard.CreatedDate.ToString("yyyy-MM-dd")}")
                                 </MudText>
                                 <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                    by @jobCard.CreatedBy
+                                    @($"Created By: {@jobCard.CreatedBy}")
                                 </MudText>
                             </MudStack>
                         </CardHeaderContent>
@@ -196,8 +196,8 @@
                                                     <MudIcon Icon="@GetApprovalIcon(approval.Status)" Size="Size.Small" />
                                                 </MudAvatar>
                                                 <div>
-                                                    <MudText Typo="Typo.body2" Class="font-weight-medium">@approval.ApproveLevelName</MudText>
-                                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@approval.ApproverUser</MudText>
+                                                    <MudText Typo="Typo.body2" Class="font-weight-medium">@($"Approval Level: {@approval.ApproveLevelName}")</MudText>
+                                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@($"Approved By: {@approval.ApproverUser}")</MudText>
                                                 </div>
                                             </MudStack>
                                             <MudChip T="string"
@@ -215,7 +215,7 @@
 
 
                     <!-- Description -->
-                    <MudCardContent Class="py-2">
+                    <MudCardContent Class="py-1">
                         <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                             @jobCard.Description
                         </MudText>
@@ -226,13 +226,12 @@
                         <MudStack Class="w-100">
                             <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
                                 <!-- Add Task Button -->
-                                <MudTooltip Text="Add New Task" Color="Color.Secondary" Placement="Placement.Top">
+                                <MudTooltip Text="Manage Tasks" Color="Color.Secondary" Placement="Placement.Top">
                                     <MudButton Variant="Variant.Outlined"
                                                Color="Color.Secondary"
                                                Size="Size.Small"
                                                StartIcon="@Icons.Material.Filled.Task"
                                                OnClick="@(() => ManageTaskAsync(jobCard))"
-                                               Disabled="jobCard.Status != JobCardStatus.Draft && jobCard.Status != JobCardStatus.PendingApproval"
                                                Class="me-2 mb-2">
                                         Manage Tasks
                                     </MudButton>
@@ -317,7 +316,7 @@
                             {
                                 <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
                                     <MudButton Variant="Variant.Filled"
-                                               Color="Color.Success"
+                                               Color="Color.Info"
                                                StartIcon="@Icons.Material.Filled.PlayArrow"
                                                FullWidth="true"
                                                Size="Size.Small"
@@ -372,13 +371,13 @@
                                         Mark As On-Hold
                                     </MudButton>
                                     <MudButton Variant="Variant.Filled"
-                                               Color="Color.Success"
+                                               Color="Color.Info"
                                                StartIcon="@Icons.Material.Filled.PlayArrow"
                                                FullWidth="true"
                                                Size="Size.Small"
                                                OnClick="@(() => MaskAsOnGoingAsync(jobCard))"
                                                Class="text-sm font-weight-medium">
-                                        Mark As On Going
+                                        Resume As On Going
                                     </MudButton>
                                 </MudStack>
                             }
@@ -395,13 +394,13 @@
                                         Mark As Canceled
                                     </MudButton>
                                     <MudButton Variant="Variant.Filled"
-                                               Color="Color.Success"
+                                               Color="Color.Info"
                                                StartIcon="@Icons.Material.Filled.PlayArrow"
                                                FullWidth="true"
                                                Size="Size.Small"
                                                OnClick="@(() => MaskAsOnGoingAsync(jobCard))"
                                                Class="text-sm font-weight-medium">
-                                        Mark As On Going
+                                        Resume As On Going
                                     </MudButton>
                                 </MudStack>
                             }
@@ -418,13 +417,13 @@
                                         Mark As Completed
                                     </MudButton>
                                     <MudButton Variant="Variant.Filled"
-                                               Color="Color.Success"
-                                               StartIcon="@Icons.Material.Filled.Upload"
+                                               Color="Color.Info"
+                                               StartIcon="@Icons.Material.Filled.PlayArrow"
                                                FullWidth="true"
                                                Size="Size.Small"
                                                OnClick="@(() => MaskAsOnGoingAsync(jobCard))"
                                                Class="text-sm font-weight-medium">
-                                        Mark As On Going
+                                        Resume As On Going
                                     </MudButton>
                                 </MudStack>
                             }

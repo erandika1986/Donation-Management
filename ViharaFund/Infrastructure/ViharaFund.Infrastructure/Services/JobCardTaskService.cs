@@ -29,6 +29,7 @@ namespace ViharaFund.Infrastructure.Services
             var entity = new JobCardTask
             {
                 JobCardId = jobCardTask.JobCardId,
+                TaskNumber = await GenerateTaskNumberAsync(dateTime.UtcNow),
                 Title = jobCardTask.Title,
                 Description = jobCardTask.Description,
                 EstimateAmount = jobCardTask.EstimateAmount,
@@ -101,7 +102,9 @@ namespace ViharaFund.Infrastructure.Services
                     Title = t.Title,
                     Description = t.Description,
                     StartDate = t.CreatedDate.ToString("yyyy-MM-dd"),
-                    EndDate = t.CompletedDate.HasValue ? t.CompletedDate.Value.ToString("yyyy-MM-dd") : string.Empty
+                    EndDate = t.CompletedDate.HasValue ? t.CompletedDate.Value.ToString("yyyy-MM-dd") : string.Empty,
+                    TaskNumber = t.TaskNumber,
+                    CreatedBy = t.CreatedByUser.FullName
                 })
                 .ToListAsync();
 
@@ -225,7 +228,6 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Job card task status updated successfully.", entity.Id);
         }
 
-
         public async Task<ResultDto> UploadJobCardTaskAttachment(UploadFileDTO upload)
         {
             try
@@ -277,6 +279,32 @@ namespace ViharaFund.Infrastructure.Services
             {
                 return ResultDto.Failure(new[] { "An error occurred while uploading the file.", ex.Message });
             }
+        }
+
+        private async Task<string> GenerateTaskNumberAsync(DateTime date)
+        {
+            string datePart = date.ToString("yyyyMMdd");
+            string prefix = $"JC{datePart}";
+
+            // Get the max sequence number for today's invoices
+            var lastTask = await tenantDbContext.JobCardTasks
+                .Where(i => i.TaskNumber.StartsWith(prefix))
+                .OrderByDescending(i => i.TaskNumber)
+                .FirstOrDefaultAsync();
+
+            int nextSequence = 1;
+
+            if (lastTask != null)
+            {
+                string lastNumber = lastTask.TaskNumber.Substring(prefix.Length);
+                if (int.TryParse(lastNumber, out int lastSeq))
+                {
+                    nextSequence = lastSeq + 1;
+                }
+            }
+
+            string taskNumber = $"{prefix}{nextSequence.ToString("D4")}";
+            return taskNumber;
         }
     }
 }

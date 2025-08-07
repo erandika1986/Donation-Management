@@ -4,15 +4,17 @@ namespace ViharaFund.Domain.Enums
 {
     public enum TaskStatus
     {
-        [Description("Pending")]
+        [Description("Draft")]
         Pending = 1,
+        [Description("Approved")]
+        Approved = 2,
         [Description("On Going")]
-        OnGoing = 2,
-        [Description("On Hold")]
-        OnHold = 3,
-        [Description("Canceled")]
-        Canceled = 4,
+        OnGoing = 3,
+        //[Description("On Hold")]
+        //OnHold = 4,
+        //[Description("Canceled")]
+        //Canceled = 5,
         [Description("Completed")]
-        Completed = 5
+        Completed = 4
     }
 }

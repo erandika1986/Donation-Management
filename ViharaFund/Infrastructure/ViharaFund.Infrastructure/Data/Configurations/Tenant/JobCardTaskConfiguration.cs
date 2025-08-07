@@ -14,6 +14,9 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
 
             builder.Property(p => p.Id).ValueGeneratedOnAdd();
 
+            builder.Property(p => p.TaskNumber)
+                .HasDefaultValue(string.Empty);
+
             builder.Property(p => p.ActualAmount)
                 .IsRequired(false);
 

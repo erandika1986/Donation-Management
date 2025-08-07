@@ -7,6 +7,7 @@ namespace ViharaFund.Domain.Entities.Tenant
     {
         public string Title { get; set; }
         public string Description { get; set; }
+        public string JobCardNo { get; set; }
         public JobPriority Priority { get; set; }
         public Enums.JobCardStatus Status { get; set; }
         public decimal? EstimatedTotalAmount { get; set; }
