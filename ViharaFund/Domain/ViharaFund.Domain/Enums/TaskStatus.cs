@@ -15,6 +15,9 @@ namespace ViharaFund.Domain.Enums
         //[Description("Canceled")]
         //Canceled = 5,
         [Description("Completed")]
-        Completed = 4
+        Completed = 4,
+
+        [Description("Deleted")]
+        Deleted = 5,
     }
 }

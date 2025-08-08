@@ -19,6 +19,19 @@ namespace ViharaFund.Infrastructure.Services
         IAzureBlobService azureBlobService,
         IConfiguration configuration) : IJobCardTaskService
     {
+        public async Task<ResultDto> CompleteTask(int taskId)
+        {
+            var task = tenantDbContext.JobCardTasks.FirstOrDefault(t => t.Id == taskId && t.IsActive);
+            task.TaskStatus = Domain.Enums.TaskStatus.Completed;
+            task.UpdatedDate = dateTime.UtcNow;
+            task.UpdatedByUserId = currentUserService.UserId;
+
+            tenantDbContext.JobCardTasks.Update(task);
+            await tenantDbContext.SaveChangesAsync();
+
+            return ResultDto.Success("Task completed successfully.", task.Id);
+        }
+
         public async Task<ResultDto> Create(JobCardTaskDTO jobCardTask)
         {
             if (jobCardTask == null)
@@ -82,7 +95,21 @@ namespace ViharaFund.Infrastructure.Services
             throw new NotImplementedException();
         }
 
-        public async Task<List<JobCardTaskDTO>> GetAllByJobCardId(int jobCardId)
+        public async Task<ResultDto> DeleteTask(int taskId)
+        {
+            var task = tenantDbContext.JobCardTasks.FirstOrDefault(t => t.Id == taskId && t.IsActive);
+            task.TaskStatus = Domain.Enums.TaskStatus.Deleted;
+            task.UpdatedDate = dateTime.UtcNow;
+            task.UpdatedByUserId = currentUserService.UserId;
+            task.IsActive = false;
+
+            tenantDbContext.JobCardTasks.Update(task);
+            await tenantDbContext.SaveChangesAsync();
+
+            return ResultDto.Success("Task deleted successfully.", task.Id);
+        }
+
+        public async Task<List<JobCardTaskSummaryDTO>> GetAllByJobCardId(int jobCardId)
         {
             var defaultCurrencyTypeId = tenantDbContext.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.DefaultCurrencyId);
             var defaultCurrencyType = await tenantDbContext.CurrencyTypes
@@ -90,12 +117,12 @@ namespace ViharaFund.Infrastructure.Services
 
             var tasks = await tenantDbContext.JobCardTasks
                 .Where(t => t.JobCardId == jobCardId && t.IsActive)
-                .Select(t => new JobCardTaskDTO
+                .Select(t => new JobCardTaskSummaryDTO
                 {
                     Id = t.Id,
                     JobCardId = t.JobCardId,
                     JobCardTitle = t.JobCard != null ? t.JobCard.Title : null,
-                    ActualAmount = t.ActualAmount,
+                    ActualAmount = t.JobCardTaskPayments.Sum(x => x.Amount),
                     EstimateAmount = t.EstimateAmount,
                     CurrencyType = defaultCurrencyType.Name,
                     TaskStatus = new DropDownDTO() { Id = (int)t.TaskStatus, Name = EnumHelper.GetEnumDescription(t.TaskStatus) },
@@ -104,7 +131,10 @@ namespace ViharaFund.Infrastructure.Services
                     StartDate = t.CreatedDate.ToString("yyyy-MM-dd"),
                     EndDate = t.CompletedDate.HasValue ? t.CompletedDate.Value.ToString("yyyy-MM-dd") : string.Empty,
                     TaskNumber = t.TaskNumber,
-                    CreatedBy = t.CreatedByUser.FullName
+                    CreatedBy = t.CreatedByUser.FullName,
+                    ProgressPercentage = t.JobCardTaskPayments.Count(t => t.IsActive) > 0
+                        ? (t.JobCardTaskPayments.Sum(t => t.Amount) / (decimal)t.EstimateAmount) * 100
+                        : 0,
                 })
                 .ToListAsync();
 
@@ -146,6 +176,39 @@ namespace ViharaFund.Infrastructure.Services
             }
 
             return masterData;
+        }
+
+        public async Task<ResultDto> MakePayment(TaskPaymentDTO payment)
+        {
+            tenantDbContext.JobCardTaskPayments.Add(new JobCardTaskPayment
+            {
+                JobCardTaskId = payment.TaskId,
+                Amount = payment.Amount,
+                PaidById = payment.PaymentUser.Id,
+                Note = payment.Note,
+                CreatedDate = dateTime.UtcNow,
+                CreatedByUserId = currentUserService.UserId,
+                UpdatedDate = dateTime.UtcNow,
+                UpdatedByUserId = currentUserService.UserId,
+                IsActive = true
+            });
+
+            await tenantDbContext.SaveChangesAsync();
+
+            return ResultDto.Success("Payment saved successfully.", payment.TaskId);
+        }
+
+        public async Task<ResultDto> StartTask(int taskId)
+        {
+            var task = tenantDbContext.JobCardTasks.FirstOrDefault(t => t.Id == taskId && t.IsActive);
+            task.TaskStatus = Domain.Enums.TaskStatus.OnGoing;
+            task.UpdatedDate = dateTime.UtcNow;
+            task.UpdatedByUserId = currentUserService.UserId;
+
+            tenantDbContext.JobCardTasks.Update(task);
+            await tenantDbContext.SaveChangesAsync();
+
+            return ResultDto.Success("Task started successfully.", task.Id);
         }
 
         public async Task<ResultDto> Update(JobCardTaskDTO jobCardTask)

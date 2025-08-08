@@ -1,0 +1,207 @@
+﻿@using MudBlazor
+@using ViharaFund.Admin.Common
+@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Shared.DTOs.JobCardTask
+
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IJSRuntime JSRuntime
+
+
+<!-- Add/Edit JobCard Dialog -->
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Class="mr-3" />
+            @($"Make a Payment for Task {TaskName}")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@isFormValid">
+            <MudGrid>
+                <!-- Amount Field -->
+                <MudItem xs="12" sm="12" md="12" lg="12">
+                    <MudNumericField @bind-Value="Payment.Amount"
+                                     Label="Amount"
+                                     Required="true"
+                                     RequiredError="Amount is required!"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Min="0.01m"
+                                     Step="0.01m"
+                                     Format="N2"
+                                     HideSpinButtons="true"
+                                     HelperText="Enter payment amount" />
+                </MudItem>
+
+                <!-- Payment User Dropdown -->
+                <MudItem xs="12" sm="12" md="12" lg="12">
+
+                    <MudSelect T="DropDownDTO"
+                               Label="Paid By User"
+                               ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
+                               MultiSelection="false"
+                               @bind-Value="SelectedPaymentUser"
+                               Required="true"
+                               RequiredError="Paid by user is required!"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var paymentUser in PaymentUsers)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@paymentUser">@paymentUser.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+
+                <!-- Date Field -->
+                <MudItem xs="12" sm="12" md="12" lg="12">
+                    <MudDatePicker @bind-Date="Payment.PaymentDate"
+                                   Label="Payment Date"
+                                   Required="true"
+                                   RequiredError="Date is required!"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   MaxDate="DateTime.Today"
+                                   HelperText="Select donation date" />
+                </MudItem>
+
+                <!-- Note Field -->
+                <MudItem xs="12" sm="12" md="12" lg="12">
+
+                    <MudTextField @bind-Value="Payment.Note"
+                                  Label="Comment"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="mt-3"
+                                  Lines="3"
+                                  RequiredError="Please provide a comment"
+                                  Placeholder="Enter reason for this action..."
+                                  Counter="@MaxCommentLength"
+                                  MaxLength="@MaxCommentLength" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog" Color="Color.Default">Cancel</MudButton>
+            <MudButton Color="Color.Success"
+                       Variant="Variant.Filled"
+                   OnClick="ProcessPayment"
+                       Disabled="!isFormValid || isSubmitting"
+                       StartIcon="@Icons.Material.Filled.Save">
+                @if (isSubmitting)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Saving...</MudText>
+                }
+                else
+                {
+                    @("Save Payment")
+                }
+            </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private MudForm form;
+    private bool isFormValid;
+    private bool isProcessing = false;
+    private bool isSubmitting = false;
+
+    [Parameter] 
+    public int MaxCommentLength { get; set; } = 500;
+
+    [Parameter]
+    public int TaskId { get; set; } = new();
+
+    [Parameter]
+    public string TaskName { get; set; } = string.Empty;
+
+    // Payment model to bind form data
+    private TaskPaymentDTO Payment = new();
+
+
+    public IEnumerable<DropDownDTO> PaymentUsers { get; set; } = new List<DropDownDTO>();
+    private DropDownDTO SelectedPaymentUser { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        PaymentUsers = new List<DropDownDTO>
+        {
+            new() { Id = 1, Name = "John Smith" },
+            new() { Id = 2, Name = "Jane Doe" },
+            new() { Id = 3, Name = "Mike Johnson" },
+            new() { Id = 4, Name = "Sarah Wilson" },
+            new() { Id = 5, Name = "David Brown" }
+        };
+
+        Payment.PaymentUser = PaymentUsers.FirstOrDefault() ?? new DropDownDTO();
+        Payment.TaskId = TaskId;
+    }
+
+
+    private async Task ProcessPayment()
+    {
+        if (!isFormValid) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+        try
+        {
+            // Replace with your actual API endpoint
+            var response = await HttpClient.PostAsJsonAsync("api/JobCardTask/save-payment", Payment);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (result is not null && result.Succeeded)
+                {
+                    Snackbar.Add(result.SuccessMessage, Severity.Success);
+                    MudDialog.Close(DialogResult.Ok(Payment));
+                }
+                else if (result is not null && !result.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", result.Errors), Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Failed to create task.", Severity.Error);
+            }
+            // Simulate payment processing
+            //await Task.Delay(2000);
+
+            // Here you would typically call your payment service
+            // await PaymentService.ProcessPaymentAsync(paymentModel);
+
+            //MudDialog.Close(DialogResult.Ok(Payment));
+        }
+        catch (Exception ex)
+        {
+            // Handle error - you might want to show a snackbar or error message
+            Console.WriteLine($"Operation failed: {ex.Message}");
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void CloseDialog()
+    {
+        MudDialog.Cancel();
+    }
+
+}

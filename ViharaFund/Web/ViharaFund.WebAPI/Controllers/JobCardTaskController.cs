@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.DTOs.JobCardTask;
 using ViharaFund.Application.Services;
+using ViharaFund.Shared.DTOs.JobCardTask;
 
 namespace ViharaFund.WebAPI.Controllers
 {
@@ -18,12 +19,14 @@ namespace ViharaFund.WebAPI.Controllers
             _jobCardTaskService = jobCardTaskService;
         }
 
+
         [HttpGet("get-all/{jobCardId}")]
         public async Task<IActionResult> GetAllByJobCardId(int jobCardId)
         {
             var result = await _jobCardTaskService.GetAllByJobCardId(jobCardId);
             return Ok(result);
         }
+
 
         [HttpGet("get-by-id/{id}")]
         public async Task<IActionResult> GetById(int id)
@@ -33,6 +36,7 @@ namespace ViharaFund.WebAPI.Controllers
                 return NotFound();
             return Ok(result);
         }
+
 
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] JobCardTaskDTO jobCardTask)
@@ -46,6 +50,7 @@ namespace ViharaFund.WebAPI.Controllers
             return BadRequest(result);
         }
 
+
         [HttpPut("update")]
         public async Task<IActionResult> Update([FromBody] JobCardTaskDTO jobCardTask)
         {
@@ -58,6 +63,7 @@ namespace ViharaFund.WebAPI.Controllers
             return BadRequest(result);
         }
 
+
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -67,12 +73,14 @@ namespace ViharaFund.WebAPI.Controllers
             return BadRequest(result);
         }
 
+
         [HttpGet("get-task-master-data")]
         public async Task<IActionResult> GetTaskMasterData()
         {
             var result = await _jobCardTaskService.GetTaskMasterData();
             return Ok(result);
         }
+
 
         [HttpPost]
         [RequestSizeLimit(long.MaxValue)]
@@ -103,6 +111,57 @@ namespace ViharaFund.WebAPI.Controllers
                         "Bad Request"
                     }));
             }
+        }
+
+
+        [HttpPut("startTask")]
+        public async Task<IActionResult> StartTask([FromBody] int taskId)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _jobCardTaskService.StartTask(taskId);
+            if (result.Succeeded)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+        [HttpPut("deleteTask")]
+        public async Task<IActionResult> DeleteTask(int taskId)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _jobCardTaskService.DeleteTask(taskId);
+            if (result.Succeeded)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+
+        [HttpPut("completeTask")]
+        public async Task<IActionResult> CompleteTask([FromBody] int taskId)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _jobCardTaskService.CompleteTask(taskId);
+            if (result.Succeeded)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPost("save-payment")]
+        public async Task<IActionResult> SavePayment([FromBody] TaskPaymentDTO payment)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _jobCardTaskService.MakePayment(payment);
+            if (result.Succeeded)
+                return Ok(result);
+            return BadRequest(result);
         }
     }
 }
