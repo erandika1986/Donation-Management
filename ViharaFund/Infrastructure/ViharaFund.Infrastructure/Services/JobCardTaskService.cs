@@ -162,7 +162,7 @@ namespace ViharaFund.Infrastructure.Services
             return task;
         }
 
-        public async Task<TaskMasterDataDTO> GetTaskMasterData()
+        public async Task<TaskMasterDataDTO> GetTaskListMasterData()
         {
             var masterData = new TaskMasterDataDTO();
             masterData.TaskStatuses.Add(new DropDownDTO() { Id = 0, Name = "All Status" });
@@ -174,6 +174,33 @@ namespace ViharaFund.Infrastructure.Services
                     Name = EnumHelper.GetEnumDescription(status)
                 });
             }
+
+            return masterData;
+        }
+
+        public async Task<TaskMasterDataDTO> GetTaskDetailMasterData(int taskId)
+        {
+            var masterData = new TaskMasterDataDTO();
+            masterData.TaskStatuses.Add(new DropDownDTO() { Id = 0, Name = "All Status" });
+            foreach (Domain.Enums.TaskStatus status in Enum.GetValues(typeof(Domain.Enums.TaskStatus)))
+            {
+                masterData.TaskStatuses.Add(new DropDownDTO
+                {
+                    Id = (int)status,
+                    Name = EnumHelper.GetEnumDescription(status)
+                });
+            }
+
+            masterData.CurrentUserId = currentUserService.UserId.HasValue ? currentUserService.UserId.Value : 0;
+
+            var members = tenantDbContext.JobCardTasks.FirstOrDefault(x => x.Id == taskId)
+                .JobCard
+                .AssignRoleGroup.UserRoles.Where(x => x.User.IsActive)
+                .Select(r =>
+
+                new DropDownDTO() { Id = r.UserId, Name = r.User.FullName }).ToList();
+
+            masterData.AssignedGroupMembers = members;
 
             return masterData;
         }

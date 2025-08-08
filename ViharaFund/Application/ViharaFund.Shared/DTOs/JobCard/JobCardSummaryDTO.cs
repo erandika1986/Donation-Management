@@ -13,7 +13,7 @@ namespace ViharaFund.Application.DTOs.JobCard
         public string CreatedBy { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; }
         public decimal EstimatedBudget { get; set; }
-        public decimal? ActualCost { get; set; }
+        public decimal ActualCost { get; set; }
         public string AssignedRoleGroup { get; set; } = string.Empty;
         public string AssignedCampaign { get; set; } = string.Empty;
 

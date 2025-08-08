@@ -14,7 +14,8 @@ namespace ViharaFund.Application.Services
         Task<ResultDto> UploadJobCardTaskAttachment(UploadFileDTO upload);
         Task<ResultDto> DeleteJobCardTaskAttachment(int jobCardTaskId, string fileName);
         Task<ResultDto> UpdateJobCardTaskStatus(int jobCardTaskId, string comment, Domain.Enums.TaskStatus taskStatus);
-        Task<TaskMasterDataDTO> GetTaskMasterData();
+        Task<TaskMasterDataDTO> GetTaskListMasterData();
+        Task<TaskMasterDataDTO> GetTaskDetailMasterData(int taskId);
         Task<ResultDto> StartTask(int taskId);
         Task<ResultDto> DeleteTask(int taskId);
         Task<ResultDto> CompleteTask(int taskId);

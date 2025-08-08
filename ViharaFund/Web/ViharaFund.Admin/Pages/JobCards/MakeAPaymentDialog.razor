@@ -42,7 +42,7 @@
                                Label="Paid By User"
                                ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
                                MultiSelection="false"
-                               @bind-Value="SelectedPaymentUser"
+                               @bind-Value="Payment.PaymentUser"
                                Required="true"
                                RequiredError="Paid by user is required!"
                                Variant="Variant.Outlined"
@@ -129,19 +129,20 @@
     public IEnumerable<DropDownDTO> PaymentUsers { get; set; } = new List<DropDownDTO>();
     private DropDownDTO SelectedPaymentUser { get; set; } = new();
 
+    private int LoggedInUserId { get; set; } = 0;
+
     protected override async Task OnInitializedAsync()
     {
-        PaymentUsers = new List<DropDownDTO>
-        {
-            new() { Id = 1, Name = "John Smith" },
-            new() { Id = 2, Name = "Jane Doe" },
-            new() { Id = 3, Name = "Mike Johnson" },
-            new() { Id = 4, Name = "Sarah Wilson" },
-            new() { Id = 5, Name = "David Brown" }
-        };
 
-        Payment.PaymentUser = PaymentUsers.FirstOrDefault() ?? new DropDownDTO();
+        await LoadMasterData();
         Payment.TaskId = TaskId;
+    }
+
+    private async Task LoadMasterData()
+    {
+        var masterData = await HttpClient.GetFromJsonAsync<TaskMasterDataDTO>($"api/JobCardTask/get-task-detail-master-data/{TaskId}") ?? new();
+        PaymentUsers = masterData.AssignedGroupMembers ?? new List<DropDownDTO>();
+        Payment.PaymentUser = PaymentUsers.FirstOrDefault(u => u.Id == masterData.CurrentUserId) ?? PaymentUsers.FirstOrDefault();
     }
 
 

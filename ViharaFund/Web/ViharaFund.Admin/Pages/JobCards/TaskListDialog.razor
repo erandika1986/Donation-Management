@@ -24,6 +24,7 @@
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Add"
                            OnClick="OpenAddTaskDialog"
+                           Disabled="@(@IsViewOnly || @JobCardStatus != Domain.Enums.JobCardStatus.Draft)"
                            Class="mt-2 mt-sm-0">
                     New Task
                 </MudButton>
@@ -117,14 +118,24 @@
 
                         <!-- Progress Section -->
                         <MudCardContent Class="pt-1 pb-3">
-                            <MudProgressLinear Color="Color.Success"
+                            <MudProgressLinear Color="@(@task.ProgressPercentage > 100 ? Color.Error : Color.Success)"
                                                Value="(double)task.ProgressPercentage"
                                                Class="mb-3"
                                                Style="height: 8px; border-radius: 4px;" />
 
                             <MudGrid AlignItems="Center" Justify="Justify.SpaceBetween" Class="mb-3">
                                 <MudItem>
-                                    <MudText Typo="Typo.h5" Color="Color.Success">Spent @task.CurrencyType @( @task.ActualAmount.HasValue? @task.ActualAmount.Value.ToString("N0") : "0.00") </MudText>
+                                    <MudText 
+                                        Typo="Typo.h5" 
+                                        Color="Color.Success">Spent @task.CurrencyType @( @task.ActualAmount.HasValue? @task.ActualAmount.Value.ToString("N0") : "0.00")
+                                        @if (@task.ProgressPercentage > 100)
+                                        {
+                                            <span style="color:red;font-size:14px;" class="blinking-text">
+                                                (Exceeded)
+                                            </span>
+                                        }
+
+                                    </MudText>
                                 </MudItem>
                                 <MudItem>
                                     <MudText Typo="Typo.body2" Color="Color.Secondary">out of the estimated @task.CurrencyType  @( @task.EstimateAmount)</MudText>
@@ -241,6 +252,9 @@
     public int JobCardId { get; set; } = new();
 
     [Parameter]
+    public ViharaFund.Domain.Enums.JobCardStatus JobCardStatus { get; set; }
+
+    [Parameter]
     public string JobCardTitle { get; set; } = string.Empty;
 
     private string searchString = "";
@@ -262,7 +276,7 @@
 
     private async Task LoadMasterData()
     {
-        MasterData = await HttpClient.GetFromJsonAsync<TaskMasterDataDTO>("api/JobCardTask/get-task-master-data") ?? new();
+        MasterData = await HttpClient.GetFromJsonAsync<TaskMasterDataDTO>("api/JobCardTask/get-task-list-master-data") ?? new();
         TaskStatuses = MasterData.TaskStatuses ?? new List<DropDownDTO>();
         SelectedTaskStatus = TaskStatuses.FirstOrDefault() ?? new DropDownDTO();
 
@@ -498,7 +512,7 @@
         var parameters = new DialogParameters<ConfirmationDialog>
         {
             { "ContentText", $"Are you sure you want to complete task '{task.Title}'?" },
-            { "ButtonText", "Start" },
+            { "ButtonText", "Mark As Completed" },
             { "Color", Color.Success }
         };
 

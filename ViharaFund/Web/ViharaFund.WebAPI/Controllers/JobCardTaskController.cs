@@ -74,10 +74,17 @@ namespace ViharaFund.WebAPI.Controllers
         }
 
 
-        [HttpGet("get-task-master-data")]
-        public async Task<IActionResult> GetTaskMasterData()
+        [HttpGet("get-task-list-master-data")]
+        public async Task<IActionResult> GetTaskListMasterData()
         {
-            var result = await _jobCardTaskService.GetTaskMasterData();
+            var result = await _jobCardTaskService.GetTaskListMasterData();
+            return Ok(result);
+        }
+
+        [HttpGet("get-task-detail-master-data/{id}")]
+        public async Task<IActionResult> GetTaskDetailMasterData(int id)
+        {
+            var result = await _jobCardTaskService.GetTaskDetailMasterData(id);
             return Ok(result);
         }
 
