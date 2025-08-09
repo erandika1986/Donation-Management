@@ -184,42 +184,43 @@
                             else
                             {
                                 <MudTooltip Text="Edit" Color="Color.Warning" Placement="Placement.Top">
-                                    <MudIconButton 
-                                        Variant="Variant.Filled" 
-                                        Icon="@Icons.Material.Filled.Edit" 
-                                        Size="Size.Small" 
-                                        Color="Color.Warning"
-                                        Class="m-1"
-                                        OnClick="@(() => OpenEditCampaignModel(campaign))"></MudIconButton>
+                                    <MudIconButton Variant="Variant.Filled"
+                                                   Icon="@Icons.Material.Filled.Edit"
+                                                   Size="Size.Small"
+                                                   Color="Color.Warning"
+                                                   Class="m-1"
+                                                   Disabled="@(campaign.Status == "Completed")"
+                                                   OnClick="@(() => OpenEditCampaignModel(campaign))"></MudIconButton>
                                 </MudTooltip>
+
                                 <MudTooltip Text="Share" Color="Color.Info" Placement="Placement.Top">
-                                    <MudIconButton 
-                                        Variant="Variant.Filled" 
-                                        Icon="@Icons.Material.Filled.Share" 
-                                        Size="Size.Small" 
-                                        Color="Color.Info"
-                                        Class="m-1"
-                                        OnClick="@(() => ShareCampaign(campaign))"></MudIconButton>
+                                    <MudIconButton Variant="Variant.Filled"
+                                                   Icon="@Icons.Material.Filled.Share"
+                                                   Size="Size.Small"
+                                                   Color="Color.Info"
+                                                   Class="m-1"
+                                                   OnClick="@(() => ShareCampaign(campaign))"></MudIconButton>
                                 </MudTooltip>
                                 <MudTooltip Text="View Details" Color="Color.Primary" Placement="Placement.Top">
-                                    <MudIconButton 
-                                        Variant="Variant.Filled" 
-                                        Icon="@Icons.Material.Filled.Visibility" 
-                                        Size="Size.Small" 
-                                        Color="Color.Primary" 
-                                        Class="m-1"
-                                        OnClick="@(() => OpenViewCampaignModel(campaign))"></MudIconButton>
+                                    <MudIconButton Variant="Variant.Filled"
+                                                   Icon="@Icons.Material.Filled.Visibility"
+                                                   Size="Size.Small"
+                                                   Color="Color.Primary"
+                                                   Class="m-1"
+                                                   OnClick="@(() => OpenViewCampaignModel(campaign))"></MudIconButton>
+                                </MudTooltip>
+
+                                <MudTooltip Text="Delete" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Variant="Variant.Filled"
+                                                   Icon="@Icons.Material.Filled.Delete"
+                                                   Size="Size.Small"
+                                                   Color="Color.Error"
+                                                   Class="m-1"
+                                                   Disabled="@(campaign.Status != "Draft")"
+                                                   OnClick="@(() => DeleteCampaign(campaign))"></MudIconButton>
                                 </MudTooltip>
                             }
-                            <MudTooltip Text="Delete" Color="Color.Error" Placement="Placement.Top">
-                                <MudIconButton 
-                                    Variant="Variant.Filled" 
-                                    Icon="@Icons.Material.Filled.Delete" 
-                                    Size="Size.Small" 
-                                    Color="Color.Error" 
-                                    Class="m-1" 
-                                    OnClick="@(() => DeleteCampaign(campaign))"></MudIconButton>
-                            </MudTooltip>
+
                             @if (campaign.Status == "Draft")
                             {
                               <MudStack Class="w-100">
@@ -290,11 +291,13 @@
             }
         </MudGrid>
 
-        <MudPagination Page="@CurrentPage"
-                       PageSize="@PageSize"
-                       TotalItems="@CampaignsSummary.TotalPages"
-                       OnPageChanged="OnPageChanged"
-                       HideNextPrev="false" />
+        <MudItem xs="12" md="12" lg="12" Class="d-flex justify-end">
+            <MudPagination Page="@CurrentPage"
+                           PageSize="@PageSize"
+                           TotalItems="@CampaignsSummary.TotalPages"
+                           OnPageChanged="OnPageChanged"
+                           HideNextPrev="false" />
+        </MudItem>
     </MudPaper>
 </MudContainer>
 

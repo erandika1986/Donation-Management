@@ -418,5 +418,95 @@ namespace ViharaFund.Infrastructure.Services
 
             return taskAttachments;
         }
+
+        public async Task<ResultDto> AddJobCardTaskComment(TaskCommentDTO taskComment)
+        {
+            var jobCardTaskComment = new JobCardTaskComment
+            {
+                Comment = taskComment.Content,
+                JobCardTaskId = taskComment.TaskId,
+                IsEdited = false,
+                IsActive = true,
+                CreatedDate = dateTime.UtcNow,
+                CreatedByUserId = currentUserService.UserId,
+                UpdatedByUserId = currentUserService.UserId,
+                UpdatedDate = dateTime.UtcNow
+            };
+
+            tenantDbContext.JobCardTaskComments.Add(jobCardTaskComment);
+
+            await tenantDbContext.SaveChangesAsync();
+
+            return ResultDto.Success("Comment added successfully.", jobCardTaskComment.Id);
+        }
+
+        public async Task<ResultDto> UpdateJobCardTaskComment(TaskCommentDTO taskComment)
+        {
+            if (taskComment == null || taskComment.Id == 0)
+            {
+                return ResultDto.Failure(new[] { "Invalid comment data." });
+            }
+
+            var entity = await tenantDbContext.JobCardTaskComments
+                .FirstOrDefaultAsync(c => c.Id == taskComment.Id && c.IsActive);
+
+            if (entity == null)
+            {
+                return ResultDto.Failure(new[] { "Job card task comment not found." });
+            }
+
+            entity.Comment = taskComment.Content;
+            entity.IsEdited = true;
+            entity.UpdatedDate = dateTime.UtcNow;
+            entity.UpdatedByUserId = currentUserService.UserId;
+
+            tenantDbContext.JobCardTaskComments.Update(entity);
+            await tenantDbContext.SaveChangesAsync();
+
+            return ResultDto.Success("Comment updated successfully.", entity.Id);
+        }
+
+        public async Task<ResultDto> DeleteJobCardTaskComment(int commentId)
+        {
+            // Step 1: Find the comment by id and ensure it's active
+            var entity = await tenantDbContext.JobCardTaskComments
+                .FirstOrDefaultAsync(c => c.Id == commentId && c.IsActive);
+
+            if (entity == null)
+            {
+                return ResultDto.Failure(new[] { "Job card task comment not found." });
+            }
+
+            // Step 2: Soft delete the comment
+            entity.IsActive = false;
+            entity.UpdatedDate = dateTime.UtcNow;
+            entity.UpdatedByUserId = currentUserService.UserId;
+
+            tenantDbContext.JobCardTaskComments.Update(entity);
+            await tenantDbContext.SaveChangesAsync();
+
+            // Step 3: Return success
+            return ResultDto.Success("Comment deleted successfully.", entity.Id);
+        }
+
+        public async Task<List<TaskCommentDTO>> GetAllJobCardTaskComments(int taskId)
+        {
+            var comments = await tenantDbContext.JobCardTaskComments
+                .Where(c => c.JobCardTaskId == taskId && c.IsActive)
+                .OrderByDescending(c => c.CreatedDate)
+                .Select(c => new TaskCommentDTO
+                {
+                    Id = c.Id,
+                    TaskId = c.JobCardTaskId,
+                    Content = c.Comment,
+                    CreatedAt = c.CreatedDate,
+                    Author = c.CreatedByUser.Username,
+                    LastModified = c.UpdatedDate,
+                    IsEdited = c.IsEdited
+                })
+                .ToListAsync();
+
+            return comments;
+        }
     }
 }

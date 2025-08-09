@@ -477,13 +477,22 @@
         </MudItem>
                 }
     </MudGrid>
+
+                <!-- Actions -->
+    <MudItem xs="12" md="12" lg="12" Class="d-flex justify-end">
+        <MudPagination Page="@CurrentPage"
+                       PageSize="@PageSize"
+                       TotalItems="@TotalPages"
+                       OnPageChanged="OnPageChanged"
+                       HideNextPrev="false" />
+    </MudItem>
 </MudContainer>
 
 @code {
 
     private int CurrentPage = 1;
     private int PageSize = 10;
-    private int TotalItems = 0;
+    private int TotalPages = 0;
 
     private List<JobCardSummaryDTO> AllJobCards = new List<JobCardSummaryDTO>();
     // Data properties
@@ -564,8 +573,7 @@
         var response = await HttpClient.GetFromJsonAsync<PaginatedResultDTO<JobCardSummaryDTO>>(url) ?? new();
         //CampaignsSummary = await HttpClient.GetFromJsonAsync<CampaignMasterDataDTO>("api/Campaign/get-campaigns-summary") ?? new();
         AllJobCards = response.Items;
-        TotalItems = response.TotalItems;
-
+        TotalPages = response.TotalPages; 
         StateHasChanged();
     }
 

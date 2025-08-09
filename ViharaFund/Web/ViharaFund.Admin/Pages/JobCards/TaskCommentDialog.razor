@@ -1,0 +1,352 @@
+﻿@using Blazored.LocalStorage
+@using MudBlazor
+@using ViharaFund.Admin.Common
+@using ViharaFund.Shared.DTOs.JobCardTask
+@inject ISnackbar Snackbar
+@inject ILocalStorageService localStorage
+@inject HttpClient HttpClient
+@inject IDialogService DialogService
+
+<MudCard Class="mt-4">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <MudIcon Icon="Icons.Material.Filled.Comment" Color="Color.Primary" />
+                <MudText Typo="Typo.h6">Comments (@comments.Count)</MudText>
+            </div>
+        </CardHeaderContent>
+    </MudCardHeader>
+
+    <MudCardContent>
+        <!-- Add new comment section -->
+        <MudStack>
+            <MudTextField @bind-Value="newCommentText"
+                          Label="Add a comment"
+                          Variant="Variant.Outlined"
+                          Lines="3"
+                          MaxLength="500"
+                          Counter="500"
+                          Placeholder="Share your thoughts about this task..." />
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Default"
+                           OnClick="ClearComment"
+                           Disabled="string.IsNullOrWhiteSpace(newCommentText)">
+                    Clear
+                </MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="Icons.Material.Filled.Send"
+                           OnClick="AddComment"
+                           Disabled="string.IsNullOrWhiteSpace(newCommentText)">
+                    Post Comment
+                </MudButton>
+            </div>
+        </MudStack>
+
+        <MudDivider Class="my-4" />
+
+        <!-- Comments list -->
+        @if (comments.Any())
+        {
+            <MudStack Spacing="3">
+                @foreach (var comment in comments.OrderByDescending(c => c.CreatedAt))
+                {
+                    <MudCard Elevation="1" Class="pa-3">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="flex: 1;">
+                                <!-- Comment header -->
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                    <MudAvatar Size="Size.Small" Color="Color.Primary">
+                                        @GetUserInitials(comment.Author)
+                                    </MudAvatar>
+                                    <MudText Typo="Typo.subtitle2" Style="font-weight: 600;">
+                                        @comment.Author
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Tertiary">
+                                        @comment.CreatedAt.ToString("MMM dd, yyyy 'at' HH:mm")
+                                    </MudText>
+                                    @if (comment.IsEdited)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">
+                                            Edited
+                                        </MudChip>
+                                    }
+                                </div>
+
+                                <!-- Comment content -->
+                                @if (editingCommentId == comment.Id)
+                                {
+                                    <MudTextField @bind-Value="editCommentText"
+                                                  Variant="Variant.Outlined"
+                                                  Lines="3"
+                                                  MaxLength="500"
+                                                  Counter="500"
+                                                  Class="mb-2" />
+                                    <div style="display: flex; gap: 8px;">
+                                        <MudButton Size="Size.Small"
+                                                   Variant="Variant.Filled"
+                                                   Color="Color.Primary"
+                                                   OnClick="() => SaveEdit(comment.Id)">
+                                            Save
+                                        </MudButton>
+                                        <MudButton Size="Size.Small"
+                                                   Variant="Variant.Text"
+                                                   Color="Color.Default"
+                                                   OnClick="CancelEdit">
+                                            Cancel
+                                        </MudButton>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body1" Style="white-space: pre-wrap;">
+                                        @comment.Content
+                                    </MudText>
+                                }
+                            </div>
+
+                            <!-- Comment actions -->
+                            @if (editingCommentId != comment.Id && CanEditComment(comment))
+                            {
+                                <MudMenu>
+                                    <ActivatorContent>
+                                        <MudIconButton Variant="Variant.Filled"
+                                                       Icon="@Icons.Material.Filled.MoreVert"
+                                                       Size="Size.Small"
+                                                       Color="Color.Default"
+                                                       Class="m-1"></MudIconButton>
+                                    </ActivatorContent>
+                                    <ChildContent>
+                                        <MudMenuItem OnClick="() => StartEdit(comment.Id, comment.Content)">
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <MudIcon Icon="Icons.Material.Filled.Edit"  Size =" Size.Small" />
+                                                Edit
+                                            </div>
+                                        </MudMenuItem>
+                                        <MudMenuItem OnClick="() => DeleteComment(comment.Id)">
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <MudIcon Icon="Icons.Material.Filled.Delete"
+                                                         Size="Size.Small"
+                                                         Color="Color.Error" />
+                                                <MudText Color="Color.Error">Delete</MudText>
+                                            </div>
+                                        </MudMenuItem>
+                                    </ChildContent>
+                                </MudMenu>
+                            }
+                        </div>
+                    </MudCard>
+                }
+            </MudStack>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" NoIcon="true" Class="text-center">
+                <MudText Typo="Typo.body1">No comments yet. Be the first to comment!</MudText>
+            </MudAlert>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public bool IsViewOnly { get; set; }
+
+    [Parameter] 
+    public int JobCardTaskId { get; set; }
+
+    [Parameter] 
+    public string CurrentUser { get; set; } = string.Empty;
+
+    // [Parameter] 
+    // public EventCallback<TaskCommentDTO> OnCommentAdded { get; set; }
+
+    // [Parameter] 
+    // public EventCallback<TaskCommentDTO> OnCommentUpdated { get; set; }
+
+    [Parameter] 
+    public EventCallback<int> OnCommentDeleted { get; set; }
+
+    private string newCommentText = string.Empty;
+    private string editCommentText = string.Empty;
+    private int? editingCommentId = null;
+
+    private List<TaskCommentDTO> comments = new List<TaskCommentDTO>();
+    public int CommentCount { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Initialize with sample data - replace with actual data loading
+        var CurrentUser = await localStorage.GetItemAsync<string>("username");
+        await LoadComments();
+    }
+
+    private async Task LoadComments()
+    {
+        var allComments = await HttpClient.GetFromJsonAsync<List<TaskCommentDTO>>($"api/JobCardTask/get-all-job-card-task-comments/{JobCardTaskId}") ?? new();
+
+        foreach (var item in allComments)
+        {
+            comments.Add(item);
+        }
+    }
+
+    private async Task AddComment()
+    {
+        if (string.IsNullOrWhiteSpace(newCommentText))
+            return;
+
+        var newComment = new TaskCommentDTO
+        {
+            TaskId = JobCardTaskId,
+            Author = CurrentUser,
+            Content = newCommentText.Trim(),
+            CreatedAt = DateTime.Now,
+            IsEdited = false
+        };
+
+        var response = await HttpClient.PostAsJsonAsync("api/JobCardTask/add-job-card-task-comment", newComment);
+        if(response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<ResponseDto>();
+            if (result is not null && result.Succeeded)
+            {
+                Snackbar.Add(result.SuccessMessage, Severity.Success);
+                newComment.Id = result.Id; // Assuming the API returns the new comment ID
+
+                comments.Add(newComment);
+                //await OnCommentAdded.InvokeAsync(newComment);
+
+                newCommentText = string.Empty;
+            }
+            else if (result is not null && !result.Succeeded)
+            {
+                Snackbar.Add(string.Join(",", result.Errors), Severity.Error);
+            }
+        }
+
+
+    }
+
+    private void ClearComment()
+    {
+        newCommentText = string.Empty;
+    }
+
+    private void StartEdit(int commentId, string content)
+    {
+        editingCommentId = commentId;
+        editCommentText = content;
+    }
+
+    private void CancelEdit()
+    {
+        editingCommentId = null;
+        editCommentText = string.Empty;
+    }
+
+    private async Task SaveEdit(int commentId)
+    {
+        if (string.IsNullOrWhiteSpace(editCommentText))
+            return;
+
+        var comment = comments.FirstOrDefault(c => c.Id == commentId);
+        if (comment != null)
+        {
+            comment.Content = editCommentText.Trim();
+            comment.IsEdited = true;
+            comment.LastModified = DateTime.Now;
+
+            var response = await HttpClient.PostAsJsonAsync("api/JobCardTask/update-job-card-task-comment", comment);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                if (result is not null && result.Succeeded)
+                {
+                    Snackbar.Add(result.SuccessMessage, Severity.Success);
+                    //await OnCommentUpdated.InvokeAsync(comment);
+                }
+                else if (result is not null && !result.Succeeded)
+                {
+                    Snackbar.Add(string.Join(",", result.Errors), Severity.Error);
+                }
+            }
+
+        }
+
+        editingCommentId = null;
+        editCommentText = string.Empty;
+    }
+
+    private async Task DeleteComment(int commentId)
+    {
+        var comment = comments.FirstOrDefault(c => c.Id == commentId);
+        if (comment != null)
+        {
+            var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "ContentText", $"Are you sure you want to comment? This action cannot be undone." },
+            { "ButtonText", "Delete" },
+            { "Color", Color.Error }
+        };
+
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Delete", parameters, options);
+            var result = await dialog.Result;
+
+            if (!result.Canceled)
+            {
+                try
+                {
+                    // Replace with your actual API endpoint
+                    var response = await HttpClient.DeleteAsync($"api/JobCardTask/delete-job-card-task-comment/{commentId}");
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        comments.Remove(comment);
+                        await OnCommentDeleted.InvokeAsync(commentId);
+                        Snackbar.Add("Comment deleted successfully!", Severity.Warning);
+                    }
+                    else
+                    {
+                        Snackbar.Add("Failed to delete task.", Severity.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Error deleting task: {ex.Message}", Severity.Error);
+                }
+            }
+
+
+        }
+    }
+
+    private bool CanEditComment(TaskCommentDTO comment)
+    {
+        
+        // Only allow editing own comments or if user is admin
+        return comment.Author == CurrentUser;
+        // For admin users: return comment.Author == CurrentUser || IsCurrentUserAdmin;
+    }
+
+    private string GetUserInitials(string author)
+    {
+        if (string.IsNullOrWhiteSpace(author))
+            return "?";
+
+        var names = author.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (names.Length == 0)
+            return "?";
+        else if (names.Length == 1)
+            return names[0].Substring(0, 1).ToUpper();
+        else
+            return $"{names[0].Substring(0, 1)}{names[names.Length - 1].Substring(0, 1)}".ToUpper();
+    }
+}

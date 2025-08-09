@@ -14,6 +14,8 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
 
             builder.Property(p => p.Id).ValueGeneratedOnAdd();
 
+            builder.Property(p => p.IsEdited).HasDefaultValue(false);
+
             builder.HasOne<JobCardTask>(a => a.JobCardTask)
                    .WithMany(u => u.JobCardTaskComments)
                    .HasForeignKey(a => a.JobCardTaskId)

@@ -184,5 +184,37 @@ namespace ViharaFund.WebAPI.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
+
+
+        [HttpPost("add-job-card-task-comment")]
+        public async Task<IActionResult> AddJobCardTaskComment(TaskCommentDTO taskComment)
+        {
+            var result = await _jobCardTaskService.AddJobCardTaskComment(taskComment);
+            return Ok(result);
+
+        }
+
+        [HttpPost("update-job-card-task-comment")]
+        public async Task<IActionResult> UpdateJobCardTaskComment(TaskCommentDTO taskComment)
+        {
+            var result = await _jobCardTaskService.UpdateJobCardTaskComment(taskComment);
+            return Ok(result);
+
+        }
+
+        [HttpDelete("delete-job-card-task-comment/{commentId}")]
+        public async Task<IActionResult> DeleteJobCardTaskComment(int commentId)
+        {
+            var result = await _jobCardTaskService.DeleteJobCardTaskComment(commentId);
+            return Ok(result);
+        }
+
+        [HttpGet("get-all-job-card-task-comments/{taskId}")]
+        public async Task<IActionResult> GetAllJobCardTaskComments(int taskId)
+        {
+            var result = await _jobCardTaskService.GetAllJobCardTaskComments(taskId);
+            return Ok(result);
+        }
+
     }
 }

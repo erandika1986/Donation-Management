@@ -158,11 +158,12 @@
                                         </MudButton>
                                     </MudTooltip>                           
                                 }
-                                <MudTooltip Text="Add New Donation" Color="Color.Secondary" Placement="Placement.Top">
+                                <MudTooltip Text="View Comments" Color="Color.Secondary" Placement="Placement.Top">
                                     <MudButton Variant="Variant.Outlined"
   
                                                Size="Size.Small"
-                                               StartIcon="@Icons.Material.Filled.AddComment"
+                                               StartIcon="@Icons.Material.Filled.Chat"
+                                               OnClick="@(() => ViewComments(task))"
                                                Class="me-2 mb-2">
                                         Add a Comment
                                     </MudButton>
@@ -564,12 +565,40 @@
         var options = new DialogOptions
         {
             CloseButton = true,
-            MaxWidth = MaxWidth.ExtraLarge,
+            MaxWidth = MaxWidth.Large,
             FullWidth = true,
             BackdropClick = true
         };
 
         var dialog = await DialogService.ShowAsync<ManageTaskImageDialog>("Manage Task Images", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is JobCardTaskDTO viewTask)
+        {
+
+        }
+    }
+
+    private async Task ViewComments(JobCardTaskSummaryDTO task)
+    {
+        var parameters = new DialogParameters<TaskCommentDialog>
+        {
+            // { x => x.IsEdit, true },
+             { x => x.IsViewOnly, false },
+             { x => x.JobCardTaskId, task.Id },
+            // { x => x.Statuses, TaskStatuses.Where(x => x.Id>0).ToList() },
+            // { x => x.JobCardId, JobCardId }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<TaskCommentDialog>("Task Comments", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is JobCardTaskDTO viewTask)
