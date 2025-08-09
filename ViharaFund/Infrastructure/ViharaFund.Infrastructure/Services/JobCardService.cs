@@ -210,6 +210,21 @@ namespace ViharaFund.Infrastructure.Services
                 return ResultDto.Failure(new[] { "Job Card data is required." });
             }
 
+            if (jobCard.AssignCampaign.Id > 0)
+            {
+                var campaign = await tenantDbContext.Campaigns
+                    .FirstOrDefaultAsync(x => x.Id == jobCard.AssignCampaign.Id && x.IsActive);
+                if (campaign == null)
+                {
+                    return ResultDto.Failure(new[] { "Assigned Campaign not found." });
+                }
+
+                if (campaign.Status == CampaignStatus.Completed || campaign.Status == CampaignStatus.Paused)
+                {
+                    return ResultDto.Failure(new[] { "You can add a job card only to campaigns that are in Active or Draft status." });
+                }
+            }
+
             var entity = new JobCard
             {
                 AssignRoleGroupId = jobCard.AssignedRoleGroup.Id,
@@ -607,6 +622,17 @@ namespace ViharaFund.Infrastructure.Services
             if (entity.Status != Domain.Enums.JobCardStatus.OnGoing)
             {
                 return ResultDto.Failure(new[] { "Only Job Cards in On Going status can be marked as Completed." });
+            }
+
+            var totalActiveTask = entity
+                .JobCardTasks.Where(x => x.IsActive).Count();
+
+            var completedTaskCount = entity.JobCardTasks.Where(x => x.TaskStatus == Domain.Enums.TaskStatus.Completed)
+                .Count();
+
+            if (totalActiveTask != completedTaskCount)
+            {
+                return ResultDto.Failure(new[] { $"Unable to complete the job card since there are not completed tasks{totalActiveTask - completedTaskCount} remaining." });
             }
 
             await jobCardHistoryService.SaveAsync(entity);

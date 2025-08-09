@@ -11,6 +11,9 @@ namespace ViharaFund.Application.Services
         Task<ResultDto> CreateCampaignAsync(CampaignDTO campaignDto);
         Task<ResultDto> UpdateCampaignAsync(CampaignDTO campaignDto);
         Task<ResultDto> DeleteCampaignAsync(int id);
+        Task<ResultDto> PublishCampaignAsync(int id);
+        Task<ResultDto> CompleteCampaignAsync(int id);
+        Task<ResultDto> PauseCampaignAsync(int id);
         Task<CampaignMasterDataDTO> GetCampaignMasterDataAsync();
         Task<List<DropDownDTO>> GetActiveCampaignsAsync();
         Task<List<DropDownDTO>> GetPublishedCampaignsAsync();

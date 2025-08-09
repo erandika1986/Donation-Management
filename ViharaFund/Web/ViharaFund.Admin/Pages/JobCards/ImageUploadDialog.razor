@@ -1,0 +1,225 @@
+﻿@using System.Net.Http.Headers
+@using Microsoft.AspNetCore.Components.Forms
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-height: 500px; overflow-y: auto;">
+            <MudText Typo="Typo.h6" Class="mb-4">Upload Images</MudText>
+
+            <!-- File Upload Section -->
+            <MudStack>
+                <MudButton HtmlTag="label"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="Icons.Material.Filled.CloudUpload"
+                           for="fileInput"
+                           Class="mb-4">
+                    Select Images
+                    <InputFile id="fileInput"
+                               OnChange="OnInputFileChanged"
+                               multiple
+                               accept=".png,.jpg,.jpeg,.gif,.bmp,.webp"
+                               style="display: none;" />
+                </MudButton>
+
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Supported formats: PNG, JPG, JPEG, GIF, BMP, WEBP (Max 10 files, 10MB each)
+                </MudText>
+            </MudStack>
+
+            @if (selectedFiles.Any())
+            {
+                <MudText Typo="Typo.h6" Class="mb-3">Selected Files (@selectedFiles.Count)</MudText>
+
+                @foreach (var fileItem in selectedFiles)
+                {
+                    <MudCard Class="mb-3">
+                        <MudCardContent>
+                            <MudGrid AlignItems="Center">
+                                <MudItem xs="12" md="4">
+                                    @if (!string.IsNullOrEmpty(fileItem.PreviewUrl))
+                                    {
+                                        <MudImage Src="@fileItem.PreviewUrl"
+                                                  Alt="@fileItem.File.Name"
+                                                  Height="100"
+                                                  Width="100"
+                                                  ObjectFit="ObjectFit.Cover"
+                                                  Class="rounded" />
+                                    }
+                                </MudItem>
+                                <MudItem xs="12" md="8">
+                                    <MudText Typo="Typo.body1">@fileItem.File.Name</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        Size: @FormatFileSize(fileItem.File.Size)
+                                    </MudText>
+                                    <MudTextField @bind-Value="fileItem.Comment"
+                                                  Label="Comment (Optional)"
+                                                  Variant="Variant.Outlined"
+                                                  Lines="2"
+                                                  Class="mt-2" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudIconButton Icon="Icons.Material.Filled.Remove"
+                                           Color="Color.Error"
+                                           OnClick="() => RemoveFile(fileItem)"
+                                           Size="Size.Small" />
+                        </MudCardActions>
+                    </MudCard>
+                }
+
+                <MudDivider Class="my-4" />
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           OnClick="UploadFiles"
+                           Disabled="isUploading"
+                           StartIcon="@(isUploading ? null : Icons.Material.Filled.Upload)"
+                           Class="me-2">
+                    @if (isUploading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                        <span class="ms-2">Uploading...</span>
+                    }
+                    else
+                    {
+                        <span>Upload Files</span>
+                    }
+                </MudButton>
+            }
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public int JobCardTaskId { get; set; }
+
+    private List<FileUploadItem> selectedFiles = new();
+    private bool isUploading = false;
+
+    public class FileUploadItem
+    {
+        public IBrowserFile File { get; set; } = null!;
+        public string Comment { get; set; } = string.Empty;
+        public string PreviewUrl { get; set; } = string.Empty;
+    }
+
+    private async Task OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        selectedFiles.Clear();
+
+        var files = e.GetMultipleFiles(10); // Max 10 files
+
+        foreach (var file in files)
+        {
+            if (IsValidImageFile(file))
+            {
+                var fileItem = new FileUploadItem { File = file };
+
+                // Generate preview
+                try
+                {
+                    var buffer = new byte[file.Size];
+                    await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).ReadAsync(buffer);
+                    fileItem.PreviewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Error generating preview for {file.Name}: {ex.Message}", Severity.Warning);
+                }
+
+                selectedFiles.Add(fileItem);
+            }
+            else
+            {
+                Snackbar.Add($"Invalid file type: {file.Name}. Only image files are allowed.", Severity.Error);
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private bool IsValidImageFile(IBrowserFile file)
+    {
+        var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/gif", "image/bmp", "image/webp" };
+        return allowedTypes.Contains(file.ContentType?.ToLower());
+    }
+
+    private void RemoveFile(FileUploadItem fileItem)
+    {
+        selectedFiles.Remove(fileItem);
+        StateHasChanged();
+    }
+
+    private async Task UploadFiles()
+    {
+        if (!selectedFiles.Any()) return;
+
+        isUploading = true;
+        StateHasChanged();
+
+        try
+        {
+            using var content = new MultipartFormDataContent();
+
+            foreach (var fileItem in selectedFiles)
+            {
+                var fileContent = new StreamContent(fileItem.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024));
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(fileItem.File.ContentType ?? "application/octet-stream");
+                content.Add(fileContent, "files", fileItem.File.Name);
+
+                // Add comment if provided
+                if (!string.IsNullOrEmpty(fileItem.Comment))
+                {
+                    content.Add(new StringContent(fileItem.Comment), $"comment_{fileItem.File.Name}");
+                }
+            }
+
+            var response = await HttpClient.PostAsync($"api/JobCardTask/uploadTaskImage/{JobCardTaskId}", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Successfully uploaded {selectedFiles.Count} file(s)", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Upload failed: {errorContent}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Upload error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isUploading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] suffixes = { "B", "KB", "MB", "GB" };
+        int counter = 0;
+        decimal number = bytes;
+        while (Math.Round(number / 1024) >= 1)
+        {
+            number /= 1024;
+            counter++;
+        }
+        return $"{number:n1} {suffixes[counter]}";
+    }
+}

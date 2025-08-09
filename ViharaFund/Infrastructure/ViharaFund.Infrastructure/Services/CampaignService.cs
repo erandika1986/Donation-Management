@@ -35,7 +35,7 @@ namespace ViharaFund.Infrastructure.Services
                     Description = campaignDto.Description,
                     CampaignCategoryId = campaignDto.CampaignCategoryId,
                     Visibility = campaignDto.Visibility,
-                    Status = campaignDto.Status,
+                    Status = CampaignStatus.Draft,
                     StartDate = campaignDto.StartDate.Value,
                     HasEndDate = campaignDto.HasEndDate,
                     EndDate = campaignDto.HasEndDate ? campaignDto.EndDate : null,
@@ -82,6 +82,78 @@ namespace ViharaFund.Infrastructure.Services
             catch (Exception ex)
             {
                 return ResultDto.Failure(new[] { "Failed to delete campaign.", ex.Message });
+            }
+        }
+
+        public async Task<ResultDto> PublishCampaignAsync(int id)
+        {
+            try
+            {
+                var campaign = await tenantDbContext.Campaigns.FindAsync(id);
+                if (campaign == null)
+                    return ResultDto.Failure(new[] { "Campaign not found." });
+
+                if (!campaign.IsActive)
+                    return ResultDto.Failure(new[] { "Campaign is deleted." });
+
+                campaign.Status = CampaignStatus.Active;
+                campaign.UpdatedByUserId = currentUserService.UserId;
+                campaign.UpdatedDate = dateTime.Now;
+
+                await tenantDbContext.SaveChangesAsync();
+                return ResultDto.Success("Campaign published successfully.", campaign.Id);
+            }
+            catch (Exception ex)
+            {
+                return ResultDto.Failure(new[] { "Failed to publish campaign.", ex.Message });
+            }
+        }
+
+        public async Task<ResultDto> CompleteCampaignAsync(int id)
+        {
+            try
+            {
+                var campaign = await tenantDbContext.Campaigns.FindAsync(id);
+                if (campaign == null)
+                    return ResultDto.Failure(new[] { "Campaign not found." });
+
+                if (!campaign.IsActive)
+                    return ResultDto.Failure(new[] { "Campaign is deleted." });
+
+                campaign.Status = CampaignStatus.Completed;
+                campaign.UpdatedByUserId = currentUserService.UserId;
+                campaign.UpdatedDate = dateTime.Now;
+
+                await tenantDbContext.SaveChangesAsync();
+                return ResultDto.Success("Campaign completed successfully.", campaign.Id);
+            }
+            catch (Exception ex)
+            {
+                return ResultDto.Failure(new[] { "Failed to complete campaign.", ex.Message });
+            }
+        }
+
+        public async Task<ResultDto> PauseCampaignAsync(int id)
+        {
+            try
+            {
+                var campaign = await tenantDbContext.Campaigns.FindAsync(id);
+                if (campaign == null)
+                    return ResultDto.Failure(new[] { "Campaign not found." });
+
+                if (!campaign.IsActive)
+                    return ResultDto.Failure(new[] { "Campaign is deleted." });
+
+                campaign.Status = CampaignStatus.Paused;
+                campaign.UpdatedByUserId = currentUserService.UserId;
+                campaign.UpdatedDate = dateTime.Now;
+
+                await tenantDbContext.SaveChangesAsync();
+                return ResultDto.Success("Campaign pause successfully.", campaign.Id);
+            }
+            catch (Exception ex)
+            {
+                return ResultDto.Failure(new[] { "Failed to pause campaign.", ex.Message });
             }
         }
 
@@ -332,8 +404,6 @@ namespace ViharaFund.Infrastructure.Services
                 CurrencyType = defaultCurrencyType.Name,
             };
         }
-
-
 
         public async Task<ResultDto> UpdateCampaignAsync(CampaignDTO campaignDto)
         {

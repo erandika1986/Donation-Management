@@ -105,6 +105,14 @@ namespace ViharaFund.WebAPI.Controllers
                 {
                     var file = request.Files[i];
                     fileDto.Files.Add(file);
+
+                    var commentKey = $"comment_{file.FileName}";
+                    if (request.TryGetValue(commentKey, out var commentValue))
+                    {
+                        var comment = commentValue.ToString();
+                        // Store comment with file info
+                        fileDto.FileComments.Add(file.FileName, comment);
+                    }
                 }
 
                 var response = await _jobCardTaskService.UploadJobCardTaskAttachment(fileDto);
@@ -120,6 +128,12 @@ namespace ViharaFund.WebAPI.Controllers
             }
         }
 
+        [HttpGet("get-task-images/{taskId}")]
+        public async Task<IActionResult> GetTaskImages(int taskId)
+        {
+            var result = await _jobCardTaskService.GetTaskImages(taskId);
+            return Ok(result);
+        }
 
         [HttpPut("startTask")]
         public async Task<IActionResult> StartTask([FromBody] int taskId)

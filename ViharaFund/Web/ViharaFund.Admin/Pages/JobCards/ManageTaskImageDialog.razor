@@ -1,0 +1,190 @@
+﻿@page "/image-upload"
+@using System.Net.Http.Headers
+@using System.Text.Json
+@using ViharaFund.Shared.DTOs.Common
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudDialog>
+    <TitleContent>
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <div class="d-flex justify-space-between align-center flex-wrap">
+                <div>
+                    <MudText Typo="Typo.h6" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Task" Class="mr-3" />
+                        Management Task Images
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                        Here you can manage all images associated with this task, including adding, viewing, and deleting them as needed.
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.CloudUpload"
+                           OnClick="OpenUploadDialog"
+                           Class="mt-2 mt-sm-0">
+                    Upload Images
+                </MudButton>
+            </div>
+        </MudPaper>
+
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Class="pa-4">
+            <!-- Uploaded Files List -->
+            <MudText Typo="Typo.h5" Class="mb-3">Uploaded Files (@UploadedFileCount)</MudText>
+
+            @if (HasAnyFileExists)
+            {
+                <MudGrid>
+                    @foreach (var file in uploadedFiles)
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudCard>
+                                <MudCardMedia Image="@file.PreviewUrl" Height="200" />
+                                <MudCardContent>
+                                    <MudText Typo="Typo.body2"><strong>File Name:</strong> @file.FileName</MudText>
+                                    @if (!string.IsNullOrEmpty(file.Comment))
+                                    {
+                                        <MudText Typo="Typo.caption" Class="mt-2">
+                                            <strong>Comment:</strong> @file.Comment
+                                        </MudText>
+                                    }
+                                </MudCardContent>
+                                <MudCardActions>
+                                    <MudTooltip Text="Preview Image" Color="Color.Info" Placement="Placement.Top">
+                                        <MudIconButton Variant="Variant.Filled"
+                                                       Icon="@Icons.Material.Filled.Visibility"
+                                                       Size="Size.Small"
+                                                       Color="Color.Info"
+                                                       OnClick="@(() => PreviewImage(file))"
+                                                       Class="m-1"></MudIconButton>
+                                    </MudTooltip>
+
+                                    <MudTooltip Text="Delete Image" Color="Color.Error" Placement="Placement.Top">
+                                        <MudIconButton Variant="Variant.Filled"
+                                                       Icon="@Icons.Material.Filled.Delete"
+                                                       Size="Size.Small"
+                                                       Color="Color.Error"
+                                                       OnClick="@(() => DeleteFile(file))"
+                                                       Class="m-1"></MudIconButton>
+                                    </MudTooltip>
+                                </MudCardActions>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">No files uploaded yet.</MudAlert>
+            }
+        </MudPaper>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public int JobCardTaskId { get; set; } = new();
+
+    [Parameter]
+    public bool IsViewOnly { get; set; }
+
+    private IEnumerable<UploadedFileDTO> uploadedFiles = new List<UploadedFileDTO>();
+    public bool HasAnyFileExists { get; set; } = false;
+    public int UploadedFileCount { get; set; } = 0;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load existing files if needed
+        await LoadUploadedFiles();
+    }
+
+    private async Task OpenUploadDialog()
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("JobCardTaskId", JobCardTaskId);
+
+        var dialog = await DialogService.ShowAsync<ImageUploadDialog>("Upload Images", parameters, new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        });
+
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            // Refresh the uploaded files list
+            await LoadUploadedFiles();
+        }
+    }
+
+    private async Task LoadUploadedFiles()
+    {
+        // This would typically call your API to get uploaded files
+        // For demo purposes, keeping existing files in memory
+
+        uploadedFiles = await HttpClient.GetFromJsonAsync<List<UploadedFileDTO>>($"api/JobCardTask/get-task-images/{JobCardTaskId}") ?? new();
+        HasAnyFileExists = uploadedFiles.Any();
+        UploadedFileCount = uploadedFiles.Count();
+        StateHasChanged();
+    }
+
+    private async Task PreviewImage(UploadedFileDTO file)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("ImageUrl", file.PreviewUrl);
+        parameters.Add("FileName", file.FileName);
+        parameters.Add("Comment", file.Comment);
+
+        await DialogService.ShowAsync<ImagePreviewDialog>("Image Preview", parameters, new DialogOptions
+        {
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true
+        });
+    }
+
+    private async Task DeleteFile(UploadedFileDTO file)
+    {
+        var confirm = await DialogService.ShowMessageBox(
+            "Confirm Delete",
+            $"Are you sure you want to delete '{file.FileName}'?",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            // Call your delete API here
+            //uploadedFiles.Remove(file);
+            Snackbar.Add($"File '{file.FileName}' deleted successfully", Severity.Success);
+            StateHasChanged();
+        }
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] suffixes = { "B", "KB", "MB", "GB" };
+        int counter = 0;
+        decimal number = bytes;
+        while (Math.Round(number / 1024) >= 1)
+        {
+            number /= 1024;
+            counter++;
+        }
+        return $"{number:n1} {suffixes[counter]}";
+    }
+
+    private void CloseDialog()
+    {
+        MudDialog.Cancel();
+    }
+}
+
+
+

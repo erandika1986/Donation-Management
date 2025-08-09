@@ -45,7 +45,7 @@
                                   AdornmentIcon="@Icons.Material.Filled.Search"
                                   Placeholder="Search by title or description..."
                                   Immediate="true"
-                                  DebounceInterval="300" />
+                                  DebounceInterval="300" OnDebounceIntervalElapsed="OnSearch" />
                 </MudItem>
 
                 <!-- Campaign Filter -->
@@ -217,11 +217,12 @@
                                                    OnClick="@(() => ViewJobCard(task))"
                                                    Class="m-1"></MudIconButton>
                                 </MudTooltip>
-                                <MudTooltip Text="Upload Images" Color="Color.Primary" Placement="Placement.Top">
+                                <MudTooltip Text="Manage Task Images" Color="Color.Primary" Placement="Placement.Top">
                                     <MudIconButton Variant="Variant.Filled"
-                                                   Icon="@Icons.Material.Filled.Upload"
+                                                   Icon="@Icons.Material.Filled.Image"
                                                    Size="Size.Small"
                                                    Color="Color.Primary"
+                                                   OnClick="@(() => ViewImages(task))"
                                                    Class="m-1"></MudIconButton>
                                 </MudTooltip>
                             </MudCardActions>
@@ -290,6 +291,12 @@
         StateHasChanged();
     }
 
+    private async Task OnSearch(string text)
+    {
+        searchString = text;
+        await GetJobCardTaskAsync();
+    }
+
     private async Task StatusChanged(DropDownDTO status)
     {
         SelectedTaskStatus = status;
@@ -344,7 +351,7 @@
 
         if (!result.Canceled && result.Data is JobCardTaskDTO task)
         {
-            //await GetJobCardsSummaryAsync();
+            await GetJobCardTaskAsync();
         }
     }
 
@@ -427,7 +434,7 @@
 
         if (!result.Canceled && result.Data is JobCardTaskDTO updatedTask)
         {
-            //await GetJobCardsSummaryAsync();
+            await GetJobCardTaskAsync();
         }
         // Open edit dialog
 
@@ -543,5 +550,31 @@
             }
         }
     }
+    private async Task ViewImages(JobCardTaskSummaryDTO task)
+    {
+        var parameters = new DialogParameters<ManageTaskImageDialog>
+        {
+            // { x => x.IsEdit, true },
+             { x => x.IsViewOnly, false },
+             { x => x.JobCardTaskId, task.Id },
+            // { x => x.Statuses, TaskStatuses.Where(x => x.Id>0).ToList() },
+            // { x => x.JobCardId, JobCardId }
+        };
 
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ManageTaskImageDialog>("Manage Task Images", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is JobCardTaskDTO viewTask)
+        {
+
+        }
+    }
 }

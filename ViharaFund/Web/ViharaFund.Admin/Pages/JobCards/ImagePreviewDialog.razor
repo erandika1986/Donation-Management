@@ -1,0 +1,30 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudContainer Style="text-align: center;">
+            <MudText Typo="Typo.h6" Class="mb-3">@FileName</MudText>
+            <MudImage Src="@ImageUrl"
+                      Alt="@FileName"
+                      Style="max-width: 100%; max-height: 70vh; object-fit: contain;" />
+            @if (!string.IsNullOrEmpty(Comment))
+            {
+                <MudPaper Class="pa-3 mt-3" Style="text-align: left;">
+                    <MudText Typo="Typo.subtitle2">Comment:</MudText>
+                    <MudText Typo="Typo.body2">@Comment</MudText>
+                </MudPaper>
+            }
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="ClosePreview" Color="Color.Primary">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public string ImageUrl { get; set; } = string.Empty;
+    [Parameter] public string FileName { get; set; } = string.Empty;
+    [Parameter] public string Comment { get; set; } = string.Empty;
+
+    private void ClosePreview() => MudDialog.Close();
+}

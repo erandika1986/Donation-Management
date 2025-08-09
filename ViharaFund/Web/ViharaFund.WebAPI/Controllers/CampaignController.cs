@@ -67,6 +67,31 @@ namespace ViharaFund.WebAPI.Controllers
             return BadRequest(result);
         }
 
+        [HttpPost("publish-campaign")]
+        public async Task<ActionResult> PublishCampaign([FromBody] int id)
+        {
+            var result = await _campaignService.PublishCampaignAsync(id);
+            return Ok(result);
+        }
+
+        [HttpPost("complete-campaign")]
+        public async Task<ActionResult> CompleteCampaign([FromBody] int id)
+        {
+            var result = await _campaignService.CompleteCampaignAsync(id);
+            if (result.Succeeded)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPost("pause-campaign")]
+        public async Task<ActionResult> PauseCampaign([FromBody] int id)
+        {
+            var result = await _campaignService.PauseCampaignAsync(id);
+            if (result.Succeeded)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
         [HttpGet("get-campaign-master-data")]
         public async Task<ActionResult> GetCampaignMasterData()
         {

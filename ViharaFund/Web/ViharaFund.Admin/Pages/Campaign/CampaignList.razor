@@ -171,7 +171,7 @@
                                         Class="m-1"
                                         OnClick="@(() => OpenEditCampaignModel(campaign))"></MudIconButton>
                                 </MudTooltip>
-                                <MudTooltip Text="Launch" Color="Color.Primary" Placement="Placement.Top">
+@*                                 <MudTooltip Text="Launch" Color="Color.Primary" Placement="Placement.Top">
                                     <MudIconButton 
                                         Variant="Variant.Filled" 
                                         Icon="@Icons.Material.Filled.Launch" 
@@ -179,7 +179,7 @@
                                         Color="Color.Primary"
                                         Class="m-1" 
                                         OnClick="@(() => DeleteCampaign(campaign))"></MudIconButton>
-                                </MudTooltip>
+                                </MudTooltip> *@
                             }
                             else
                             {
@@ -220,6 +220,63 @@
                                     Class="m-1" 
                                     OnClick="@(() => DeleteCampaign(campaign))"></MudIconButton>
                             </MudTooltip>
+                            @if (campaign.Status == "Draft")
+                            {
+                              <MudStack Class="w-100">
+                                <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               StartIcon="@Icons.Material.Filled.Launch"
+                                               FullWidth="true"
+                                               Size="Size.Small"
+                                                   OnClick="@(() => PublishCampaign(campaign))"
+                                               Class="text-sm font-weight-medium">
+                                        Publish
+                                    </MudButton>
+                                </MudStack>
+                                </MudStack>
+                            }
+                            else if (campaign.Status == "Active")
+                            {
+                                <MudStack Class="w-100">
+                                    <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
+                                        <MudButton Variant="Variant.Filled"
+                                                   Color="Color.Primary"
+                                                   StartIcon="@Icons.Material.Filled.Check"
+                                                   FullWidth="true"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => CompleteCampaign(campaign))"
+                                                   Class="text-sm font-weight-medium">
+                                            Complete
+                                        </MudButton>
+                                        <MudButton Variant="Variant.Filled"
+                                                   Color="Color.Warning"
+                                                   StartIcon="@Icons.Material.Filled.Pause"
+                                                   FullWidth="true"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => PauseCampaign(campaign))"
+                                                   Class="text-sm font-weight-medium">
+                                            Pause
+                                        </MudButton>
+                                    </MudStack>
+                                </MudStack>
+                            }
+                            else if (campaign.Status == "Paused")
+                            {
+                                <MudStack Class="w-100">
+                                    <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
+                                        <MudButton Variant="Variant.Filled"
+                                                   Color="Color.Success"
+                                                   StartIcon="@Icons.Material.Filled.Launch"
+                                                   FullWidth="true"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => PublishCampaign(campaign))"
+                                                   Class="text-sm font-weight-medium">
+                                            Re-Activate
+                                        </MudButton>
+                                    </MudStack>
+                                </MudStack>
+                            }
                         </MudCardActions>
 
                         @code {
@@ -259,7 +316,6 @@
 @code {
     public CampaignsSummaryDTO CampaignsSummary { get; set; } = new();
 
-
     private string selectedStatus = "All";
     private string selectedCategory = "All";
 
@@ -276,23 +332,6 @@
 
     private int CurrentPage = 1;
     private int PageSize = 10;
-
-    // Separate nullable DateTime properties for the date pickers
-    // private DateTime? startDate = DateTime.Today;
-    // private DateTime? endDate = DateTime.Today.AddMonths(3);
-
-    // private DialogOptions dialogOptions = new()
-    // {
-    //     MaxWidth = MaxWidth.Medium,
-    //     FullWidth = true,
-    //     CloseButton = true,
-    //     BackdropClick = true,
-    //     CloseOnEscapeKey = true
-    // };
-
-
-    // private List<Campaign> campaigns = new();
-    // private List<Campaign> filteredCampaigns => FilterCampaigns();
 
     protected override async Task OnInitializedAsync()
     {
@@ -507,6 +546,118 @@
         }
     }
 
+    private async Task PublishCampaign(CampaignSummaryDTO campaignDto)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "ContentText", $"Are you sure you want to publish campaign '{campaignDto.Title}'? This action cannot be undone." },
+            { "ButtonText", "Publish" },
+            { "Color", Color.Success }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                // Replace with your actual API endpoint
+                var response = await HttpClient.PostAsJsonAsync($"api/Campaign/publish-campaign", campaignDto.Id);
+                if (response.IsSuccessStatusCode)
+                {
+                    await GetCampaignsSummaryAsync();
+                    StateHasChanged();
+                    Snackbar.Add("Campaign deleted successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete campaign.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting campaign: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task PauseCampaign(CampaignSummaryDTO campaignDto)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "ContentText", $"Are you sure you want to pause campaign '{campaignDto.Title}'? This action cannot be undone." },
+            { "ButtonText", "Pause" },
+            { "Color", Color.Warning }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                // Replace with your actual API endpoint
+                var response = await HttpClient.PostAsJsonAsync($"api/Campaign/pause-campaign", campaignDto.Id);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await GetCampaignsSummaryAsync();
+                    StateHasChanged();
+                    Snackbar.Add("Campaign deleted successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete campaign.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting campaign: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task CompleteCampaign(CampaignSummaryDTO campaignDto)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "ContentText", $"Are you sure you want to complete campaign '{campaignDto.Title}'? This action cannot be undone." },
+            { "ButtonText", "Complete" },
+            { "Color", Color.Success }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+
+                // Replace with your actual API endpoint
+                var response = await HttpClient.PostAsJsonAsync($"api/Campaign/complete-campaign", campaignDto.Id);
+                if (response.IsSuccessStatusCode)
+                {
+                    await GetCampaignsSummaryAsync();
+                    StateHasChanged();
+                    Snackbar.Add("Campaign deleted successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete campaign.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting campaign: {ex.Message}", Severity.Error);
+            }
+        }
+    }
 
     private async Task SaveCampaign(CampaignDTO campaign)
     {

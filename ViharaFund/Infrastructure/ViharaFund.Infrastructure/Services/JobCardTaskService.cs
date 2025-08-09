@@ -8,6 +8,7 @@ using ViharaFund.Application.Helpers;
 using ViharaFund.Application.Services;
 using ViharaFund.Domain.Entities.Tenant;
 using ViharaFund.Infrastructure.Data;
+using ViharaFund.Shared.DTOs.Common;
 using ViharaFund.Shared.DTOs.JobCardTask;
 
 namespace ViharaFund.Infrastructure.Services
@@ -322,7 +323,7 @@ namespace ViharaFund.Infrastructure.Services
         {
             try
             {
-                string leaveSupportDocumentPath = configuration["FileSavePaths:LeaveSupportDocumentPath"];
+                string leaveSupportDocumentPath = configuration["FileSavePaths:TaskImageSavingPathPath"];
                 if (!Directory.Exists(leaveSupportDocumentPath))
                 {
                     Directory.CreateDirectory(leaveSupportDocumentPath);
@@ -331,9 +332,9 @@ namespace ViharaFund.Infrastructure.Services
 
                 for (int i = 0; i < upload.Files.Count; i++)
                 {
-                    var extension = Path.GetExtension(upload.Files[i].Name);
+                    var extension = Path.GetExtension(upload.Files[i].FileName);
 
-                    var fileName = $"{Path.GetFileNameWithoutExtension(upload.Files[i].Name)}{extension}";
+                    var fileName = upload.Files[i].FileName;
                     var uniqueFileName = $"{Guid.NewGuid()}{extension}";
                     var filePath = Path.Combine(leaveSupportDocumentPath, uniqueFileName);
 
@@ -344,11 +345,14 @@ namespace ViharaFund.Infrastructure.Services
 
                     var uploadedFileUrl = await azureBlobService
                         .UploadFileAsync(memoryStream, uniqueFileName, upload.Files[i].ContentType, ApplicationConstants.AzureBlobStorageName);
-
+                    var comment = upload.FileComments.ContainsKey(upload.Files[i].FileName)
+                        ? upload.FileComments[upload.Files[i].FileName]
+                        : string.Empty;
                     var jobCardTaskAttachment = new JobCardTaskAttachment()
                     {
                         JobCardTaskId = upload.JobCardTaskId,
                         FileName = fileName,
+                        Description = comment,
                         FilePath = uploadedFileUrl,
                         CreatedDate = dateTime.UtcNow,
                         CreatedByUserId = currentUserService.UserId,
@@ -370,6 +374,7 @@ namespace ViharaFund.Infrastructure.Services
                 return ResultDto.Failure(new[] { "An error occurred while uploading the file.", ex.Message });
             }
         }
+
 
         private async Task<string> GenerateTaskNumberAsync(DateTime date)
         {
@@ -395,6 +400,23 @@ namespace ViharaFund.Infrastructure.Services
 
             string taskNumber = $"{prefix}{nextSequence.ToString("D4")}";
             return taskNumber;
+        }
+
+        public Task<List<UploadedFileDTO>> GetTaskImages(int taskId)
+        {
+            var taskAttachments = tenantDbContext.JobCardTaskAttachments
+                .Where(x => x.JobCardTaskId == taskId && x.IsActive)
+                .Select(x => new UploadedFileDTO
+                {
+                    Comment = x.Description,
+                    FileName = x.FileName,
+                    FileSize = 0,
+                    PreviewUrl = x.FilePath,
+                    UploadDate = x.CreatedDate,
+                })
+                .ToListAsync();
+
+            return taskAttachments;
         }
     }
 }
