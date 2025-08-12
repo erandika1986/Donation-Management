@@ -179,6 +179,7 @@
                 await LocalStorage.SetItemAsync("authToken", result.Token);
                 await LocalStorage.SetItemAsync("organizationId", result.OrganizationId);
                 await LocalStorage.SetItemAsync("username", result.Username);
+                await LocalStorage.SetItemAsync("currencyCode", result.DefaultCurrencyCode);
 
                 ((ApiAuthenticationStateProvider)AuthProvider).MarkUserAsAuthenticated(result.Token);
 

@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using ViharaFund.Application.Constants;
 using ViharaFund.Application.Contracts;
 using ViharaFund.Application.DTOs.User;
 using ViharaFund.Application.Services;
@@ -57,12 +58,16 @@ namespace ViharaFund.Infrastructure.Services
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"]);
 
+            var defaultCurrencyTypeRecord = await _tenantDbContext.AppSettings.FirstOrDefaultAsync(x => x.Name == CompanySettingConstants.DefaultCurrencyId);
+            var defaultAddressId = defaultCurrencyTypeRecord is not null ? int.Parse(defaultCurrencyTypeRecord.Value) : 0;
+            var currencyType = await _tenantDbContext.CurrencyTypes.FirstOrDefaultAsync(x => x.Id == defaultAddressId);
             return new LoginResponse
             {
                 Token = token,
                 Username = user.Username,
                 OrganizationId = tenant.OrganizationId,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes)
+                ExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes),
+                DefaultCurrencyCode = currencyType is not null ? currencyType.Name : string.Empty
             };
         }
 

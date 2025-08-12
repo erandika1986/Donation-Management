@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Blazored.LocalStorage
 @using Microsoft.AspNetCore.Authorization
 @using MudBlazor
 @using System.Globalization
@@ -8,6 +9,7 @@
 @inject HttpClient HttpClient
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject ILocalStorageService localStorage;
 
 @attribute [Authorize]
 <PageTitle>Dashboard</PageTitle>
@@ -37,7 +39,7 @@
                     <MudCardContent>
                         <div class="d-flex justify-space-between align-center">
                             <div>
-                                <MudText Typo="Typo.h4" Class="mb-2">@DonationDashboard.TotalDonation.ToString("C0")</MudText>
+                                <MudText Typo="Typo.h4" Class="mb-2">@(CurrencyCode)@DonationDashboard.TotalDonation.ToString("#,##0.00")</MudText>
                                 <MudText Typo="Typo.body2" Style="opacity: 0.8;">Total Donations</MudText>
                             </div>
                             <MudIcon Icon="Icons.Material.Filled.MonetizationOn" Size="Size.Large" Style="opacity: 0.7;" />
@@ -136,7 +138,7 @@
                                         <MudProgressLinear Color="Color.Primary" Value="@campaign.TargetProgress" Class="mb-2" />
                                         <div class="d-flex justify-space-between">
                                             <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                                @campaign.ActualIncome.ToString("C0") / @campaign.TargetAmount.ToString("C0")
+                                                @(CurrencyCode)@campaign.ActualIncome.ToString("#,##0.00") / @(CurrencyCode)@campaign.TargetAmount.ToString("#,##0.00")
                                             </MudText>
                                             <MudText Typo="Typo.body2" Color="Color.Primary">
                                                 @campaign.TargetProgress.ToString("F1")%
@@ -244,7 +246,7 @@
                                         </div>
                                         <div class="text-right">
                                             <MudText Typo="Typo.subtitle1" Color="Color.Primary">
-                                                @donor.TotalDonation.ToString("C0")
+                                                @(CurrencyCode)@donor.TotalDonation.ToString("#,##0.00")
                                             </MudText>
                                             <MudChip T="string" Size="Size.Small" Color="@GetRankColor(index)">
                                                 #@(index + 1)
@@ -270,11 +272,13 @@
     public DonorDashboardDTO DonorDashboard { get; set; } = new();
     public CampaignDashboardDTO CampaignDashboard { get; set; } = new();
     public JobDashboardDTO JobDashboard { get; set; } = new();
+    public string CurrencyCode { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-
         await LoadDashBoardData();
+
+        CurrencyCode = await localStorage.GetItemAsync<string>("currencyCode");
     }
 
     private async Task LoadDashBoardData()

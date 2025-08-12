@@ -45,6 +45,9 @@ namespace ViharaFund.Admin
             if (!string.IsNullOrEmpty(token))
             {
                 await _localStorage.RemoveItemAsync("authToken");
+                await _localStorage.RemoveItemAsync("organizationId");
+                await _localStorage.RemoveItemAsync("username");
+                await _localStorage.RemoveItemAsync("currencyCode");
             }
 
             _http.DefaultRequestHeaders.Authorization = null;

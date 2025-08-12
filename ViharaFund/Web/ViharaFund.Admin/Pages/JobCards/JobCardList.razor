@@ -1,5 +1,6 @@
 ﻿@page "/job-cards"
 @using System.ComponentModel.DataAnnotations
+@using Blazored.LocalStorage
 @using ViharaFund.Admin.Common
 @using ViharaFund.Admin.Helper
 @using ViharaFund.Application.DTOs.Common
@@ -12,6 +13,7 @@
 @inject HttpClient HttpClient
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject ILocalStorageService localStorage;
 
 <PageTitle>Campaign Management</PageTitle>
 
@@ -21,7 +23,7 @@
         <div class="d-flex justify-space-between align-center flex-wrap">
             <div>
                 <MudText Typo="Typo.h4" Class="mb-2">
-                    <MudIcon Icon="@Icons.Material.Filled.Campaign" Class="mr-3" />
+                    <MudIcon Icon="@Icons.Material.Filled.Assignment" Class="mr-3" />
                     Job Cards Management
                 </MudText>
                 <MudText Typo="Typo.body1" Class="mud-text-secondary">
@@ -145,10 +147,10 @@
                     <MudCardContent Class="py-2">
                         <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
                             <MudText Typo="Typo.h5" Color="Color.Success" Class="font-weight-bold">
-                                @jobCard.ActualCost.ToString("C0")
+                                @(CurrencyCode)@jobCard.ActualCost.ToString("#,##0.00")
                             </MudText>
                             <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                                of @jobCard.EstimatedBudget.ToString("C0")
+                                of @(CurrencyCode)@jobCard.EstimatedBudget.ToString("#,##0.00")
                             </MudText>
                         </MudStack>
 
@@ -520,10 +522,13 @@
 
     private string searchString = "";
 
+    public string CurrencyCode { get; set; } = string.Empty;
+
     private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium };
 
     protected override async Task OnInitializedAsync()
     {
+        CurrencyCode = await localStorage.GetItemAsync<string>("currencyCode");
         await LoadMasterDataAsync();
         await GetJobCardsSummaryAsync();
     }
