@@ -41,23 +41,10 @@ namespace ViharaFund.Admin
 
         public async Task MarkUserAsLoggedOut()
         {
-            var username = await _localStorage.GetItemAsync<string>("username");
-            var organizationId = await _localStorage.GetItemAsync<string>("organizationId");
             var token = await _localStorage.GetItemAsync<string>("authToken");
-
             if (!string.IsNullOrEmpty(token))
             {
                 await _localStorage.RemoveItemAsync("authToken");
-            }
-
-            if (!string.IsNullOrEmpty(username))
-            {
-                await _localStorage.RemoveItemAsync("username");
-            }
-
-            if (!string.IsNullOrEmpty(organizationId))
-            {
-                await _localStorage.RemoveItemAsync("organizationId");
             }
 
             _http.DefaultRequestHeaders.Authorization = null;

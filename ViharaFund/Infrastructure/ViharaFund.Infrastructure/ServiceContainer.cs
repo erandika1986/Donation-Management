@@ -48,6 +48,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<IJobCardHistoryService, JobCardHistoryService>();
             services.AddScoped<IDonationService, DonationService>();
             services.AddScoped<IDonorService, DonorService>();
+            services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ICampaignService, CampaignService>();

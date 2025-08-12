@@ -1,8 +1,434 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using System.Globalization
+@using ViharaFund.Domain.Enums
+@using ViharaFund.Shared.DTOs.Dashboard
+
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
 @attribute [Authorize]
-<PageTitle>Home</PageTitle>
+<PageTitle>Dashboard</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <!-- Page Header -->
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <div class="d-flex justify-space-between align-center flex-wrap">
+            <div>
+                <MudText Typo="Typo.h4" Class="mb-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Leaderboard" Class="mr-3" />
+                    Donation Management Dashboard
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    Welcome back! Here's an overview of your donation activities.
+                </MudText>
+            </div>
+        </div>
+    </MudPaper>
 
-Welcome to your new app.
+    <!-- Main Content -->
+    <MudPaper Elevation="8" Class="pa-6" Style="background: rgba(255,255,255,0.95); backdrop-filter: blur(15px); border-radius: 20px;">
+        <!-- Key Metrics Cards -->
+        <MudGrid Class="mb-4">
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="3" Class="pa-4" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <MudCardContent>
+                        <div class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudText Typo="Typo.h4" Class="mb-2">@DonationDashboard.TotalDonation.ToString("C0")</MudText>
+                                <MudText Typo="Typo.body2" Style="opacity: 0.8;">Total Donations</MudText>
+                            </div>
+                            <MudIcon Icon="Icons.Material.Filled.MonetizationOn" Size="Size.Large" Style="opacity: 0.7;" />
+                        </div>
+                        <div class="d-flex align-center mt-3">
+                            <MudIcon Icon="Icons.Material.Filled.TrendingUp" Size="Size.Small" Class="mr-1" />
+                            <MudText Typo="Typo.caption">@(DonationDashboard.MonthlyProgress)% from last month</MudText>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="3" Class="pa-4" Style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                    <MudCardContent>
+                        <div class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudText Typo="Typo.h4" Class="mb-2">@CampaignDashboard.ActiveCampaigns</MudText>
+                                <MudText Typo="Typo.body2" Style="opacity: 0.8;">Active Campaigns</MudText>
+                            </div>
+                            <MudIcon Icon="Icons.Material.Filled.Campaign" Size="Size.Large" Style="opacity: 0.7;" />
+                        </div>
+                        <div class="d-flex align-center mt-3">
+                            <MudIcon Icon="Icons.Material.Filled.TrendingUp" Size="Size.Small" Class="mr-1" />
+                            <MudText Typo="Typo.caption">@(CampaignDashboard.NewInThisMonth) new this month</MudText>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="3" Class="pa-4" Style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                    <MudCardContent>
+                        <div class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudText Typo="Typo.h4" Class="mb-2">@(DonorDashboard.TotalDonor.ToString("N0"))</MudText>
+                                <MudText Typo="Typo.body2" Style="opacity: 0.8;">Total Donors</MudText>
+                            </div>
+                            <MudIcon Icon="Icons.Material.Filled.People" Size="Size.Large" Style="opacity: 0.7;" />
+                        </div>
+                        <div class="d-flex align-center mt-3">
+                            <MudIcon Icon="Icons.Material.Filled.PersonAdd" Size="Size.Small" Class="mr-1" />
+                            <MudText Typo="Typo.caption">@(DonorDashboard.NewInThisMonth) new donors</MudText>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="3" Class="pa-4" Style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+                    <MudCardContent>
+                        <div class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudText Typo="Typo.h4" Class="mb-2">@(JobDashboard.TotalPendingJobs)</MudText>
+                                <MudText Typo="Typo.body2" Style="opacity: 0.8;">Pending Jobs</MudText>
+                            </div>
+                            <MudIcon Icon="Icons.Material.Filled.Assignment" Size="Size.Large" Style="opacity: 0.7;" />
+                        </div>
+                        <div class="d-flex align-center mt-3">
+                            <MudIcon Icon="Icons.Material.Filled.Schedule" Size="Size.Small" Class="mr-1" />
+                            <MudText Typo="Typo.caption">@(JobDashboard.UrgentJob) urgent jobs</MudText>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Main Content Grid -->
+        <MudGrid>
+            <!-- Campaign Performance -->
+            <MudItem xs="12" lg="12">
+                <MudCard Elevation="3" Class="pa-4 mb-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h5" Color="Color.Primary">
+                                <MudIcon Icon="Icons.Material.Filled.Campaign" Class="mr-2" />
+                                Campaign Performance
+                            </MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIconButton Icon="Icons.Material.Filled.MoreVert" Color="Color.Default" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudGrid>
+                            @foreach (var campaign in CampaignDashboard.CampaignPerformances)
+                            {
+                                <MudItem xs="12" md="6" Class="mb-3">
+                                    <MudPaper Class="pa-3" Elevation="1">
+                                        <div class="d-flex justify-space-between align-center mb-2">
+                                            <MudText Typo="Typo.subtitle1">@campaign.CampaignName</MudText>
+                                            <MudChip T="string" Size="Size.Small" Color="@GetCampainStatusColor(campaign.Status)">
+                                                @(campaign.Status)
+                                            </MudChip>
+                                        </div>
+                                        <MudProgressLinear Color="Color.Primary" Value="@campaign.TargetProgress" Class="mb-2" />
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                @campaign.ActualIncome.ToString("C0") / @campaign.TargetAmount.ToString("C0")
+                                            </MudText>
+                                            <MudText Typo="Typo.body2" Color="Color.Primary">
+                                                @campaign.TargetProgress.ToString("F1")%
+                                            </MudText>
+                                        </div>
+                                    </MudPaper>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Job Status -->
+            <MudItem xs="12" md="12">
+                <MudCard Elevation="3" Class="pa-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6" Color="Color.Primary">
+                                <MudIcon Icon="Icons.Material.Filled.Assignment" Class="mr-2" />
+                                Job Status Overview
+                            </MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudGrid>
+                            @foreach (var jobCard in JobDashboard.JobStatusSummary)
+                            {
+                                <MudItem xs="12" sm="6" md="4" lg="2" Class="mb-3">
+                                    <MudPaper Class="pa-3 text-center" Elevation="1">
+                                        <MudText Typo="Typo.h5" Color="GetJobCardStatusColor(jobCard.Status)" Class="mb-1">
+                                            @jobCard.JobCardCount
+                                        </MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                            @jobCard.StatusText
+                                        </MudText>
+                                        <MudProgressCircular Color="GetJobCardStatusColor(jobCard.Status)" Size="Size.Small"
+                                                             Value="@(jobCard.Precentage)"
+                                                             Class="mt-2" />
+                                    </MudPaper>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudCard Elevation="3" Class="pa-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6" Color="Color.Primary">
+                                <MudIcon Icon="Icons.Material.Filled.Assignment" Class="mr-2" />
+                                Recent Job Cards
+                            </MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">Recent Job Cards</MudText>
+                        @foreach (var job in JobDashboard.RecentJobCards)
+                        {
+                            <MudPaper Class="pa-2 mb-2" Elevation="1">
+                                <div class="d-flex justify-space-between align-center">
+                                    <div>
+                                        <MudText Typo="Typo.body2">@job.Name</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@job.OwnedGroup</MudText>
+                                    </div>
+                                    <MudChip T="string" Size="Size.Small" Color="@GetJobStatusColor(job.Status)">
+                                        @job.Status
+                                    </MudChip>
+                                </div>
+                            </MudPaper>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Top Donors -->
+            <MudItem xs="12" md="6">
+                <MudCard Elevation="3" Class="pa-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6" Color="Color.Primary">
+                                <MudIcon Icon="Icons.Material.Filled.StarRate" Class="mr-2" />
+                                Top Donors
+                            </MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudList T="string" Clickable="false">
+                            @foreach (var (donor, index) in DonorDashboard.TopDonors.Select((d, i) => (d, i)))
+                            {
+                                <MudListItem>
+                                    <div class="d-flex align-center justify-space-between w-100">
+                                        <div class="d-flex align-center">
+                                            <MudAvatar Color="@GetAvatarColor(index)" Size="Size.Medium" Class="mr-3">
+                                                @donor.DonorName.Substring(0, 1).ToUpper()
+                                            </MudAvatar>
+                                            <div>
+                                                <MudText Typo="Typo.subtitle2">@donor.DonorName</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                    @donor.NumberOfDonation donation(s)
+                                                </MudText>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <MudText Typo="Typo.subtitle1" Color="Color.Primary">
+                                                @donor.TotalDonation.ToString("C0")
+                                            </MudText>
+                                            <MudChip T="string" Size="Size.Small" Color="@GetRankColor(index)">
+                                                #@(index + 1)
+                                            </MudChip>
+                                        </div>
+                                    </div>
+                                </MudListItem>
+                                @if (index < TopDonors.Count - 1)
+                                {
+                                    <MudDivider />
+                                }
+                            }
+                        </MudList>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    public DonationDashboardDTO DonationDashboard { get; set; } = new();
+    public DonorDashboardDTO DonorDashboard { get; set; } = new();
+    public CampaignDashboardDTO CampaignDashboard { get; set; } = new();
+    public JobDashboardDTO JobDashboard { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await LoadDashBoardData();
+    }
+
+    private async Task LoadDashBoardData()
+    {
+
+        DonationDashboard = await HttpClient.GetFromJsonAsync<DonationDashboardDTO>($"api/Dashboard/get-donation-dashboard") ?? new();
+
+        DonorDashboard = await HttpClient.GetFromJsonAsync<DonorDashboardDTO>($"api/Dashboard/get-donor-dashboard") ?? new();
+
+        CampaignDashboard = await HttpClient.GetFromJsonAsync<CampaignDashboardDTO>($"api/Dashboard/get-campaign-dashboard") ?? new();
+
+        JobDashboard = await HttpClient.GetFromJsonAsync<JobDashboardDTO>($"api/Dashboard/get-job-dashboard") ?? new();
+    }
+
+    private Color GetCampainStatusColor(string status)
+    {
+        return status switch
+        {
+            "Active" => Color.Success,
+            "Draft" => Color.Warning,
+            "Completed" => Color.Primary,
+            "Paused" => Color.Secondary,
+            _ => Color.Default
+        };
+    }
+
+    private Color GetJobCardStatusColor(JobCardStatus status)
+    {
+        return status switch
+        {
+            JobCardStatus.PendingApproval => Color.Warning,
+            JobCardStatus.PartiallyApproved => Color.Info,
+            JobCardStatus.Approved => Color.Success,
+            JobCardStatus.Rejected => Color.Error,
+            JobCardStatus.PendingCompletion => Color.Info,
+            JobCardStatus.Completed => Color.Success,
+            JobCardStatus.OnGoing => Color.Info,
+            JobCardStatus.PendingOnHold => Color.Warning,
+            JobCardStatus.OnHold => Color.Warning,
+            JobCardStatus.PendingCancellation => Color.Error,
+            JobCardStatus.Cancelled => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    // Sample data - replace with actual data from your service
+    private decimal TotalDonations = 125000m;
+    private int ActiveCampaigns = 8;
+    private int TotalDonors = 1247;
+    private int PendingJobs = 12;
+    private int TotalJobs = 45;
+
+    private List<Campaign> TopCampaigns = new()
+    {
+        new Campaign { Name = "Children's Education Fund", CurrentAmount = 75000, TargetAmount = 100000, IsActive = true },
+        new Campaign { Name = "Healthcare Initiative", CurrentAmount = 45000, TargetAmount = 80000, IsActive = true },
+        new Campaign { Name = "Community Center", CurrentAmount = 30000, TargetAmount = 50000, IsActive = true },
+        new Campaign { Name = "Food Security Program", CurrentAmount = 65000, TargetAmount = 70000, IsActive = false }
+    };
+
+    private List<Donor> TopDonors = new()
+    {
+        new Donor { Name = "John Smith", TotalAmount = 15000, DonationCount = 8 },
+        new Donor { Name = "Sarah Johnson", TotalAmount = 12500, DonationCount = 6 },
+        new Donor { Name = "Michael Brown", TotalAmount = 10000, DonationCount = 4 },
+        new Donor { Name = "Emily Davis", TotalAmount = 8500, DonationCount = 7 },
+        new Donor { Name = "Robert Wilson", TotalAmount = 7200, DonationCount = 3 }
+    };
+
+    private List<Activity> RecentActivities = new()
+    {
+        new Activity { Description = "New donation of $500 received", Time = "2 minutes ago", Color = Color.Success },
+        new Activity { Description = "Campaign 'Education Fund' reached 75%", Time = "1 hour ago", Color = Color.Info },
+        new Activity { Description = "Job card assigned to team member", Time = "3 hours ago", Color = Color.Warning },
+        new Activity { Description = "New donor registered", Time = "5 hours ago", Color = Color.Primary },
+        new Activity { Description = "Monthly report generated", Time = "1 day ago", Color = Color.Secondary }
+    };
+
+    private List<JobStatus> JobStatusData = new()
+    {
+        new JobStatus { Status = "Completed", Count = 18, Color = Color.Success },
+        new JobStatus { Status = "In Progress", Count = 15, Color = Color.Info },
+        new JobStatus { Status = "Pending", Count = 8, Color = Color.Warning },
+        new JobStatus { Status = "Overdue", Count = 4, Color = Color.Error }
+    };
+
+    private List<Job> RecentJobs = new()
+    {
+        new Job { Title = "Process donation receipts", AssignedTo = "Alice Cooper", Status = "In Progress" },
+        new Job { Title = "Update campaign materials", AssignedTo = "Bob Wilson", Status = "Pending" },
+        new Job { Title = "Contact major donors", AssignedTo = "Carol Smith", Status = "Completed" },
+        new Job { Title = "Prepare monthly report", AssignedTo = "David Lee", Status = "Overdue" }
+    };
+
+    private Color GetAvatarColor(int index) => index switch
+    {
+        0 => Color.Primary,
+        1 => Color.Secondary,
+        2 => Color.Tertiary,
+        3 => Color.Info,
+        _ => Color.Default
+    };
+
+    private Color GetRankColor(int index) => index switch
+    {
+        0 => Color.Warning,
+        1 => Color.Secondary,
+        2 => Color.Info,
+        _ => Color.Default
+    };
+
+    private Color GetJobStatusColor(string status) => status switch
+    {
+        "Completed" => Color.Success,
+        "In Progress" => Color.Info,
+        "Pending" => Color.Warning,
+        "Overdue" => Color.Error,
+        _ => Color.Default
+    };
+
+    public class Campaign
+    {
+        public string Name { get; set; }
+        public decimal CurrentAmount { get; set; }
+        public decimal TargetAmount { get; set; }
+        public bool IsActive { get; set; }
+        public double ProgressPercentage => (double)(CurrentAmount / TargetAmount * 100);
+    }
+
+    public class Donor
+    {
+        public string Name { get; set; }
+        public decimal TotalAmount { get; set; }
+        public int DonationCount { get; set; }
+    }
+
+    public class Activity
+    {
+        public string Description { get; set; }
+        public string Time { get; set; }
+        public Color Color { get; set; }
+    }
+
+    public class JobStatus
+    {
+        public string Status { get; set; }
+        public int Count { get; set; }
+        public Color Color { get; set; }
+    }
+
+    public class Job
+    {
+        public string Title { get; set; }
+        public string AssignedTo { get; set; }
+        public string Status { get; set; }
+    }
+}

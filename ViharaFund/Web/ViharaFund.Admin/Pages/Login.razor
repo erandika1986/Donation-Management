@@ -1,5 +1,4 @@
-﻿@* Login.razor *@
-@page "/login"
+﻿@page "/login"
 @layout LoginLayout
 
 @using Microsoft.AspNetCore.Components.Authorization
@@ -7,7 +6,6 @@
 @using static System.Net.WebRequestMethods
 @using Blazored.LocalStorage
 @using ViharaFund.Application.DTOs.User
-
 
 @inject IJSRuntime JSRuntime
 @inject HttpClient Http
@@ -17,79 +15,112 @@
 
 <MudLayout>
     <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4 d-flex justify-center align-center" Style="min-height: calc(100vh - 64px);">
-            <MudPaper Elevation="3" Class="pa-8" Style="width: 100%; max-width: 400px;">
-                <div class="text-center mb-6">
-                    <div class="vhara-icon-container mb-4" style="justify-content: center;">
-                        <img src="https://schoolmanagement.blob.core.windows.net/viharafund/ViharaFundIcon64.png"
-                             alt="Vihara Fund" 
-                             width="64" 
-                             height="64" />
-                    </div>
-                    <MudText Typo="Typo.h4" Class="mb-2">Welcome to Vihara Fund</MudText>
-                    <MudText Typo="Typo.body1" Color="Color.Secondary">Please sign in to continue</MudText>
-                </div>
-                
-                <MudForm @ref="_form" Model="_loginModel">
-                    <MudTextField @bind-Value="_loginModel.OrganizationId"
-                                  For="@(() => _loginModel.OrganizationId)"
-                                  Label="Organization ID"
-                                  Variant="Variant.Outlined"
-                                  Required="true"
-                                  RequiredError="Organization name is required!"
-                                  InputType="InputType.Text"
-                                  Class="mb-4" />
-                    <MudTextField @bind-Value="_loginModel.Username"
-                                  For="@(() => _loginModel.Username)"
-                                  Label="User Name" 
-                                  Variant="Variant.Outlined" 
-                                  Required="true" 
-                                  RequiredError="User name is required!"
-                                  InputType="InputType.Text"
-                                  Class="mb-4" />
-                    
-                    <MudTextField @bind-Value="_loginModel.Password" 
-                                  For="@(() => _loginModel.Password)"
-                                  Label="Password" 
-                                  Variant="Variant.Outlined" 
-                                  InputType="InputType.Password" 
-                                  Required="true" 
-                                  RequiredError="Password is required!"
-                                  Class="mb-4" />
-                    
-                    <div class="d-flex justify-space-between align-center mb-4">
-                        <MudLink Href="/forgot-password" Color="Color.Primary">Forgot Password?</MudLink>
-                    </div>
-                    
-                    <MudButton ButtonType="ButtonType.Submit" 
-                               Variant="Variant.Filled" 
-                               Color="Color.Primary" 
-                               FullWidth="true"
-                               Size="Size.Large"
-                               OnClick="LoginAsync"
-                               Disabled="_isLoading"
-                               Class="mb-4">
-                        @if (_isLoading)
-                        {
-                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                            <span class="ml-2">Signing In...</span>
-                        }
-                        else
-                        {
-                            <span>Sign In</span>
-                        }
-                    </MudButton>
-                </MudForm>
-                
-                @if (!string.IsNullOrEmpty(_errorMessage))
-                {
-                    <MudAlert Severity="Severity.Error" Class="mb-4">
-                        @_errorMessage
-                    </MudAlert>
-                }
-                
-                <MudDivider Class="my-4" />
-            </MudPaper>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="login-container">
+            <MudGrid Justify="Justify.Center" AlignItems="Center" Class="login-grid">
+                <MudItem xs="12" sm="10" md="8" lg="6" xl="4">
+                    <MudPaper Elevation="8" Class="login-paper">
+                        <!-- Header Section -->
+                        <div class="login-header">
+                            <div class="logo-container">
+                                <img src="https://schoolmanagement.blob.core.windows.net/viharafund/ViharaFundIcon64.png"
+                                     alt="Vihara Fund"
+                                     class="logo-image" />
+                            </div>
+                            <MudText Typo="Typo.h4" Class="welcome-title">Welcome Back</MudText>
+                            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="welcome-subtitle">
+                                Sign in to your Vihara Fund account
+                            </MudText>
+                        </div>
+
+                        <!-- Form Section -->
+                        <div class="form-container">
+                            <MudForm @ref="_form" Model="_loginModel">
+                                <MudStack Spacing="4">
+                                    <MudTextField @bind-Value="_loginModel.OrganizationId"
+                                                  For="@(() => _loginModel.OrganizationId)"
+                                                  Label="Organization ID"
+                                                  Variant="Variant.Outlined"
+                                                  Required="true"
+                                                  RequiredError="Organization ID is required"
+                                                  InputType="InputType.Text"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="Icons.Material.Filled.Business"
+                                                  FullWidth="true"
+                                                  autocomplete="off"
+                                                  Class="input-field" />
+
+                                    <MudTextField @bind-Value="_loginModel.Username"
+                                                  For="@(() => _loginModel.Username)"
+                                                  Label="Username"
+                                                  Variant="Variant.Outlined"
+                                                  Required="true"
+                                                  RequiredError="Username is required"
+                                                  InputType="InputType.Text"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="Icons.Material.Filled.Person"
+                                                  FullWidth="true"
+                                                  autocomplete="off"
+                                                  Class="input-field" />
+
+                                    <MudTextField @bind-Value="_loginModel.Password"
+                                                  For="@(() => _loginModel.Password)"
+                                                  Label="Password"
+                                                  Variant="Variant.Outlined"
+                                                  InputType="@(_passwordVisible? InputType.Text: InputType.Password)"
+                                                  Required="true"
+                                                  RequiredError="Password is required"
+                                                  Adornment="Adornment.End"
+                                                  AdornmentIcon="@(_passwordVisible? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                                  OnAdornmentClick="TogglePasswordVisibility"
+                                                  AdornmentAriaLabel="Show/Hide Password"
+                                                  FullWidth="true"
+                                                  autocomplete="new-password"
+                                                  Class="input-field" />
+                                </MudStack>
+
+                                <!-- Forgot Password Link -->
+                                <div class="forgot-password-container">
+                                    <MudLink Href="/forgot-password" Color="Color.Primary" Class="forgot-password-link">
+                                        Forgot Password?
+                                    </MudLink>
+                                </div>
+
+                                <!-- Login Button -->
+                                <MudButton ButtonType="ButtonType.Submit"
+                                           Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           FullWidth="true"
+                                           Size="Size.Large"
+                                           OnClick="LoginAsync"
+                                           Disabled="_isLoading"
+                                           Class="login-button">
+                                    @if (_isLoading)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                        <span>Signing In...</span>
+                                    }
+                                    else
+                                    {
+                                        <MudIcon Icon="Icons.Material.Filled.Login" Class="mr-2" />
+                                        <span>Sign In</span>
+                                    }
+                                </MudButton>
+                            </MudForm>
+
+                            <!-- Error Alert -->
+                            @if (!string.IsNullOrEmpty(_errorMessage))
+                            {
+                                <MudAlert Severity="Severity.Error"
+                                          Class="error-alert"
+                                          ShowCloseIcon="true"
+                                          CloseIconClicked="() => _errorMessage = string.Empty">
+                                    @_errorMessage
+                                </MudAlert>
+                            }
+                        </div>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
         </MudContainer>
     </MudMainContent>
 </MudLayout>
@@ -98,12 +129,34 @@
     private MudForm _form = new();
     private LoginDTO _loginModel = new();
     private bool _isLoading = false;
+    private bool _passwordVisible = false;
     private string _errorMessage = string.Empty;
 
     [Parameter]
     [SupplyParameterFromQuery]
     public string? ReturnUrl { get; set; }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Disable autocomplete for all form inputs
+            await JSRuntime.InvokeVoidAsync("eval", @"
+                document.addEventListener('DOMContentLoaded', function() {
+                    const inputs = document.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        input.setAttribute('autocomplete', 'off');
+                        input.setAttribute('spellcheck', 'false');
+                    });
+                });
+            ");
+        }
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        _passwordVisible = !_passwordVisible;
+    }
 
     private async Task LoginAsync()
     {
@@ -123,11 +176,12 @@
             {
                 var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
 
+                await LocalStorage.SetItemAsync("authToken", result.Token);
                 await LocalStorage.SetItemAsync("organizationId", result.OrganizationId);
                 await LocalStorage.SetItemAsync("username", result.Username);
-                await LocalStorage.SetItemAsync("authToken", result.Token);
 
                 ((ApiAuthenticationStateProvider)AuthProvider).MarkUserAsAuthenticated(result.Token);
+
                 if (!string.IsNullOrEmpty(ReturnUrl))
                 {
                     Nav.NavigateTo(ReturnUrl, true);
@@ -139,7 +193,7 @@
             }
             else
             {
-                _errorMessage = "Invalid email or password. Try demo@viharafund.com / password";
+                _errorMessage = "Invalid credentials. Please check your organization ID, username, and password.";
             }
         }
         catch (Exception ex)
@@ -152,65 +206,304 @@
             StateHasChanged();
         }
     }
-
-    private async Task ShowAbout()
-    {
-        await JSRuntime.InvokeVoidAsync("alert", "Vihara Fund Management System\nVersion 1.0\nManaging temple funds with transparency and efficiency.");
-    }
 }
 
 <style>
-    .mud-appbar {
-        backdrop-filter: blur(8px);
-        background: #ffffff !important;
-        border-bottom: 2px solid #D2691E;
-        color: #333333 !important;
-    }
-
-        .mud-appbar .mud-text {
-            color: #333333 !important;
-        }
-
-        .mud-appbar .mud-button-root {
-            color: #333333 !important;
-        }
-
-    .vhara-icon-container {
+    /* Container Styles */
+    .login-container {
+        min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 1rem;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     }
 
-        .vhara-icon-container img {
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-            transition: transform 0.2s ease-in-out;
-            border-radius: 4px;
+    .login-grid {
+        min-height: 100vh;
+        width: 100%;
+    }
+
+    /* Paper Styles */
+    .login-paper {
+        border-radius: 16px !important;
+        padding: 2rem;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        max-width: 100%;
+        width: 100%;
+    }
+
+        .login-paper:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.15), 0 15px 15px -5px rgba(0, 0, 0, 0.06) !important;
         }
 
-            .vhara-icon-container img:hover {
-                transform: scale(1.05);
-            }
+    /* Header Styles */
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
 
-    /* Login form styles */
-    .mud-paper {
+    .logo-container {
+        margin-bottom: 1.5rem;
+    }
+
+    .logo-image {
+        width: 80px;
+        height: 80px;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+        transition: transform 0.3s ease;
         border-radius: 12px;
     }
 
-    .mud-button.mud-button-filled-primary {
+        .logo-image:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+    .welcome-title {
+        font-weight: 600 !important;
         background: linear-gradient(45deg, #D2691E, #FF8C42);
-        box-shadow: 0 3px 5px 2px rgba(210, 105, 30, 0.3);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0 !important;
     }
 
-        .mud-button.mud-button-filled-primary:hover:not(:disabled) {
-            background: linear-gradient(45deg, #B8601B, #E67A32);
+    .welcome-subtitle {
+        margin: 0 !important;
+        opacity: 0.9;
+        font-size: 1rem !important;
+        color: #555 !important;
+        font-weight: 500 !important;
+    }
+
+    /* Form Container */
+    .form-container {
+        width: 100%;
+    }
+
+    /* Input Field Styles */
+    .input-field {
+        margin-bottom: 0 !important;
+    }
+
+        .input-field .mud-input-root {
+            transition: all 0.3s ease;
         }
 
-        .mud-button.mud-button-filled-primary:disabled {
-            background: #ccc;
-            box-shadow: none;
+            .input-field .mud-input-root:hover {
+                transform: translateY(-1px);
+            }
+
+        .input-field .mud-input-outlined .mud-input-outlined-border {
+            border-radius: 12px !important;
         }
 
-    .mud-alert {
-        border-radius: 8px;
+        /* Input Labels and Text */
+        .input-field .mud-input-label {
+            font-size: 1rem !important;
+            font-weight: 500 !important;
+            color: #444 !important;
+        }
+
+        .input-field .mud-input-slot {
+            font-size: 1rem !important;
+            color: #333 !important;
+        }
+
+        .input-field .mud-input-root input {
+            font-size: 1rem !important;
+            color: #333 !important;
+        }
+
+    /* Error text visibility */
+    .mud-input-helper-text {
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+    }
+
+    /* Forgot Password */
+    .forgot-password-container {
+        display: flex;
+        justify-content: flex-end;
+        margin: 1rem 0 1.5rem 0;
+    }
+
+    .forgot-password-link {
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+        .forgot-password-link:hover {
+            transform: translateX(2px);
+        }
+
+    /* Login Button */
+    .login-button {
+        height: 48px !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        background: linear-gradient(45deg, #D2691E, #FF8C42) !important;
+        box-shadow: 0 4px 6px -1px rgba(210, 105, 30, 0.3) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        margin-top: 0.5rem;
+    }
+
+        .login-button:hover:not(:disabled) {
+            background: linear-gradient(45deg, #B8601B, #E67A32) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 10px -2px rgba(210, 105, 30, 0.4) !important;
+        }
+
+        .login-button:disabled {
+            background: #e0e0e0 !important;
+            color: #9e9e9e !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+    /* Error Alert */
+    .error-alert {
+        margin-top: 1rem !important;
+        border-radius: 12px !important;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @@keyframes slideIn {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    /* Responsive Design */
+    @@media (min-width: 1200px) {
+        .welcome-title
+
+    {
+        font-size: 2.5rem !important;
+    }
+
+    .welcome-subtitle {
+        font-size: 1.125rem !important;
+    }
+
+    .input-field .mud-input-label {
+        font-size: 1.125rem !important;
+    }
+
+    .input-field .mud-input-slot,
+    .input-field .mud-input-root input {
+        font-size: 1.125rem !important;
+    }
+
+    .login-paper {
+        padding: 3rem;
+    }
+
+    }
+
+    @@media (max-width: 599px) {
+        .login-container
+
+    {
+        padding: 0.5rem;
+    }
+
+    .login-paper {
+        padding: 1.5rem;
+        margin: 0.5rem;
+    }
+
+    .logo-image {
+        width: 60px;
+        height: 60px;
+    }
+
+    .welcome-title {
+        font-size: 1.5rem !important;
+    }
+
+    .welcome-subtitle {
+        font-size: 0.875rem !important;
+    }
+
+    .input-field .mud-input-label {
+        font-size: 0.875rem !important;
+    }
+
+    .input-field .mud-input-slot,
+    .input-field .mud-input-root input {
+        font-size: 0.875rem !important;
+    }
+
+    }
+
+    @@media (max-width: 479px) {
+        .login-paper
+
+    {
+        padding: 1rem;
+        margin: 0.25rem;
+    }
+
+    .welcome-title {
+        font-size: 1.25rem !important;
+    }
+
+    .login-button {
+        height: 44px !important;
+    }
+
+    }
+
+    /* Focus States */
+    .mud-input-root.mud-input-root-outlined.mud-focus {
+        box-shadow: 0 0 0 2px rgba(210, 105, 30, 0.2);
+    }
+
+    /* Loading Animation */
+    .login-button .mud-progress-circular {
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @@keyframes pulse {
+        0%
+
+    {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
+
+    }
+
+    /* Disable autocomplete styles */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px white inset !important;
+        -webkit-text-fill-color: inherit !important;
     }
 </style>
