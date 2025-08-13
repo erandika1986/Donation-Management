@@ -112,5 +112,12 @@ namespace ViharaFund.WebAPI.Controllers
             var masterData = await _campaignService.GetPublishedCampaignsAsync();
             return Ok(masterData);
         }
+
+        [HttpGet("get-campaigns-by-status/{selectedStatus}")]
+        public async Task<ActionResult> GetCampaignsByStatus(int selectedStatus)
+        {
+            var campaigns = await _campaignService.GetCampaignsByStatusAsync(selectedStatus);
+            return Ok(campaigns);
+        }
     }
 }

@@ -1,0 +1,141 @@
+﻿@page "/reports/campaign-job-detail"
+@using MudBlazor
+@using ViharaFund.Domain.Entities.Tenant
+@using ViharaFund.Domain.Enums
+@inject NavigationManager NavManager
+
+<PageTitle>Campaign Job Detail</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="padding:4px !important;">
+
+    <!-- Page Title -->
+    <MudStack Spacing="2" Class="mb-4">
+        <MudText Typo="Typo.h4">@JobCardData?.Title</MudText>
+        <MudText Typo="Typo.subtitle1" Color="Color.Secondary">
+            JobCard No: @JobCardData?.JobCardNo
+        </MudText>
+    </MudStack>
+
+    <MudGrid GutterSize="3">
+
+        <!-- JobCard Info -->
+        <MudItem xs="12" md="6">
+            <MudCard>
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">📄 Job Information</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText><b>Priority:</b> @JobCardData?.Priority</MudText>
+                    <MudText><b>Status:</b> @JobCardData?.Status</MudText>
+                    <MudText><b>Assigned Role Group:</b> @JobCardData?.AssignRoleGroup?.Name</MudText>
+                    <MudText><b>Campaign:</b> @JobCardData?.Campaign?.Name</MudText>
+                    <MudText Class="mt-2">@JobCardData?.Description</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Financial Info -->
+        <MudItem xs="12" md="6">
+            <MudCard>
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">💰 Financial Details</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText><b>Estimated Total:</b> @(JobCardData?.EstimatedTotalAmount?.ToString("C") ?? "N/A")</MudText>
+                    <MudText><b>Actual Total:</b> @(JobCardData?.ActualTotalAmount?.ToString("C") ?? "N/A")</MudText>
+                    @if (JobCardData?.EstimatedTotalAmount.HasValue == true && JobCardData?.ActualTotalAmount.HasValue == true)
+                    {
+                        var variance = JobCardData.ActualTotalAmount.Value - JobCardData.EstimatedTotalAmount.Value;
+                        <MudText Color="@((variance > 0) ? Color.Error : Color.Success)">
+                            Variance: @variance.ToString("C")
+                        </MudText>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+    </MudGrid>
+
+    <!-- Additional Notes -->
+    @if (!string.IsNullOrWhiteSpace(JobCardData?.AdditionalNote))
+    {
+        <MudPaper Class="pa-4 mt-4">
+            <MudText Typo="Typo.subtitle1">📝 Additional Notes</MudText>
+            <MudText Class="mt-2">@JobCardData?.AdditionalNote</MudText>
+        </MudPaper>
+    }
+
+    <!-- Related Items Summary -->
+    <MudGrid GutterSize="3" Class="mt-4">
+        <MudItem xs="12" sm="4" md="2">
+            <MudPaper Class="pa-4" Elevation="3">
+                <MudText Typo="Typo.h6">@JobCardData?.JobCardApprovals.Count</MudText>
+                <MudText Typo="Typo.caption">Approvals</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="4" md="2">
+            <MudPaper Class="pa-4" Elevation="3">
+                <MudText Typo="Typo.h6">@JobCardData?.JobCardFundRequests.Count</MudText>
+                <MudText Typo="Typo.caption">Fund Requests</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="4" md="2">
+            <MudPaper Class="pa-4" Elevation="3">
+                <MudText Typo="Typo.h6">@JobCardData?.JobCardFundRequestReleases.Count</MudText>
+                <MudText Typo="Typo.caption">Fund Releases</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="4" md="2">
+            <MudPaper Class="pa-4" Elevation="3">
+                <MudText Typo="Typo.h6">@JobCardData?.JobCardTasks.Count</MudText>
+                <MudText Typo="Typo.caption">Tasks</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="4" md="2">
+            <MudPaper Class="pa-4" Elevation="3">
+                <MudText Typo="Typo.h6">@JobCardData?.JobCardHistories.Count</MudText>
+                <MudText Typo="Typo.caption">History Records</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="4" md="2">
+            <MudPaper Class="pa-4" Elevation="3">
+                <MudText Typo="Typo.h6">@JobCardData?.JobCardComments.Count</MudText>
+                <MudText Typo="Typo.caption">Comments</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+</MudContainer>
+
+@code {
+    [Parameter] public int JobCardId { get; set; }
+
+    // This will be loaded from API/DB in real usage
+    private JobCard JobCardData { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Mock data for testing - replace with API/DB call
+        JobCardData = new JobCard
+        {
+            Title = "Build Classroom Block",
+            JobCardNo = "JC-2025-001",
+            Description = "Construct a new classroom block for the rural school.",
+            Priority = JobPriority.High,
+            Status = JobCardStatus.OnGoing,
+            EstimatedTotalAmount = 50000,
+            ActualTotalAmount = 52000,
+            AdditionalNote = "Weather delays caused slight budget overrun.",
+            AssignRoleGroup = new Role { Name = "Construction Team" },
+            Campaign = new Campaign { Name = "School Development Campaign" },
+            JobCardApprovals = new List<JobCardApproval> { new(), new() },
+            JobCardFundRequests = new List<JobCardFundRequest> { new() },
+            JobCardFundRequestReleases = new List<JobCardFundRequestRelease> { new(), new(), new() },
+            JobCardTasks = new List<JobCardTask> { new(), new(), new(), new() },
+            JobCardHistories = new List<JobCardHistory> { new() },
+            JobCardComments = new List<JobCardComment> { new(), new() }
+        };
+    }
+
+
+}

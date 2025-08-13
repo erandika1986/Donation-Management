@@ -1,0 +1,106 @@
+﻿@page "/reports/campaign-detail"
+@using MudBlazor
+@inject NavigationManager NavManager
+
+<PageTitle>Donation Campaign Detail</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="padding:4px !important;">
+
+    <!-- Page Header -->
+    <MudStack Spacing="2">
+        <MudText Typo="Typo.h4" Class="mb-2">@CampaignName</MudText>
+        <MudText Typo="Typo.subtitle1" Color="Color.Secondary">
+            Campaign Report - ID: @CampaignId
+        </MudText>
+    </MudStack>
+
+    <MudGrid GutterSize="3" Class="mt-4">
+
+        <!-- Campaign Information -->
+        <MudItem xs="12" md="4">
+            <MudCard>
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">📢 Campaign Info</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText><b>Status:</b> @Status</MudText>
+                    <MudText><b>Start Date:</b> @StartDate.ToShortDateString()</MudText>
+                    <MudText><b>End Date:</b> @EndDate.ToShortDateString()</MudText>
+                    <MudText Class="mt-2">@Description</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Summary Stats -->
+        <MudItem xs="12" md="8">
+            <MudPaper Class="pa-4">
+                <MudGrid>
+                    <MudItem xs="12" sm="4">
+                        <MudText Typo="Typo.subtitle1" Color="Color.Primary">Total Donations</MudText>
+                        <MudText Typo="Typo.h5" Class="mt-1">@TotalDonations.ToString("C")</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudText Typo="Typo.subtitle1" Color="Color.Primary">Total Donors</MudText>
+                        <MudText Typo="Typo.h5" Class="mt-1">@TotalDonors</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudText Typo="Typo.subtitle1" Color="Color.Primary">Goal Progress</MudText>
+                        <MudProgressLinear Value="@GoalProgress" Color="Color.Success" Rounded="true" Class="mt-2" />
+                        <MudText Typo="Typo.caption">@GoalProgress.ToString("F0")% of goal reached</MudText>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+
+    </MudGrid>
+
+    <!-- Donor List Table -->
+    <MudCard Class="mt-4">
+        <MudCardHeader>
+            <MudText Typo="Typo.h6">🧑‍🤝‍🧑 Donor Contributions</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudTable Items="@Donors" Hover="true" Dense="true">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Amount</MudTh>
+                    <MudTh>Date</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Amount">@context.Amount.ToString("C")</MudTd>
+                    <MudTd DataLabel="Date">@context.Date.ToShortDateString()</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+
+</MudContainer>
+
+@code {
+    [Parameter] public int CampaignId { get; set; }
+
+    // Mock data - replace with real DB/API data
+    private string CampaignName = "Help Build a School";
+    private string Status = "Active";
+    private DateTime StartDate = new DateTime(2025, 1, 10);
+    private DateTime EndDate = new DateTime(2025, 12, 31);
+    private string Description = "This campaign aims to build a school for underprivileged children.";
+    private decimal TotalDonations = 12500.50m;
+    private int TotalDonors = 75;
+    private double GoalProgress = 62.5;
+
+    private List<DonorRecord> Donors = new()
+    {
+        new DonorRecord { Name = "John Doe", Amount = 250, Date = DateTime.Now.AddDays(-5) },
+        new DonorRecord { Name = "Jane Smith", Amount = 500, Date = DateTime.Now.AddDays(-10) },
+        new DonorRecord { Name = "Michael Brown", Amount = 100, Date = DateTime.Now.AddDays(-15) }
+    };
+
+    public class DonorRecord
+    {
+        public string Name { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime Date { get; set; }
+    }
+}

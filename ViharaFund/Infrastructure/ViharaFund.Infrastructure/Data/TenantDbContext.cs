@@ -38,6 +38,8 @@ namespace ViharaFund.Infrastructure.Data
         public DbSet<JobCardTaskAttachment> JobCardTaskAttachments { get; set; }
         public DbSet<JobCardTaskPayment> JobCardTaskPayments { get; set; }
         public DbSet<JobCardApprovalLevel> JobCardApprovalLevels { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<GroupUser> GroupUsers { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

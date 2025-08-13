@@ -1,0 +1,93 @@
+﻿@page "/reports"
+@using MudBlazor
+@inject NavigationManager NavManager
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="padding:4px !important;">
+
+    <MudText Typo="Typo.h4" Class="mb-4">Reports</MudText>
+
+    <MudGrid GutterSize="3">
+
+        <!-- Campaign Reports -->
+        <MudItem xs="12" md="6">
+            <MudCard Class="pa-3">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">📢 Campaign Reports</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList T="string" Dense="true">
+                        <MudListItem OnClick="@(() => GoToCampaignDetail())">Active Campaign Summary</MudListItem>
+                        <MudListItem OnClick="@(() => GoToCampaignJobs())">Campaign Jobs Report</MudListItem>
+                        <MudListItem OnClick="@(() => GoToCampaignTask())">Campaign Task Report</MudListItem>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Donation Reports -->
+        <MudItem xs="12" md="6">
+            <MudCard Class="pa-3">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">💰 Donation Reports</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList T="string" Dense="true">
+                        <MudListItem>Total Donations Summary</MudListItem>
+                        <MudListItem>Monthly Donation Trends</MudListItem>
+                        <MudListItem>Top Donors by Amount</MudListItem>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Donor Reports -->
+        <MudItem xs="12" md="6">
+            <MudCard Class="pa-3">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">🧑‍🤝‍🧑 Donor Reports</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList T="string" Dense="true">
+                        <MudListItem>Donor Contribution Summary</MudListItem>
+                        <MudListItem>New Donors This Month</MudListItem>
+                        <MudListItem>Inactive Donor Report</MudListItem>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- JobCard Reports -->
+        <MudItem xs="12" md="6">
+            <MudCard Class="pa-3">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">🗂 JobCard Reports</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList T="string" Dense="true">
+                        <MudListItem>Open Job Cards</MudListItem>
+                        <MudListItem>Completed Job Cards</MudListItem>
+                        <MudListItem>Job Card Performance Analysis</MudListItem>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+    </MudGrid>
+</MudContainer>
+
+@code{
+    private void GoToCampaignDetail()
+    {
+        NavManager.NavigateTo($"/reports/campaign-detail");
+    }
+    private void GoToCampaignJobs()
+    {
+        NavManager.NavigateTo($"/reports/campaign-job-detail");
+    }
+
+    private void GoToCampaignTask()
+    {
+        NavManager.NavigateTo($"/reports/campaign-task-detail");
+    }
+
+}

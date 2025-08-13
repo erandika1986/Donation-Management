@@ -51,6 +51,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IGroupService, GroupService>();
             services.AddScoped<ICampaignService, CampaignService>();
             services.AddScoped<IAppSettingService, AppSettingService>();
             services.AddTransient<IDateTime, DateTimeService>();

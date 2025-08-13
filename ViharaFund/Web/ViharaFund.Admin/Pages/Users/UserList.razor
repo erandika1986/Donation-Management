@@ -1,5 +1,6 @@
 ﻿@page "/users"
 @using System.Net.Http.Json
+@using Microsoft.AspNetCore.Authorization
 @using ViharaFund.Admin.Common
 @using ViharaFund.Admin.Helper
 @using ViharaFund.Application.DTOs.Common
@@ -7,6 +8,9 @@
 @inject HttpClient HttpClient
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+
+@attribute [Authorize]
+<PageTitle>User Management</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="padding:4px !important;">
     @if (!_isMasterDataLoaded)

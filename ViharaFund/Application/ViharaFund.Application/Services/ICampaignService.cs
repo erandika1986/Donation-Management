@@ -17,5 +17,6 @@ namespace ViharaFund.Application.Services
         Task<CampaignMasterDataDTO> GetCampaignMasterDataAsync();
         Task<List<DropDownDTO>> GetActiveCampaignsAsync();
         Task<List<DropDownDTO>> GetPublishedCampaignsAsync();
+        Task<List<DropDownDTO>> GetCampaignsByStatusAsync(int selectedStatus);
     }
 }

@@ -1,0 +1,139 @@
+﻿@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Shared.DTOs.Group
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            @if (IsEdit)
+            {
+                <MudIcon Icon="Icons.Material.Filled.Edit" Class="mr-3" />
+                <text>Edit Group</text>
+            }
+            else
+            {
+                <MudIcon Icon="Icons.Material.Filled.Add" Class="mr-3" />
+                <text>Add New Group</text>
+            }
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudContainer Style="max-height: 500px; overflow-y: scroll;">
+            <MudForm @ref="form" @bind-IsValid="@isValid">
+                <!-- Group Name -->
+                <MudTextField @bind-Value="Group.Name"
+                              For="@(() => Group.Name)"
+                              Label="Group Name"
+                              Required="true"
+                              RequiredError="Group name is required!"
+                              Class="mb-4" />
+
+                <!-- Role Selection -->
+                <MudSelect @bind-Value="Group.SelectedRole"
+                           Label="Assign Role"
+                           AnchorOrigin="Origin.BottomCenter"
+                           Class="mb-4"
+                           Clearable="true">
+                    @foreach (var role in AvailableRoles)
+                    {
+                        <MudSelectItem Value="@role">@role.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <!-- User Selection -->
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Assign Users</MudText>
+                <MudPaper Class="pa-4 mb-4" Elevation="1">
+                    <MudText Typo="Typo.body2" Class="mb-3">
+                        Selected Users (@Group.Users.Count)
+                    </MudText>
+
+                    @if (Group.Users.Any())
+                    {
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            @foreach (var user in Group.Users)
+                            {
+                                <MudChip T="string" Color="Color.Primary"
+                                         OnClose="@(() => RemoveUser(user))">
+                                    @user.Name
+                                </MudChip>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                            No users selected
+                        </MudText>
+                    }
+
+                    <MudSelect @bind-Value="selectedUserToAdd"
+                               Label="Add User"
+                               AnchorOrigin="Origin.BottomCenter"
+                               Clearable="true">
+                        @foreach (var user in AvailableUsers.Where(u => !Group.Users.Any(gu => gu.Id == u.Id)))
+                        {
+                            <MudSelectItem Value="@user">@user.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="Icons.Material.Filled.Add"
+                               OnClick="AddUser"
+                               Disabled="@(selectedUserToAdd == null)"
+                               Class="mt-2">
+                        Add User
+                    </MudButton>
+                </MudPaper>
+            </MudForm>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="Submit"
+                   Disabled="@(!isValid)">
+            @(IsEdit ? "Update" : "Add")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private MudForm form;
+    private bool isValid = false;
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public GroupDTO Group { get; set; } = new();
+    [Parameter] public List<DropDownDTO> AvailableRoles { get; set; } = new();
+    [Parameter] public List<DropDownDTO> AvailableUsers { get; set; } = new();
+    [Parameter] public bool IsEdit { get; set; } = false;
+
+
+    private DropDownDTO selectedUserToAdd;
+
+    private void AddUser()
+    {
+        if (selectedUserToAdd != null && !Group.Users.Any(u => u.Id == selectedUserToAdd.Id))
+        {
+            Group.Users.Add(selectedUserToAdd);
+            selectedUserToAdd = null;
+        }
+    }
+
+    private void RemoveUser(DropDownDTO user)
+    {
+        Group.Users.Remove(user);
+    }
+
+    private void Submit()
+    {
+        if (isValid)
+        {
+            MudDialog.Close(DialogResult.Ok(Group));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

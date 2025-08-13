@@ -478,5 +478,23 @@ namespace ViharaFund.Infrastructure.Services
             return query;
         }
 
+        public async Task<List<DropDownDTO>> GetCampaignsByStatusAsync(int selectedStatus)
+        {
+            var query = tenantDbContext.Campaigns.AsQueryable();
+            if (selectedStatus != 0)
+            {
+                query = query.Where(c => c.Status == (CampaignStatus)selectedStatus);
+            }
+            var campaigns = await query
+                .OrderBy(c => c.Name)
+                .Select(c => new DropDownDTO
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
+                .ToListAsync();
+
+            return campaigns;
+        }
     }
 }

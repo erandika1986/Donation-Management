@@ -1,0 +1,264 @@
+﻿@page "/group-management"
+
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Shared.DTOs.Group
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+@attribute [Authorize]
+<PageTitle>Group Management</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="padding:4px !important;">
+    @if (!_isMasterDataLoaded)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText>Loading master data...</MudText>
+    }
+    else
+    {
+        <!-- Page Header -->
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <div class="d-flex justify-space-between align-center flex-wrap">
+                <div>
+                    <MudText Typo="Typo.h4" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Groups" Class="mr-3" />
+                        Manage Groups
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                        Manage system group and assign users to groups. Groups can have different roles and permissions.
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddGroupDialog"
+                           Class="mt-2 mt-sm-0">
+                    Add New Group
+                </MudButton>
+            </div>
+        </MudPaper>
+
+        <!-- Filters Section -->
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+
+        </MudPaper>
+
+        <MudPaper Class="pa-0" Elevation="1">
+            <!-- Groups Table -->
+            <MudTable Items="@groups"
+                      Dense="true"
+                      Hover="true"
+                      Striped="true"
+                      Loading="@loading"
+                      LoadingProgressColor="Color.Info">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Role</MudTh>
+                    <MudTh>Users Count</MudTh>
+                    <MudTh>Users</MudTh>
+                    <MudTh Style="text-align:center">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">
+                        <MudText Typo="Typo.body1">@context.Name</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Role">
+                        @if (context.SelectedRole != null)
+                        {
+                            <MudChip T="string" Color="Color.Primary" Size="Size.Small">@context.SelectedRole.Name</MudChip>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No role assigned</MudText>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Users Count">
+                        <MudBadge Content="@context.Users.Count" Color="Color.Info">
+                            <MudIcon Icon="Icons.Material.Filled.People" />
+                        </MudBadge>
+                    </MudTd>
+                    <MudTd DataLabel="Users">
+                        @if (context.Users.Any())
+                        {
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach (var user in context.Users.Take(3))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@user.Name</MudChip>
+                                }
+                                @if (context.Users.Count > 3)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default">+@(context.Users.Count - 3) more</MudChip>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No users</MudText>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Actions" Style="text-align:center">
+                        <MudIconButton Icon="Icons.Material.Filled.Edit"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       OnClick="@(() => OpenEditGroupDialog(context))" />
+                        <MudIconButton Icon="Icons.Material.Filled.Delete"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       OnClick="@(() => DeleteGroup(context))" />
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>No groups found. Click "Add New Group" to create your first group.</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = true;
+    private List<GroupDTO> groups = new();
+    private bool loading = false;
+
+    // Sample data - replace with your actual data service
+    private List<DropDownDTO> availableRoles = new()
+    {
+        new DropDownDTO { Id = 1, Name = "Administrator" },
+        new DropDownDTO { Id = 2, Name = "Manager" },
+        new DropDownDTO { Id = 3, Name = "User" },
+        new DropDownDTO { Id = 4, Name = "Guest" }
+    };
+
+    private List<DropDownDTO> availableUsers = new()
+    {
+        new DropDownDTO { Id = 1, Name = "John Doe" },
+        new DropDownDTO { Id = 2, Name = "Jane Smith" },
+        new DropDownDTO { Id = 3, Name = "Bob Johnson" },
+        new DropDownDTO { Id = 4, Name = "Alice Brown" },
+        new DropDownDTO { Id = 5, Name = "Charlie Wilson" },
+        new DropDownDTO { Id = 6, Name = "Diana Davis" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGroups();
+    }
+
+    private async Task LoadGroups()
+    {
+        loading = true;
+        
+        // Simulate API call - replace with your actual service call
+        await Task.Delay(500);
+        
+        groups = new List<GroupDTO>
+        {
+            new GroupDTO
+            {
+                Id = 1,
+                Name = "IT Department",
+                SelectedRole = availableRoles.First(r => r.Id == 1),
+                Users = availableUsers.Take(3).ToList()
+            },
+            new GroupDTO
+            {
+                Id = 2,
+                Name = "Sales Team",
+                SelectedRole = availableRoles.First(r => r.Id == 2),
+                Users = availableUsers.Skip(2).Take(2).ToList()
+            }
+        };
+        
+        loading = false;
+    }
+
+    private async Task OpenAddGroupDialog()
+    {
+        var parameters = new DialogParameters
+        {
+            ["Group"] = new GroupDTO(),
+            ["AvailableRoles"] = availableRoles,
+            ["AvailableUsers"] = availableUsers,
+            ["IsEdit"] = false
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<GroupDialog>("Add New Group", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is GroupDTO newGroup)
+        {
+            newGroup.Id = groups.Max(g => g.Id) + 1;
+            groups.Add(newGroup);
+            Snackbar.Add($"Group '{newGroup.Name}' added successfully!", Severity.Success);
+        }
+    }
+
+    private async Task OpenEditGroupDialog(GroupDTO group)
+    {
+        var groupCopy = new GroupDTO
+        {
+            Id = group.Id,
+            Name = group.Name,
+            SelectedRole = group.SelectedRole,
+            Users = group.Users.ToList()
+        };
+
+        var parameters = new DialogParameters
+        {
+            ["Group"] = groupCopy,
+            ["AvailableRoles"] = availableRoles,
+            ["AvailableUsers"] = availableUsers,
+            ["IsEdit"] = true
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<GroupDialog>("Edit Group", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is GroupDTO updatedGroup)
+        {
+            var index = groups.FindIndex(g => g.Id == updatedGroup.Id);
+            if (index >= 0)
+            {
+                groups[index] = updatedGroup;
+                Snackbar.Add($"Group '{updatedGroup.Name}' updated successfully!", Severity.Success);
+            }
+        }
+    }
+
+    private async Task DeleteGroup(GroupDTO group)
+    {
+        var parameters = new DialogParameters
+        {
+            ["ContentText"] = $"Are you sure you want to delete the group '{group.Name}'?",
+            ["ButtonText"] = "Delete",
+            ["Color"] = Color.Error
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<MudMessageBox>("Delete Group", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            groups.Remove(group);
+            Snackbar.Add($"Group '{group.Name}' deleted successfully!", Severity.Success);
+        }
+    }
+}

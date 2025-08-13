@@ -14,6 +14,7 @@ namespace ViharaFund.Domain.Entities.Tenant
         public bool IsDeleted { get; set; }
 
         public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
+        public virtual ICollection<GroupUser> GroupUsers { get; set; } = new HashSet<GroupUser>();
         public virtual ICollection<JobCardApproval> JobCardApprovals { get; set; } = new HashSet<JobCardApproval>();
         public virtual ICollection<JobCardFundRequestApproval> JobCardFundRequestApprovals { get; set; } = new HashSet<JobCardFundRequestApproval>();
         public virtual ICollection<JobCardFundRequest> JobCardFundRequests { get; set; } = new HashSet<JobCardFundRequest>();
@@ -21,6 +22,9 @@ namespace ViharaFund.Domain.Entities.Tenant
 
         public virtual ICollection<User> CreatedUsers { get; set; } = new HashSet<User>();
         public virtual ICollection<User> UpdatedUsers { get; set; } = new HashSet<User>();
+
+        public virtual ICollection<Group> CreatedGroups { get; set; } = new HashSet<Group>();
+        public virtual ICollection<Group> UpdatedGroups { get; set; } = new HashSet<Group>();
 
         public virtual ICollection<Campaign> CreatedCampaigns { get; set; } = new HashSet<Campaign>();
         public virtual ICollection<Campaign> UpdatedCampaigns { get; set; } = new HashSet<Campaign>();
