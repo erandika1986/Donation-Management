@@ -30,8 +30,8 @@ builder.Services.AddScoped(sp =>
 
     return new HttpClient
     {
-        //BaseAddress = new Uri("https://localhost:7044")
-        BaseAddress = new Uri(" https://api.donationmanager.xyz")
+        BaseAddress = new Uri("https://localhost:7044")
+        //BaseAddress = new Uri(" https://api.donationmanager.xyz")
     };
 
 });

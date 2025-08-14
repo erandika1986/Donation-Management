@@ -14,6 +14,10 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
 
             builder.Property(p => p.Id).ValueGeneratedOnAdd();
 
+            builder.Property(p => p.IsGroupDetailEditable)
+                   .IsRequired()
+                   .HasDefaultValue(true);
+
             builder.HasOne<Role>(a => a.Role)
                    .WithMany(u => u.Groups)
                    .HasForeignKey(a => a.RoleId)

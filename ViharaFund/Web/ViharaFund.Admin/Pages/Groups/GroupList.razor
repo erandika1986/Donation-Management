@@ -6,6 +6,7 @@
 @using ViharaFund.Shared.DTOs.Group
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject HttpClient HttpClient
 
 @attribute [Authorize]
 <PageTitle>Group Management</PageTitle>
@@ -150,28 +151,9 @@
     private async Task LoadGroups()
     {
         loading = true;
-        
-        // Simulate API call - replace with your actual service call
-        await Task.Delay(500);
-        
-        groups = new List<GroupDTO>
-        {
-            new GroupDTO
-            {
-                Id = 1,
-                Name = "IT Department",
-                SelectedRole = availableRoles.First(r => r.Id == 1),
-                Users = availableUsers.Take(3).ToList()
-            },
-            new GroupDTO
-            {
-                Id = 2,
-                Name = "Sales Team",
-                SelectedRole = availableRoles.First(r => r.Id == 2),
-                Users = availableUsers.Skip(2).Take(2).ToList()
-            }
-        };
-        
+
+        groups = await HttpClient.GetFromJsonAsync<List<GroupDTO>>($"api/Group/get-all") ?? new();
+                
         loading = false;
     }
 

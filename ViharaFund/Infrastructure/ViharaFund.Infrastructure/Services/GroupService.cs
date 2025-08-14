@@ -53,15 +53,15 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Group deleted successfully.");
         }
 
-        public async Task<List<GroupSummaryDTO>> GetAllGroups()
+        public async Task<List<GroupDTO>> GetAllGroups()
         {
             var groups = await tenantDbContext.Groups
-                .Select(g => new GroupSummaryDTO
+                .Select(g => new GroupDTO
                 {
                     Id = g.Id,
                     Name = g.Name,
-                    RoleName = g.Role.Name,
-                    UserCount = g.GroupUsers.Count,
+                    SelectedRole = new DropDownDTO() { Id = g.RoleId, Name = g.Role.Name },
+                    //UserCount = g.GroupUsers.Count,
                     Users = g.GroupUsers.Select(gu => new DropDownDTO
                     {
                         Id = gu.UserId,

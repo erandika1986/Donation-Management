@@ -46,7 +46,7 @@ namespace ViharaFund.WebAPI.Controllers
         }
 
         [HttpGet("get-all")]
-        public async Task<IActionResult> GetById()
+        public async Task<IActionResult> GetAllGroups()
         {
             var donor = await _groupService.GetAllGroups();
             return Ok(donor);

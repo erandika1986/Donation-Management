@@ -7,7 +7,7 @@ namespace ViharaFund.Application.Services
     {
         Task<ResultDto> CreateGroup(GroupDTO group);
         Task<ResultDto> UpdateGroup(GroupDTO group);
-        Task<List<GroupSummaryDTO>> GetAllGroups();
+        Task<List<GroupDTO>> GetAllGroups();
         Task<ResultDto> DeleteSelectedGroup(int groupId);
     }
 }

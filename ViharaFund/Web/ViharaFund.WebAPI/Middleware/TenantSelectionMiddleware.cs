@@ -48,13 +48,13 @@ namespace ViharaFund.WebAPI.Middleware
                             // Set the connection string for the tenant's database context
                             tenantDbContext.Database.SetConnectionString(connectionString);
 
-                            if (tenantDbContext.Database.IsSqlServer())
-                            {
-                                var tenantDbContextInitializer = httpContext.RequestServices.GetRequiredService<TenantDbContextInitializer>();
-                                // Apply database migration for the tenant's database context
-                                await tenantDbContextInitializer.InitializeAsync();
-                                await tenantDbContextInitializer.SeedAsync();
-                            }
+                            //if (tenantDbContext.Database.IsSqlServer())
+                            //{
+                            //    var tenantDbContextInitializer = httpContext.RequestServices.GetRequiredService<TenantDbContextInitializer>();
+                            //    // Apply database migration for the tenant's database context
+                            //    await tenantDbContextInitializer.InitializeAsync();
+                            //    await tenantDbContextInitializer.SeedAsync();
+                            //}
 
                             // Reset the request body with the original content
                             httpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(requestBody));

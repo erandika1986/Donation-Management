@@ -66,7 +66,8 @@ namespace ViharaFund.Infrastructure.Services
                 .Sum(x => x.Amount);
 
             response.TotalDonation = donationThisMonth;
-            response.MonthlyProgress = (donationThisMonth - donationLastMonth) / donationLastMonth * 100;
+            response.MonthlyProgress = donationLastMonth > 0 ? (donationThisMonth - donationLastMonth) / donationLastMonth * 100 : 0;
+
 
             return response;
         }
@@ -118,7 +119,7 @@ namespace ViharaFund.Infrastructure.Services
                     JobCardCount = matchingJobCards.Count(),
                     Status = status,
                     StatusText = EnumHelper.GetEnumDescription(status),
-                    Precentage = ((double)matchingJobCards.Count() / (double)jobCards.Count()) * 100
+                    Precentage = jobCards.Count() > 0 ? ((double)matchingJobCards.Count() / (double)jobCards.Count()) * 100 : 0
                 });
             }
 

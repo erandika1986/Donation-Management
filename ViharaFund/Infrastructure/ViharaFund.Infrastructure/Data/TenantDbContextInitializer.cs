@@ -42,6 +42,7 @@ namespace ViharaFund.Infrastructure.Data
                 await SeedJobCardApprovalLevelAsync();
                 await SeedCurrencyTypesAsync();
                 await SeedCampaignCategoriesAsync();
+                await SeedDefaultGroupsAsync();
             }
             catch (Exception ex)
             {
@@ -96,8 +97,9 @@ namespace ViharaFund.Infrastructure.Data
                     };
 
                     _context.Roles.Add(role);
-                    await _context.SaveChangesAsync();
+
                 }
+                await _context.SaveChangesAsync();
             }
         }
 
@@ -217,6 +219,54 @@ namespace ViharaFund.Infrastructure.Data
                     },
                 });
                 await _context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SeedDefaultGroupsAsync()
+        {
+            if (!_context.Groups.Any())
+            {
+                _context.Groups.Add(new Domain.Entities.Tenant.Group
+                {
+                    Name = "Chief Monk",
+                    RoleId = 2,
+                    IsGroupDetailEditable = false,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedByUserId = 1, // Assuming admin user created this group
+                    UpdatedDate = DateTime.UtcNow,
+                    UpdatedByUserId = 1, // Assuming admin user updated this group
+                    IsActive = true,
+                });
+
+
+                _context.Groups.Add(new Domain.Entities.Tenant.Group
+                {
+                    Name = "Temple Management Committee",
+                    RoleId = (int)RoleName.TempleManagementCommittee,
+                    IsGroupDetailEditable = false,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedByUserId = 1, // Assuming admin user created this group
+                    UpdatedDate = DateTime.UtcNow,
+                    UpdatedByUserId = 1, // Assuming admin user updated this group
+                    IsActive = true,
+                });
+
+                _context.Groups.Add(new Domain.Entities.Tenant.Group
+                {
+
+                    Name = "Temple Financial Management Committee",
+                    RoleId = (int)RoleName.TempleFinancialManagementCommittee,
+                    IsGroupDetailEditable = true,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedByUserId = 1, // Assuming admin user created this group
+                    UpdatedDate = DateTime.UtcNow,
+                    UpdatedByUserId = 1, // Assuming admin user updated this group
+                    IsActive = true,
+
+                });
+
+                await _context.SaveChangesAsync();
+
             }
         }
     }

@@ -6,8 +6,9 @@ namespace ViharaFund.Domain.Entities.Tenant
     {
         public string Name { get; set; } = string.Empty;
         public int RoleId { get; set; }
+        public bool IsGroupDetailEditable { get; set; }
 
-        public virtual Role Role { get; set; } = new();
+        public virtual Role Role { get; set; }
 
         public virtual ICollection<GroupUser> GroupUsers { get; set; } = new HashSet<GroupUser>();
     }
