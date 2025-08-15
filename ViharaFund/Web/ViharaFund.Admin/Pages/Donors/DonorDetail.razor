@@ -147,7 +147,7 @@
                                     <MudTd DataLabel="Amount">
                                         <MudText Color="Color.Success">@context.Amount.ToString("C")</MudText>
                                     </MudTd>
-                                    <MudTd DataLabel="Campaign">@context.</MudTd>
+                                    <MudTd DataLabel="Campaign">@context.Campaign</MudTd>
                                     <MudTd DataLabel="Method">
                                         <MudChip T="string" Size="Size.Small" Color="Color.Default">
                                             @context.PaymentMethod
@@ -173,6 +173,10 @@
 </MudDialog>
 
 @code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
     [Parameter] public DonorDTO Donor { get; set; } = new();
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnEdit { get; set; }
@@ -206,9 +210,9 @@
         return $"{words[0][0]}{words[^1][0]}".ToUpper();
     }
 
-    private async Task Close()
+    private void Close()
     {
-        await OnClose.InvokeAsync();
+        MudDialog.Cancel();
     }
 
     private async Task EditDonor()

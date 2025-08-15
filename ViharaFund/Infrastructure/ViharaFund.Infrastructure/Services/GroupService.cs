@@ -61,6 +61,7 @@ namespace ViharaFund.Infrastructure.Services
                     Id = g.Id,
                     Name = g.Name,
                     SelectedRole = new DropDownDTO() { Id = g.RoleId, Name = g.Role.Name },
+                    IsGroupDetailEditable = g.IsGroupDetailEditable,
                     //UserCount = g.GroupUsers.Count,
                     Users = g.GroupUsers.Select(gu => new DropDownDTO
                     {

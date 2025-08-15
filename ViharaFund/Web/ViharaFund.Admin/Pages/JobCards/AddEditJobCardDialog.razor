@@ -71,7 +71,7 @@
                 <MudItem xs="12" sm="6" md="4" lg="4">
                     <MudSelect T="DropDownDTO"
                                Label="Status"
-                               ReadOnly="IsViewOnly"
+                               ReadOnly="true"
                                @bind-Value="JobCard.Status"
                                Required="true"
                                RequiredError="Status is required!"
@@ -133,7 +133,7 @@
                                      Step="0.01m"
                                      Format="N2"
                                      HideSpinButtons="true"
-                                     HelperText="Enter estimated cost (optional)" 
+                                     HelperText="Estimated cost" 
                                      Disabled="true" />
                 </MudItem>
 
@@ -148,7 +148,7 @@
                                      Step="0.01m"
                                      Format="N2"
                                      HideSpinButtons="true"
-                                     HelperText="Enter actual cost (optional)"
+                                     HelperText="Actual cost"
                                      Disabled="true" />
                 </MudItem>
 
@@ -221,7 +221,7 @@
         Priorities = MasterData.JobPriorities.Where(x => x.Id>0) ?? new List<DropDownDTO>();
         Statuses = MasterData.Statuses.Where(x => x.Id > 0) ?? new List<DropDownDTO>();
         Roles = MasterData.AvailableRoles.Where(x => x.Id > 0) ?? new List<DropDownDTO>();
-        ActiveCampaigns = MasterData.ActiveCampaigns;
+        ActiveCampaigns = MasterData.ActiveCampaigns.Where(x => x.Id > 0) ?? new List<DropDownDTO>(); ;
 
         if (IsEdit && JobCardId > 0)
         {
@@ -234,7 +234,7 @@
                 Status = Statuses.FirstOrDefault(s => s.Id == 1) ?? new(),
                 Priority = Priorities.FirstOrDefault(s => s.Id == 1) ?? new(),
                 AssignedRoleGroup = Roles.FirstOrDefault(s => s.Id == 1) ?? new(),
-                AssignCampaign = ActiveCampaigns.Skip(1).FirstOrDefault() ?? new(),
+                AssignCampaign = ActiveCampaigns.FirstOrDefault() ?? new(),
             };
         }
     }

@@ -273,6 +273,19 @@ namespace ViharaFund.Infrastructure.Services
             return roles;
         }
 
+        public async Task<List<DropDownDTO>> GetAvailableUsers()
+        {
+            var users = await tenantDbContext.Users
+                .Where(u => !u.IsDeleted)
+                .Select(u => new DropDownDTO
+                {
+                    Id = u.Id,
+                    Name = u.FullName ?? u.Username // Fallback to username if fullname is null
+                })
+                .ToListAsync();
+            return users;
+        }
+
         public async Task<ResultDto> UpdatePasswordAsync(UpdatePasswordDTO updatePassword)
         {
             if (updatePassword == null || updatePassword.UserId <= 0)

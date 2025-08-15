@@ -1,91 +1,110 @@
-﻿@using ViharaFund.Application.DTOs.Common
+﻿@using ViharaFund.Admin.Common
+@using ViharaFund.Application.DTOs.Common
 @using ViharaFund.Shared.DTOs.Group
+
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
 
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
             @if (IsEdit)
             {
-                <MudIcon Icon="Icons.Material.Filled.Edit" Class="mr-3" />
+                <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3" />
                 <text>Edit Group</text>
             }
             else
             {
-                <MudIcon Icon="Icons.Material.Filled.Add" Class="mr-3" />
+                <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" />
                 <text>Add New Group</text>
             }
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudContainer Style="max-height: 500px; overflow-y: scroll;">
-            <MudForm @ref="form" @bind-IsValid="@isValid">
+        <MudForm @ref="form" @bind-IsValid="@isValid">
+            <MudGrid>
                 <!-- Group Name -->
-                <MudTextField @bind-Value="Group.Name"
-                              For="@(() => Group.Name)"
-                              Label="Group Name"
-                              Required="true"
-                              RequiredError="Group name is required!"
-                              Class="mb-4" />
+                <MudItem xs="12" sm="12" md="6" lg="6">
+                    <MudTextField @bind-Value="Group.Name"
+                                  ReadOnly="!Group.IsGroupDetailEditable"
+                                  For="@(() => Group.Name)"
+                                  Label="Group Name"
+                                  Required="true"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  RequiredError="Group name is required!" />
+                </MudItem>
 
-                <!-- Role Selection -->
-                <MudSelect @bind-Value="Group.SelectedRole"
-                           Label="Assign Role"
-                           AnchorOrigin="Origin.BottomCenter"
-                           Class="mb-4"
-                           Clearable="true">
-                    @foreach (var role in AvailableRoles)
-                    {
-                        <MudSelectItem Value="@role">@role.Name</MudSelectItem>
-                    }
-                </MudSelect>
-
-                <!-- User Selection -->
-                <MudText Typo="Typo.subtitle1" Class="mb-2">Assign Users</MudText>
-                <MudPaper Class="pa-4 mb-4" Elevation="1">
-                    <MudText Typo="Typo.body2" Class="mb-3">
-                        Selected Users (@Group.Users.Count)
-                    </MudText>
-
-                    @if (Group.Users.Any())
-                    {
-                        <div class="d-flex flex-wrap gap-2 mb-3">
-                            @foreach (var user in Group.Users)
-                            {
-                                <MudChip T="string" Color="Color.Primary"
-                                         OnClose="@(() => RemoveUser(user))">
-                                    @user.Name
-                                </MudChip>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
-                            No users selected
-                        </MudText>
-                    }
-
-                    <MudSelect @bind-Value="selectedUserToAdd"
-                               Label="Add User"
-                               AnchorOrigin="Origin.BottomCenter"
-                               Clearable="true">
-                        @foreach (var user in AvailableUsers.Where(u => !Group.Users.Any(gu => gu.Id == u.Id)))
+                <MudItem xs="12" sm="12" md="6" lg="6">
+                    <MudSelect T="DropDownDTO"
+                               Label="Assigned Role"
+                               ReadOnly="!Group.IsGroupDetailEditable"
+                               ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
+                               MultiSelection="false" @bind-Value="Group.SelectedRole"
+                               Required="true"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               RequiredError="Role is required!">
+                        @foreach (var role in AvailableRoles)
                         {
-                            <MudSelectItem Value="@user">@user.Name</MudSelectItem>
+                            <MudSelectItem T="DropDownDTO" Value="@role">@role.Name</MudSelectItem>
                         }
                     </MudSelect>
+                </MudItem>
 
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Primary"
-                               StartIcon="Icons.Material.Filled.Add"
-                               OnClick="AddUser"
-                               Disabled="@(selectedUserToAdd == null)"
-                               Class="mt-2">
-                        Add User
-                    </MudButton>
-                </MudPaper>
-            </MudForm>
-        </MudContainer>
+                <MudItem xs="12" sm="12" md="12" lg="12">
+                    <!-- User Selection -->
+                    <MudText Typo="Typo.subtitle1" Class="mb-2">Assign Users</MudText>
+                    <MudPaper Class="pa-4 mb-4" Elevation="1">
+                        <MudText Typo="Typo.body2" Class="mb-3">
+                            Selected Users (@Group.Users.Count)
+                        </MudText>
+
+                        @if (Group.Users.Any())
+                        {
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                @foreach (var user in Group.Users)
+                                {
+                                    <MudChip T="string" Color="Color.Primary"
+                                             OnClose="@(() => RemoveUser(user))">
+                                        @user.Name
+                                    </MudChip>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                                No users selected
+                            </MudText>
+                        }
+
+                        <MudSelect T="DropDownDTO"
+                                   Label="Add User"
+                                   ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
+                                   MultiSelection="false" @bind-Value="selectedUserToAdd"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Clearable="true">
+                            @foreach (var user in AvailableUsers.Where(u => !Group.Users.Any(gu => gu.Id == u.Id)))
+                            {
+                                <MudSelectItem T="DropDownDTO" Value="@user">@user.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="Icons.Material.Filled.Add"
+                                   OnClick="AddUser"
+                                   Disabled="@(selectedUserToAdd == null)"
+                                   Class="mt-2">
+                            Add User
+                        </MudButton>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+
+        </MudForm>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -127,11 +146,83 @@
         Group.Users.Remove(user);
     }
 
-    private void Submit()
+    private async Task Submit()
     {
         if (isValid)
         {
-            MudDialog.Close(DialogResult.Ok(Group));
+            if (!IsEdit)
+            {
+                try
+                {
+                    // Replace with your actual API endpoint
+                    var response = await HttpClient.PostAsJsonAsync("api/Group/create", Group);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var result = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                        if (result is not null && result.Succeeded)
+                        {
+                            Snackbar.Add(result.SuccessMessage, Severity.Success);
+                            Group.Id = result.Id; // Assuming the API returns the created/updated group with an ID
+                            MudDialog.Close(DialogResult.Ok(Group));
+
+                            MudDialog.Close(DialogResult.Ok(Group));
+                        }
+                        else if (result is not null && !result.Succeeded)
+                        {
+                            Snackbar.Add(string.Join(",", result.Errors), Severity.Error);
+                        }
+                    }
+                    else
+                    {
+                        Snackbar.Add("Failed to create group.", Severity.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Error processing group: {ex.Message}", Severity.Error);
+                }
+                finally
+                {
+                }
+            }
+            else
+            {
+                try
+                {
+                    // Replace with your actual API endpoint
+                    var response = await HttpClient.PutAsJsonAsync("api/Group/update", Group);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var result = await response.Content.ReadFromJsonAsync<ResponseDto>();
+                        if (result is not null && result.Succeeded)
+                        {
+                            Snackbar.Add(result.SuccessMessage, Severity.Success);
+                            Group.Id = result.Id; // Assuming the API returns the created/updated group with an ID
+                            MudDialog.Close(DialogResult.Ok(Group));
+
+                            MudDialog.Close(DialogResult.Ok(Group));
+                        }
+                        else if (result is not null && !result.Succeeded)
+                        {
+                            Snackbar.Add(string.Join(",", result.Errors), Severity.Error);
+                        }
+                    }
+                    else
+                    {
+                        Snackbar.Add("Failed to create group.", Severity.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Error processing group: {ex.Message}", Severity.Error);
+                }
+                finally
+                {
+                }
+            }
+
         }
     }
 

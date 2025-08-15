@@ -93,10 +93,18 @@ namespace ViharaFund.WebAPI.Controllers
         }
 
 
-        [HttpGet("getAvailableRoles")]
+        [HttpGet("get-available-roles")]
         public async Task<IActionResult> GetAvailableRoles()
         {
             var roles = await userService.GetAvailableRoles();
+
+            return Ok(roles);
+        }
+
+        [HttpGet("get-available-users")]
+        public async Task<IActionResult> GetAvailableUsers()
+        {
+            var roles = await userService.GetAvailableUsers();
 
             return Ok(roles);
         }

@@ -76,9 +76,10 @@
                         }
                     </MudTd>
                     <MudTd DataLabel="Users Count">
-                        <MudBadge Content="@context.Users.Count" Color="Color.Info">
-                            <MudIcon Icon="Icons.Material.Filled.People" />
-                        </MudBadge>
+                        <div class="d-flex flex-wrap gap-1">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info">@context.Users.Count</MudChip>
+                        </div>
+
                     </MudTd>
                     <MudTd DataLabel="Users">
                         @if (context.Users.Any())
@@ -100,14 +101,21 @@
                         }
                     </MudTd>
                     <MudTd DataLabel="Actions" Style="text-align:center">
-                        <MudIconButton Icon="Icons.Material.Filled.Edit"
-                                       Color="Color.Primary"
-                                       Size="Size.Small"
-                                       OnClick="@(() => OpenEditGroupDialog(context))" />
-                        <MudIconButton Icon="Icons.Material.Filled.Delete"
-                                       Color="Color.Error"
-                                       Size="Size.Small"
-                                       OnClick="@(() => DeleteGroup(context))" />
+
+                        <MudTooltip Text="Edit Group Detail" Color="Color.Primary" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Color="Color.Primary"
+                                           Variant="Variant.Filled"
+                                           OnClick="@(() => OpenEditGroupDialog(context))" />
+                        </MudTooltip>
+
+                        <MudTooltip Text="Delete Group" Color="Color.Error" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Disabled="@(!context.IsGroupDetailEditable)"
+                                           Color="Color.Error"
+                                           Variant="Variant.Filled"
+                                           OnClick="@(() => DeleteGroup(context))" />
+                        </MudTooltip>
                     </MudTd>
                 </RowTemplate>
                 <NoRecordsContent>
@@ -124,24 +132,8 @@
     private List<GroupDTO> groups = new();
     private bool loading = false;
 
-    // Sample data - replace with your actual data service
-    private List<DropDownDTO> availableRoles = new()
-    {
-        new DropDownDTO { Id = 1, Name = "Administrator" },
-        new DropDownDTO { Id = 2, Name = "Manager" },
-        new DropDownDTO { Id = 3, Name = "User" },
-        new DropDownDTO { Id = 4, Name = "Guest" }
-    };
-
-    private List<DropDownDTO> availableUsers = new()
-    {
-        new DropDownDTO { Id = 1, Name = "John Doe" },
-        new DropDownDTO { Id = 2, Name = "Jane Smith" },
-        new DropDownDTO { Id = 3, Name = "Bob Johnson" },
-        new DropDownDTO { Id = 4, Name = "Alice Brown" },
-        new DropDownDTO { Id = 5, Name = "Charlie Wilson" },
-        new DropDownDTO { Id = 6, Name = "Diana Davis" }
-    };
+    private List<DropDownDTO> availableRoles = new();
+    private List<DropDownDTO> availableUsers = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -153,7 +145,9 @@
         loading = true;
 
         groups = await HttpClient.GetFromJsonAsync<List<GroupDTO>>($"api/Group/get-all") ?? new();
-                
+        availableRoles = await HttpClient.GetFromJsonAsync<List<DropDownDTO>>($"api/User/get-available-roles") ?? new();
+        availableUsers = await HttpClient.GetFromJsonAsync<List<DropDownDTO>>($"api/User/get-available-users") ?? new();
+
         loading = false;
     }
 
@@ -161,7 +155,7 @@
     {
         var parameters = new DialogParameters
         {
-            ["Group"] = new GroupDTO(),
+            ["Group"] = new GroupDTO() { IsGroupDetailEditable = true},
             ["AvailableRoles"] = availableRoles,
             ["AvailableUsers"] = availableUsers,
             ["IsEdit"] = false
@@ -226,21 +220,38 @@
 
     private async Task DeleteGroup(GroupDTO group)
     {
-        var parameters = new DialogParameters
+        var parameters = new DialogParameters<ConfirmationDialog>
         {
-            ["ContentText"] = $"Are you sure you want to delete the group '{group.Name}'?",
-            ["ButtonText"] = "Delete",
-            ["Color"] = Color.Error
+            { "ContentText", $"Are you sure you want to delete group '{group.Name}'? This action cannot be undone." },
+            { "ButtonText", "Delete" },
+            { "Color", Color.Error }
         };
 
-        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-        var dialog = await DialogService.ShowAsync<MudMessageBox>("Delete Group", parameters, options);
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Delete", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
         {
-            groups.Remove(group);
-            Snackbar.Add($"Group '{group.Name}' deleted successfully!", Severity.Success);
+            try
+            {
+                // Replace with your actual API endpoint
+                var response = await HttpClient.DeleteAsync($"api/Group/delete/{group.Id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    StateHasChanged();
+                    Snackbar.Add("group deleted successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete group.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting group: {ex.Message}", Severity.Error);
+            }
         }
     }
 }

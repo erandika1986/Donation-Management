@@ -13,5 +13,6 @@ namespace ViharaFund.Application.Services
         Task<ResultDto> UpdatePasswordAsync(UpdatePasswordDTO updatePassword);
         Task<UserDTO> GetByIdAsync(int userId);
         Task<List<DropDownDTO>> GetAvailableRoles();
+        Task<List<DropDownDTO>> GetAvailableUsers();
     }
 }
