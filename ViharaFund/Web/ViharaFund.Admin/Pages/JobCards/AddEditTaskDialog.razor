@@ -88,18 +88,22 @@
 
 
                 <!-- Estimated Total Amount -->
-                <MudItem xs="12" sm="6" md="6" lg="4">
-                    <MudNumericField @bind-Value="JobTask.EstimateAmount"
-                                     Label="Estimated  Amount"
-                                     ReadOnly="IsViewOnly"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Min="0.01m"
-                                     Step="0.01m"
-                                     Format="N2"
-                                     HideSpinButtons="true"
-                                     HelperText="Enter estimated cost (optional)"/>
-                </MudItem>
+                @if (!IsRecurringTask)
+                {
+                    <MudItem xs="12" sm="6" md="6" lg="4">
+                        <MudNumericField @bind-Value="JobTask.EstimateAmount"
+                                         Label="Estimated  Amount"
+                                         ReadOnly="IsViewOnly"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Min="0.01m"
+                                         Step="0.01m"
+                                         Format="N2"
+                                         HideSpinButtons="true"
+                                         HelperText="Enter estimated cost (optional)" />
+                    </MudItem>
+                }
+
 
                 <!-- Actual Total Amount -->
                 <MudItem xs="12" sm="6" md="6" lg="4">
@@ -167,6 +171,9 @@
 
     [Parameter]
     public int JobCardId { get; set; } = new();
+
+    [Parameter]
+    public bool IsRecurringTask { get; set; }
 
     [Parameter]
     public string JobCardTitle { get; set; } = string.Empty;
@@ -272,7 +279,7 @@
         try
         {
             // Replace with your actual API endpoint
-            var response = await HttpClient.PostAsJsonAsync("api/JobCardTask/update", JobTask);
+            var response = await HttpClient.PutAsJsonAsync("api/JobCardTask/update", JobTask);
 
             if (response.IsSuccessStatusCode)
             {

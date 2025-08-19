@@ -26,15 +26,20 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
             builder.Property(p => p.AdditionalNote)
                 .IsRequired(false);
 
+
+            builder.Property(p => p.HaveRecurringTasks)
+                .IsRequired(true)
+                .HasDefaultValue(false);
+
             builder.HasOne<Campaign>(a => a.Campaign)
                    .WithMany(u => u.JobCards)
                    .HasForeignKey(a => a.CampaignId)
                    .OnDelete(DeleteBehavior.Restrict)
                    .IsRequired(false);
 
-            builder.HasOne<Role>(a => a.AssignRoleGroup)
+            builder.HasOne<Group>(a => a.AssignGroup)
                    .WithMany(u => u.AssignedJobCards)
-                   .HasForeignKey(a => a.AssignRoleGroupId)
+                   .HasForeignKey(a => a.AssignGroupId)
                    .OnDelete(DeleteBehavior.Restrict);
 
 

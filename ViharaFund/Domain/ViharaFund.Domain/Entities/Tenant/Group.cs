@@ -11,5 +11,6 @@ namespace ViharaFund.Domain.Entities.Tenant
         public virtual Role Role { get; set; }
 
         public virtual ICollection<GroupUser> GroupUsers { get; set; } = new HashSet<GroupUser>();
+        public virtual ICollection<JobCard> AssignedJobCards { get; set; } = new HashSet<JobCard>();
     }
 }

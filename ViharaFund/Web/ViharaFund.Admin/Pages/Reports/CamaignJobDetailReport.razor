@@ -27,7 +27,7 @@
                 <MudCardContent>
                     <MudText><b>Priority:</b> @JobCardData?.Priority</MudText>
                     <MudText><b>Status:</b> @JobCardData?.Status</MudText>
-                    <MudText><b>Assigned Role Group:</b> @JobCardData?.AssignRoleGroup?.Name</MudText>
+                    <MudText><b>Assigned Role Group:</b> @JobCardData?.AssignGroup?.Name</MudText>
                     <MudText><b>Campaign:</b> @JobCardData?.Campaign?.Name</MudText>
                     <MudText Class="mt-2">@JobCardData?.Description</MudText>
                 </MudCardContent>
@@ -126,7 +126,7 @@
             EstimatedTotalAmount = 50000,
             ActualTotalAmount = 52000,
             AdditionalNote = "Weather delays caused slight budget overrun.",
-            AssignRoleGroup = new Role { Name = "Construction Team" },
+            AssignGroup = new Group { Name = "Construction Team" },
             Campaign = new Campaign { Name = "School Development Campaign" },
             JobCardApprovals = new List<JobCardApproval> { new(), new() },
             JobCardFundRequests = new List<JobCardFundRequest> { new() },

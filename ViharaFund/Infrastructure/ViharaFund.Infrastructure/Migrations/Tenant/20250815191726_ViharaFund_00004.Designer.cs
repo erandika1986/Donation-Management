@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ViharaFund.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using ViharaFund.Infrastructure.Data;
 namespace ViharaFund.Infrastructure.Migrations.Tenant
 {
     [DbContext(typeof(TenantDbContext))]
-    partial class TenantDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250815191726_ViharaFund_00004")]
+    partial class ViharaFund_00004
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -370,7 +373,7 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.Property<string>("AdditionalNote")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("AssignGroupId")
+                    b.Property<int>("AssignRoleGroupId")
                         .HasColumnType("int");
 
                     b.Property<int?>("CampaignId")
@@ -421,7 +424,7 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssignGroupId");
+                    b.HasIndex("AssignRoleGroupId");
 
                     b.HasIndex("CampaignId");
 
@@ -777,9 +780,6 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.Property<decimal?>("EstimatedTotalAmount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<bool>("HaveRecurringTasks")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -837,7 +837,7 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal?>("EstimateAmount")
+                    b.Property<decimal>("EstimateAmount")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsActive")
@@ -981,10 +981,6 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("BillingPeriod")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<int?>("CreatedByUserId")
                         .HasColumnType("int");
 
@@ -1020,35 +1016,6 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("JobCardTaskPayment", (string)null);
-                });
-
-            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardTaskPaymentAttachment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("JobCardTaskPaymentId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("JobCardTaskPaymentId");
-
-                    b.ToTable("JobCardTaskPaymentAttachment", (string)null);
                 });
 
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.Role", b =>
@@ -1306,9 +1273,9 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCard", b =>
                 {
-                    b.HasOne("ViharaFund.Domain.Entities.Tenant.Group", "AssignGroup")
+                    b.HasOne("ViharaFund.Domain.Entities.Tenant.Role", "AssignRoleGroup")
                         .WithMany("AssignedJobCards")
-                        .HasForeignKey("AssignGroupId")
+                        .HasForeignKey("AssignRoleGroupId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1327,7 +1294,7 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                         .HasForeignKey("UpdatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("AssignGroup");
+                    b.Navigation("AssignRoleGroup");
 
                     b.Navigation("Campaign");
 
@@ -1661,17 +1628,6 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.Navigation("UpdatedByUser");
                 });
 
-            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardTaskPaymentAttachment", b =>
-                {
-                    b.HasOne("ViharaFund.Domain.Entities.Tenant.JobCardTaskPayment", "JobCardTaskPayment")
-                        .WithMany("JobCardTaskPaymentAttachments")
-                        .HasForeignKey("JobCardTaskPaymentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("JobCardTaskPayment");
-                });
-
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.User", b =>
                 {
                     b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "CreatedByUser")
@@ -1732,8 +1688,6 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
 
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.Group", b =>
                 {
-                    b.Navigation("AssignedJobCards");
-
                     b.Navigation("GroupUsers");
                 });
 
@@ -1776,12 +1730,12 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardTaskPayment", b =>
                 {
                     b.Navigation("DonationExpenses");
-
-                    b.Navigation("JobCardTaskPaymentAttachments");
                 });
 
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.Role", b =>
                 {
+                    b.Navigation("AssignedJobCards");
+
                     b.Navigation("Groups");
 
                     b.Navigation("JobCardApprovalLevels");

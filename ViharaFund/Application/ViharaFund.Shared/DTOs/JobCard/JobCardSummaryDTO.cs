@@ -22,5 +22,6 @@ namespace ViharaFund.Application.DTOs.JobCard
         public int TotalTaskCount { get; set; }
         public int CompletedTaskCount { get; set; }
         public decimal ProgressPercentage { get; set; }
+        public bool HaveRecurringTasks { get; set; }
     }
 }

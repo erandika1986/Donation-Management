@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using ViharaFund.Application.Constants;
 using ViharaFund.Application.Contracts;
@@ -40,13 +41,16 @@ namespace ViharaFund.Infrastructure.Services
                 return ResultDto.Failure(new[] { "Job card task cannot be null." });
             }
 
+            var jobCard = await tenantDbContext.JobCards
+                .FirstOrDefaultAsync(jc => jc.Id == jobCardTask.JobCardId);
+
             var entity = new JobCardTask
             {
                 JobCardId = jobCardTask.JobCardId,
                 TaskNumber = await GenerateTaskNumberAsync(dateTime.UtcNow),
                 Title = jobCardTask.Title,
                 Description = jobCardTask.Description,
-                EstimateAmount = jobCardTask.EstimateAmount,
+                EstimateAmount = jobCard.HaveRecurringTasks ? (decimal?)null : jobCardTask.EstimateAmount,
                 TaskStatus = Domain.Enums.TaskStatus.Pending,
                 CreatedDate = dateTime.UtcNow,
                 CreatedByUserId = currentUserService.UserId,
@@ -126,6 +130,7 @@ namespace ViharaFund.Infrastructure.Services
                     ActualAmount = t.JobCardTaskPayments.Sum(x => x.Amount),
                     EstimateAmount = t.EstimateAmount,
                     CurrencyType = defaultCurrencyType.Name,
+                    IsRecurringTasks = t.JobCard.HaveRecurringTasks,
                     TaskStatus = new DropDownDTO() { Id = (int)t.TaskStatus, Name = EnumHelper.GetEnumDescription(t.TaskStatus) },
                     Title = t.Title,
                     Description = t.Description,
@@ -133,9 +138,9 @@ namespace ViharaFund.Infrastructure.Services
                     EndDate = t.CompletedDate.HasValue ? t.CompletedDate.Value.ToString("yyyy-MM-dd") : string.Empty,
                     TaskNumber = t.TaskNumber,
                     CreatedBy = t.CreatedByUser.FullName,
-                    ProgressPercentage = t.JobCardTaskPayments.Count(t => t.IsActive) > 0
+                    ProgressPercentage = t.JobCard.HaveRecurringTasks == false ? (t.JobCardTaskPayments.Count(t => t.IsActive) > 0
                         ? (t.JobCardTaskPayments.Sum(t => t.Amount) / (decimal)t.EstimateAmount) * 100
-                        : 0,
+                        : 0) : 0,
                 })
                 .ToListAsync();
 
@@ -156,7 +161,46 @@ namespace ViharaFund.Infrastructure.Services
                     EstimateAmount = t.EstimateAmount,
                     TaskStatus = new DropDownDTO() { Id = (int)t.TaskStatus, Name = EnumHelper.GetEnumDescription(t.TaskStatus) },
                     Title = t.Title,
+                    IsRecurringTask = t.JobCard.HaveRecurringTasks,
                     Description = t.Description
+                })
+                .FirstOrDefaultAsync();
+
+            return task;
+        }
+
+        public async Task<TaskDetailDTO> GetDetailById(int id)
+        {
+            var task = await tenantDbContext.JobCardTasks
+                .Include(t => t.JobCard)
+                .Where(t => t.Id == id && t.IsActive)
+                .Select(t => new TaskDetailDTO
+                {
+                    Id = t.Id,
+                    ActualAmount = t.JobCardTaskPayments.Sum(x => x.Amount),
+                    EstimateAmount = t.EstimateAmount,
+                    TaskStatus = EnumHelper.GetEnumDescription(t.TaskStatus),
+                    Title = t.Title,
+                    IsRecurringTask = t.JobCard.HaveRecurringTasks,
+                    Description = t.Description,
+                    StartDate = t.CreatedDate.ToString("yyyy-MM-dd"),
+                    EndDate = t.CompletedDate.HasValue ? t.CompletedDate.Value.ToString("yyyy-MM-dd") : string.Empty,
+                    TaskNumber = t.TaskNumber,
+                    CreatedBy = t.CreatedByUser.FullName,
+                    CreatedOn = t.CreatedDate.ToString("yyyy-MM-dd"),
+                    UpdatedBy = t.UpdatedByUser != null ? t.UpdatedByUser.FullName : null,
+                    UpdatedOn = t.UpdatedDate.Value.ToString("yyyy-MM-dd"),
+                    Payments = t.JobCardTaskPayments
+                        .Where(p => p.IsActive)
+                        .Select(p => new JobCardPaymentSummary
+                        {
+                            Id = p.Id,
+                            Amount = p.Amount,
+                            Note = p.Note,
+                            PaymentBy = p.PaidByUser.FullName,
+                            PaymentDate = p.CreatedDate.ToString("yyyy-MM-dd"),
+                            BillingPeriod = p.BillingPeriod
+                        }).ToList(),
                 })
                 .FirstOrDefaultAsync();
 
@@ -196,10 +240,9 @@ namespace ViharaFund.Infrastructure.Services
 
             var members = tenantDbContext.JobCardTasks.FirstOrDefault(x => x.Id == taskId)
                 .JobCard
-                .AssignRoleGroup.UserRoles.Where(x => x.User.IsActive)
+                .AssignGroup.GroupUsers.Where(x => x.User.IsActive)
                 .Select(r =>
-
-                new DropDownDTO() { Id = r.UserId, Name = r.User.FullName }).ToList();
+                    new DropDownDTO() { Id = r.UserId, Name = r.User.FullName }).ToList();
 
             masterData.AssignedGroupMembers = members;
 
@@ -208,18 +251,33 @@ namespace ViharaFund.Infrastructure.Services
 
         public async Task<ResultDto> MakePayment(TaskPaymentDTO payment)
         {
-            tenantDbContext.JobCardTaskPayments.Add(new JobCardTaskPayment
+            var taskPayment = new JobCardTaskPayment
             {
                 JobCardTaskId = payment.TaskId,
                 Amount = payment.Amount,
                 PaidById = payment.PaymentUser.Id,
                 Note = payment.Note,
+                BillingPeriod = payment.BillingPeriod,
                 CreatedDate = dateTime.UtcNow,
                 CreatedByUserId = currentUserService.UserId,
                 UpdatedDate = dateTime.UtcNow,
                 UpdatedByUserId = currentUserService.UserId,
                 IsActive = true
-            });
+            };
+
+
+            foreach (var file in payment.Files)
+            {
+                var uploadResult = await UploadFileToAzureBlob(file);
+
+                taskPayment.JobCardTaskPaymentAttachments.Add(new JobCardTaskPaymentAttachment
+                {
+                    FileName = uploadResult.Item1,
+                    FilePath = uploadResult.Item2
+                });
+            }
+
+            tenantDbContext.JobCardTaskPayments.Add(taskPayment);
 
             await tenantDbContext.SaveChangesAsync();
 
@@ -263,15 +321,18 @@ namespace ViharaFund.Infrastructure.Services
             entity.UpdatedDate = dateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
 
-            entity.JobCardTaskComments.Add(new JobCardTaskComment()
+            if (!string.IsNullOrEmpty(jobCardTask.Comment))
             {
-                Comment = jobCardTask.Comment,
-                IsActive = true,
-                CreatedDate = dateTime.UtcNow,
-                CreatedByUserId = currentUserService.UserId,
-                UpdatedDate = dateTime.UtcNow,
-                UpdatedByUserId = currentUserService.UserId
-            });
+                entity.JobCardTaskComments.Add(new JobCardTaskComment()
+                {
+                    Comment = jobCardTask.Comment,
+                    IsActive = true,
+                    CreatedDate = dateTime.UtcNow,
+                    CreatedByUserId = currentUserService.UserId,
+                    UpdatedDate = dateTime.UtcNow,
+                    UpdatedByUserId = currentUserService.UserId
+                });
+            }
 
             // Map other updatable properties from DTO if available
 
@@ -323,37 +384,19 @@ namespace ViharaFund.Infrastructure.Services
         {
             try
             {
-                string leaveSupportDocumentPath = configuration["FileSavePaths:TaskImageSavingPathPath"];
-                if (!Directory.Exists(leaveSupportDocumentPath))
-                {
-                    Directory.CreateDirectory(leaveSupportDocumentPath);
-                }
-
-
                 for (int i = 0; i < upload.Files.Count; i++)
                 {
-                    var extension = Path.GetExtension(upload.Files[i].FileName);
+                    var uploadResult = await UploadFileToAzureBlob(upload.Files[i]);
 
-                    var fileName = upload.Files[i].FileName;
-                    var uniqueFileName = $"{Guid.NewGuid()}{extension}";
-                    var filePath = Path.Combine(leaveSupportDocumentPath, uniqueFileName);
-
-                    await using var stream = upload.Files[i].OpenReadStream();
-                    using var memoryStream = new MemoryStream();
-                    await stream.CopyToAsync(memoryStream);
-                    memoryStream.Position = 0;
-
-                    var uploadedFileUrl = await azureBlobService
-                        .UploadFileAsync(memoryStream, uniqueFileName, upload.Files[i].ContentType, ApplicationConstants.AzureBlobStorageName);
                     var comment = upload.FileComments.ContainsKey(upload.Files[i].FileName)
                         ? upload.FileComments[upload.Files[i].FileName]
                         : string.Empty;
                     var jobCardTaskAttachment = new JobCardTaskAttachment()
                     {
                         JobCardTaskId = upload.JobCardTaskId,
-                        FileName = fileName,
+                        FileName = uploadResult.Item1,
                         Description = comment,
-                        FilePath = uploadedFileUrl,
+                        FilePath = uploadResult.Item2,
                         CreatedDate = dateTime.UtcNow,
                         CreatedByUserId = currentUserService.UserId,
                         UpdatedDate = dateTime.UtcNow,
@@ -362,7 +405,6 @@ namespace ViharaFund.Infrastructure.Services
                     };
 
                     await tenantDbContext.JobCardTaskAttachments.AddAsync(jobCardTaskAttachment);
-
                 }
 
                 await tenantDbContext.SaveChangesAsync();
@@ -375,11 +417,35 @@ namespace ViharaFund.Infrastructure.Services
             }
         }
 
+        private async Task<Tuple<string, string>> UploadFileToAzureBlob(IFormFile formFile)
+        {
+            string imagesSavingPath = configuration["FileSavePaths:TaskImageSavingPathPath"];
+            if (!Directory.Exists(imagesSavingPath))
+            {
+                Directory.CreateDirectory(imagesSavingPath);
+            }
+
+            var extension = Path.GetExtension(formFile.FileName);
+
+            var fileName = formFile.FileName;
+            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(imagesSavingPath, uniqueFileName);
+
+            await using var stream = formFile.OpenReadStream();
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
+
+            var uploadedFileUrl = await azureBlobService
+                .UploadFileAsync(memoryStream, uniqueFileName, formFile.ContentType, ApplicationConstants.AzureBlobStorageName);
+
+            return new Tuple<string, string>(fileName, uploadedFileUrl);
+        }
 
         private async Task<string> GenerateTaskNumberAsync(DateTime date)
         {
             string datePart = date.ToString("yyyyMMdd");
-            string prefix = $"JC{datePart}";
+            string prefix = $"T{datePart}";
 
             // Get the max sequence number for today's invoices
             var lastTask = await tenantDbContext.JobCardTasks

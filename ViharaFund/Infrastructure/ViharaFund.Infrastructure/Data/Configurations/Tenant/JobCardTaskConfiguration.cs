@@ -20,6 +20,9 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
             builder.Property(p => p.ActualAmount)
                 .IsRequired(false);
 
+            builder.Property(p => p.EstimateAmount)
+                   .IsRequired(false);
+
             builder
                .HasOne<JobCard>(c => c.JobCard)
                .WithMany(c => c.JobCardTasks)

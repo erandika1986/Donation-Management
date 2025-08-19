@@ -8,5 +8,6 @@
         public decimal Amount { get; set; }
         public string? Note { get; set; }
         public string PaidBy { get; set; }
+        public string? BillingPeriod { get; set; }
     }
 }

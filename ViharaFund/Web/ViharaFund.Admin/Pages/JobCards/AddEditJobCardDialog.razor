@@ -87,13 +87,13 @@
                 <!-- Assigned Role Group -->
                 <MudItem xs="12" sm="12" md="4" lg="4">
                     <MudSelect T="DropDownDTO"
-                               Label="Assigned Role Group"
+                               Label="Assigned Group"
                                ReadOnly="IsViewOnly"
                                ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
                                MultiSelection="false"
                                @bind-Value="JobCard.AssignedRoleGroup"
                                Required="true"
-                               RequiredError="Role group is required!"
+                               RequiredError="Group is required!"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense">
                         @foreach (var role in Roles)
@@ -123,7 +123,7 @@
                 </MudItem>
 
                 <!-- Estimated Total Amount -->
-                <MudItem xs="12" sm="6" md="6" lg="4">
+@*                 <MudItem xs="12" sm="6" md="6" lg="4">
                     <MudNumericField @bind-Value="JobCard.EstimatedTotalAmount"
                                      Label="Estimated Total Amount"
                                      ReadOnly="IsViewOnly"
@@ -135,12 +135,12 @@
                                      HideSpinButtons="true"
                                      HelperText="Estimated cost" 
                                      Disabled="true" />
-                </MudItem>
+                </MudItem> *@
 
                 <!-- Actual Total Amount -->
                 <MudItem xs="12" sm="6" md="6" lg="4">
                     <MudNumericField @bind-Value="JobCard.ActualTotalAmount"
-                                     Label="Actual Total Amount"
+                                     Label="Actual Total Expense Amount"
                                      ReadOnly="IsViewOnly"
                                      Variant="Variant.Outlined"
                                      Margin="Margin.Dense"
@@ -148,8 +148,14 @@
                                      Step="0.01m"
                                      Format="N2"
                                      HideSpinButtons="true"
-                                     HelperText="Actual cost"
+                                     HelperText="Actual Total Expense Amount"
                                      Disabled="true" />
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudSwitch @bind-Value="JobCard.HaveRecurringTasks"
+                               Label="Has Recurring Tasks"
+                               Color="Color.Primary" />
                 </MudItem>
 
                 <!-- Additional Note -->
@@ -220,7 +226,7 @@
 
         Priorities = MasterData.JobPriorities.Where(x => x.Id>0) ?? new List<DropDownDTO>();
         Statuses = MasterData.Statuses.Where(x => x.Id > 0) ?? new List<DropDownDTO>();
-        Roles = MasterData.AvailableRoles.Where(x => x.Id > 0) ?? new List<DropDownDTO>();
+        Roles = MasterData.AvailableGroups.Where(x => x.Id > 0) ?? new List<DropDownDTO>();
         ActiveCampaigns = MasterData.ActiveCampaigns.Where(x => x.Id > 0) ?? new List<DropDownDTO>(); ;
 
         if (IsEdit && JobCardId > 0)

@@ -37,6 +37,15 @@ namespace ViharaFund.WebAPI.Controllers
             return Ok(result);
         }
 
+        [HttpGet("get-detail-by-id/{id}")]
+        public async Task<IActionResult> GetDetailById(int id)
+        {
+            var result = await _jobCardTaskService.GetDetailById(id);
+            if (result == null)
+                return NotFound();
+            return Ok(result);
+        }
+
 
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] JobCardTaskDTO jobCardTask)
@@ -174,10 +183,22 @@ namespace ViharaFund.WebAPI.Controllers
         }
 
         [HttpPost("save-payment")]
-        public async Task<IActionResult> SavePayment([FromBody] TaskPaymentDTO payment)
+        public async Task<IActionResult> SavePayment([FromForm] TaskPaymentJsonDTO request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            var payment = new TaskPaymentDTO()
+            {
+                TaskId = request.TaskId,
+                Amount = request.Amount,
+                Note = request.Note,
+                PaymentDate = request.PaymentDate,
+                PaymentUser = new DropDownDTO { Id = request.PaymentUserId, Name = string.Empty },
+                BillingPeriod = request.BillingPeriod,
+                Files = request.Files
+            };
+
 
             var result = await _jobCardTaskService.MakePayment(payment);
             if (result.Succeeded)

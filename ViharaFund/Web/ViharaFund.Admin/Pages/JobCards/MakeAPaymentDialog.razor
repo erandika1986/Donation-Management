@@ -1,4 +1,5 @@
 ﻿@using MudBlazor
+@using System.Text.Json
 @using ViharaFund.Admin.Common
 @using ViharaFund.Application.DTOs.Common
 @using ViharaFund.Shared.DTOs.JobCardTask
@@ -21,7 +22,7 @@
         <MudForm @ref="form" @bind-IsValid="@isFormValid">
             <MudGrid>
                 <!-- Amount Field -->
-                <MudItem xs="12" sm="12" md="12" lg="12">
+                <MudItem xs="12" sm="12" md="6" lg="6">
                     <MudNumericField @bind-Value="Payment.Amount"
                                      Label="Amount"
                                      Required="true"
@@ -36,7 +37,7 @@
                 </MudItem>
 
                 <!-- Payment User Dropdown -->
-                <MudItem xs="12" sm="12" md="12" lg="12">
+                <MudItem xs="12" sm="12" md="6" lg="6">
 
                     <MudSelect T="DropDownDTO"
                                Label="Paid By User"
@@ -56,7 +57,7 @@
 
 
                 <!-- Date Field -->
-                <MudItem xs="12" sm="12" md="12" lg="12">
+                <MudItem xs="12" sm="12" md="6" lg="6">
                     <MudDatePicker @bind-Date="Payment.PaymentDate"
                                    Label="Payment Date"
                                    Required="true"
@@ -64,7 +65,15 @@
                                    Variant="Variant.Outlined"
                                    Margin="Margin.Dense"
                                    MaxDate="DateTime.Today"
-                                   HelperText="Select donation date" />
+                                   HelperText="Select payment date" />
+                </MudItem>
+
+                <!-- Billing Period -->
+                <MudItem xs="12" sm="12" md="6" lg="6">
+                    <MudTextField @bind-Value="Payment.BillingPeriod"
+                                  Label="Billing Period"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
                 </MudItem>
 
                 <!-- Note Field -->
@@ -74,13 +83,33 @@
                                   Label="Comment"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
-                                  Class="mt-3"
                                   Lines="3"
                                   RequiredError="Please provide a comment"
                                   Placeholder="Enter reason for this action..."
                                   Counter="@MaxCommentLength"
                                   MaxLength="@MaxCommentLength" />
                 </MudItem>
+
+                <MudItem xs="12">
+                    <MudText>Supporting Documents</MudText>
+
+                    <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFiles" AppendMultipleFiles="true">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Filled"
+
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.CloudUpload">
+                                    Upload Support Files
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    
+
+
+
+                </MudItem>
+
+
             </MudGrid>
         </MudForm>
     </DialogContent>
@@ -124,12 +153,14 @@
 
     // Payment model to bind form data
     private TaskPaymentDTO Payment = new();
-
+    private List<IBrowserFile> Files = new List<IBrowserFile>();
 
     public IEnumerable<DropDownDTO> PaymentUsers { get; set; } = new List<DropDownDTO>();
     private DropDownDTO SelectedPaymentUser { get; set; } = new();
 
     private int LoggedInUserId { get; set; } = 0;
+
+    private long MaxFileSize = 10 * 1024 * 1024; // 10MB
 
     protected override async Task OnInitializedAsync()
     {
@@ -145,6 +176,28 @@
         Payment.PaymentUser = PaymentUsers.FirstOrDefault(u => u.Id == masterData.CurrentUserId) ?? PaymentUsers.FirstOrDefault();
     }
 
+    private void UploadFiles(IReadOnlyList<IBrowserFile> files)
+    {
+        foreach (var file in files)
+        {
+            if (file.Size > MaxFileSize)
+            {
+                Snackbar.Add($"{file.Name} exceeds the maximum file size (10MB).", Severity.Error);
+                continue;
+            }
+            try
+            {
+                //selectedFile = file;
+                Files.Add(file);
+                // FileNames.Add(file.Name);
+            }
+            catch (Exception ex)
+            {
+                //UploadErrors.Add($"Error uploading {file.Name}: {ex.Message}");
+            }
+        }
+    }
+
 
     private async Task ProcessPayment()
     {
@@ -155,8 +208,47 @@
 
         try
         {
+            var content = new MultipartFormDataContent();
+
+
+            // add primitive fields
+            content.Add(new StringContent(Payment.TaskId.ToString()), nameof(TaskPaymentJsonDTO.TaskId));
+            content.Add(new StringContent(Payment.Amount.ToString()), nameof(TaskPaymentJsonDTO.Amount));
+            content.Add(new StringContent(Payment.Note ?? ""), nameof(TaskPaymentJsonDTO.Note));
+            content.Add(new StringContent(Payment.PaymentDate?.ToString("o") ?? ""), nameof(TaskPaymentJsonDTO.PaymentDate));
+            content.Add(new StringContent(Payment.PaymentUser.Id.ToString()), nameof(TaskPaymentJsonDTO.PaymentUserId));
+            content.Add(new StringContent(Payment.BillingPeriod ?? ""), nameof(TaskPaymentJsonDTO.BillingPeriod));
+
+               // Add all files
+            foreach (var file in Files)
+            {
+                var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize: 10_000_000));
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+
+                // 👇 Name must match DTO property: "Files"
+                content.Add(fileContent, nameof(TaskPaymentJsonDTO.Files), file.Name);
+            }
+
+            // if (selectedFile is not null)
+            // {
+            //     // Add file
+            //     var fileContent = new StreamContent(selectedFile.OpenReadStream(maxAllowedSize: 10_000_000));
+            //     fileContent.Headers.ContentType =
+            //         new System.Net.Http.Headers.MediaTypeHeaderValue(selectedFile.ContentType);
+            //     content.Add(fileContent, nameof(TaskPaymentJsonDTO.File), selectedFile.Name);
+            // }
+            // Add complex object properties individually
+            // content.Add(new StringContent(Payment.TaskId.ToString()), "TaskId");
+            // content.Add(new StringContent(Payment.Amount.ToString()), "Amount");
+            // content.Add(new StringContent(Payment.Note), "Note");
+            // content.Add(new StringContent(Payment.PaymentDate.ToString()), "PaymentDate");
+            // content.Add(new StringContent(Payment.PaymentUser.Id.ToString()), "PaymentUserId");
+            // content.Add(new StringContent(Payment.BillingPeriod), "BillingPeriod");
+
+            // send as JSON string
+           // content.Add(new StringContent(JsonSerializer.Serialize(Payment)), "employeeJson");
             // Replace with your actual API endpoint
-            var response = await HttpClient.PostAsJsonAsync("api/JobCardTask/save-payment", Payment);
+            var response = await HttpClient.PostAsync("api/JobCardTask/save-payment", content);
 
             if (response.IsSuccessStatusCode)
             {

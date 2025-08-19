@@ -17,6 +17,10 @@ namespace ViharaFund.Infrastructure.Data.Configurations.Tenant
             builder.Property(p => p.Note)
                 .IsRequired(false);
 
+            builder.Property(p => p.BillingPeriod)
+                .IsRequired(false)
+                .HasMaxLength(200);
+
             builder
                 .HasOne<User>(c => c.PaidByUser)
                 .WithMany(c => c.JobCardTaskPayments)

@@ -14,5 +14,6 @@ namespace ViharaFund.Application.DTOs.JobCard
         public decimal? EstimatedTotalAmount { get; set; }
         public decimal? ActualTotalAmount { get; set; }
         public string? AdditionalNote { get; set; }
+        public bool HaveRecurringTasks { get; set; }
     }
 }

@@ -13,6 +13,7 @@ namespace ViharaFund.Domain.Entities.Tenant
         public decimal? EstimatedTotalAmount { get; set; }
         public decimal? ActualTotalAmount { get; set; }
         public string? AdditionalNote { get; set; }
+        public bool HaveRecurringTasks { get; set; }
 
         public virtual JobCard JobCard { get; set; }
     }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ViharaFund.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using ViharaFund.Infrastructure.Data;
 namespace ViharaFund.Infrastructure.Migrations.Tenant
 {
     [DbContext(typeof(TenantDbContext))]
-    partial class TenantDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250816074932_ViharaFund_00006")]
+    partial class ViharaFund_00006
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -981,10 +984,6 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("BillingPeriod")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<int?>("CreatedByUserId")
                         .HasColumnType("int");
 
@@ -1020,35 +1019,6 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("JobCardTaskPayment", (string)null);
-                });
-
-            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardTaskPaymentAttachment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("JobCardTaskPaymentId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("JobCardTaskPaymentId");
-
-                    b.ToTable("JobCardTaskPaymentAttachment", (string)null);
                 });
 
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.Role", b =>
@@ -1661,17 +1631,6 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
                     b.Navigation("UpdatedByUser");
                 });
 
-            modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardTaskPaymentAttachment", b =>
-                {
-                    b.HasOne("ViharaFund.Domain.Entities.Tenant.JobCardTaskPayment", "JobCardTaskPayment")
-                        .WithMany("JobCardTaskPaymentAttachments")
-                        .HasForeignKey("JobCardTaskPaymentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("JobCardTaskPayment");
-                });
-
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.User", b =>
                 {
                     b.HasOne("ViharaFund.Domain.Entities.Tenant.User", "CreatedByUser")
@@ -1776,8 +1735,6 @@ namespace ViharaFund.Infrastructure.Migrations.Tenant
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.JobCardTaskPayment", b =>
                 {
                     b.Navigation("DonationExpenses");
-
-                    b.Navigation("JobCardTaskPaymentAttachments");
                 });
 
             modelBuilder.Entity("ViharaFund.Domain.Entities.Tenant.Role", b =>

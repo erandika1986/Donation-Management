@@ -1,0 +1,272 @@
+﻿@using ViharaFund.Admin.Common
+@using ViharaFund.Application.DTOs.Common
+@using ViharaFund.Application.DTOs.JobCardTask
+
+@inherits MudComponentBase
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+
+<!-- Add/Edit JobCard Dialog -->
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Visibility" Class="mr-3" />
+            @("Task Detail")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+<MudPaper Class="pa-0" Elevation="1">
+        <MudGrid>
+            <!-- Description -->
+            <MudItem xs="12">
+                <MudTextField @bind-Value="JobTask.Description"
+                              Label="Task Description"
+                              ReadOnly="IsViewOnly"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"/>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4" lg="4">
+                <MudTextField @bind-Value="JobTask.Title"
+                              Label="Task Title"
+                              ReadOnly="IsViewOnly"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense" />
+            </MudItem>
+
+
+            <MudItem xs="12" sm="6" md="4" lg="4">
+                <MudTextField @bind-Value="JobTask.TaskStatus"
+                              Label="Task Status"
+                              ReadOnly="IsViewOnly"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense" />
+            </MudItem>
+
+
+
+
+            <!-- Estimated Total Amount -->
+            @if (!IsRecurringTask)
+            {
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudNumericField @bind-Value="JobTask.EstimateAmount"
+                                     Label="Estimated  Amount"
+                                     ReadOnly="IsViewOnly"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Format="N2"
+                                     HideSpinButtons="true"/>
+                </MudItem>
+            }
+
+            <!-- Actual Total Amount -->
+            <MudItem xs="12" sm="6" md="6" lg="4">
+                <MudNumericField @bind-Value="JobTask.ActualAmount"
+                                 Label="Total Amount"
+                                 ReadOnly="IsViewOnly"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Format="N2"
+                                 HideSpinButtons="true" />
+            </MudItem>
+
+                <!-- ATask Number -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudTextField @bind-Value="JobTask.TaskNumber"
+                                     Label="Task Number"
+                                     ReadOnly="IsViewOnly"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"/>
+                </MudItem>
+
+                <!-- CreatedBy -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudTextField @bind-Value="JobTask.CreatedBy"
+                                     Label="Created By"
+                                     ReadOnly="IsViewOnly"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+
+                <!-- CreatedOn -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudTextField @bind-Value="JobTask.CreatedOn"
+                                  Label="Created On"
+                                  ReadOnly="IsViewOnly"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+
+                <!-- UpdatedBy -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudTextField @bind-Value="JobTask.UpdatedBy"
+                                  Label="Updated By"
+                                  ReadOnly="IsViewOnly"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+
+                <!-- UpdatedOn -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudTextField @bind-Value="JobTask.UpdatedOn"
+                                  Label="Updated On"
+                                  ReadOnly="IsViewOnly"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+                <!-- Comment  -->
+            <MudItem xs="12">
+                <MudTextField @bind-Value="JobTask.Comment"
+                              Label="Additional Notes"
+                              ReadOnly="IsViewOnly"
+                              Lines="3"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              HelperText="Optional additional notes..." />
+            </MudItem>
+        </MudGrid>
+        </MudPaper>
+        <MudPaper Class="pa-0" Elevation="1">
+            <!-- Groups Table -->
+            <MudTable Items="@JobTask.Payments"
+                      Dense="true"
+                      Hover="true"
+                      Striped="true"
+                      Loading="@loading"
+                      LoadingProgressColor="Color.Info">
+                <HeaderContent>
+                    <MudTh>Id</MudTh>
+                    <MudTh>Amount</MudTh>
+                    <MudTh>Payment By</MudTh>
+                    <MudTh>Billing Period</MudTh>
+                    <MudTh>Payment Date</MudTh>
+                    <MudTh Style="text-align:center">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Id">
+                        <MudText Typo="Typo.body1">@context.Id</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Amount">
+                        <MudText Typo="Typo.body1">@context.Amount</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Payment By">
+                        <MudText Typo="Typo.body1">@context.PaymentBy</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Billing Period">
+                        <MudText Typo="Typo.body1">@context.BillingPeriod</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Payment Date">
+                        <MudText Typo="Typo.body1">@context.PaymentDate</MudText>
+                    </MudTd>
+@*                     <MudTd DataLabel="Users">
+                        @if (context.Users.Any())
+                        {
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach (var user in context.Users.Take(3))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@user.Name</MudChip>
+                                }
+                                @if (context.Users.Count > 3)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default">+@(context.Users.Count - 3) more</MudChip>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No users</MudText>
+                        }
+                    </MudTd> *@
+                    <MudTd DataLabel="Actions" Style="text-align:center">
+
+                        <MudTooltip Text="Edit Group Detail" Color="Color.Primary" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Color="Color.Primary"
+                                           Variant="Variant.Filled"
+                                            />
+                        </MudTooltip>
+
+                        <MudTooltip Text="Delete Group" Color="Color.Error" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           
+                                           Color="Color.Error"
+                                           Variant="Variant.Filled"
+                                           />
+                        </MudTooltip>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>No groups found. Click "Add New Group" to create your first group.</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog" Color="Color.Default">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public bool IsViewOnly { get; set; }
+
+    [Parameter]
+    public int TaskId { get; set; } = new();
+
+    [Parameter]
+    public int JobCardId { get; set; } = new();
+
+    [Parameter]
+    public bool IsRecurringTask { get; set; }
+
+    [Parameter]
+    public string JobCardTitle { get; set; } = string.Empty;
+
+    private string searchString = "";
+
+    private TaskDetailDTO JobTask { get; set; } = new();
+    private MudForm form = null!;
+    private bool isFormValid = false;
+    private bool isSubmitting = false;
+    private bool loading = false;
+
+    [Parameter]
+    public IEnumerable<DropDownDTO> Statuses { get; set; } = new List<DropDownDTO>();
+    public DropDownDTO SelectedStatus { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadJobTask();
+    }
+
+    private async Task LoadJobTask()
+    {
+        JobTask = await HttpClient.GetFromJsonAsync<TaskDetailDTO>($"api/JobCardTask/get-detail-by-id/{TaskId}") ?? new();
+    }
+
+    private void CloseDialog()
+    {
+        MudDialog.Cancel();
+    }
+
+
+    private Color GetStatusColor(int status)
+    {
+        return (ViharaFund.Domain.Enums.TaskStatus)status switch
+        {
+            ViharaFund.Domain.Enums.TaskStatus.Approved => Color.Success,
+            ViharaFund.Domain.Enums.TaskStatus.Completed => Color.Primary,
+            // ViharaFund.Domain.Enums.TaskStatus.OnHold => Color.Warning,
+            // ViharaFund.Domain.Enums.TaskStatus.Canceled => Color.Error,
+            ViharaFund.Domain.Enums.TaskStatus.OnGoing => Color.Info,
+            _ => Color.Secondary
+        };
+    }
+}

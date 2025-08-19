@@ -147,38 +147,62 @@
                     <MudCardContent Class="py-2">
                         <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
                             <MudText Typo="Typo.h5" Color="Color.Success" Class="font-weight-bold">
-                                @(CurrencyCode)@jobCard.ActualCost.ToString("#,##0.00")
+                               Total Spent @(CurrencyCode)@jobCard.ActualCost.ToString("#,##0.00")
                             </MudText>
-                            <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                                of @(CurrencyCode)@jobCard.EstimatedBudget.ToString("#,##0.00")
-                            </MudText>
+                            @if (!jobCard.HaveRecurringTasks)
+                            {
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                    of @(CurrencyCode)@jobCard.EstimatedBudget.ToString("#,##0.00")
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                    Has Recurring Tasks
+                                </MudText>
+                            }
                         </MudStack>
-
-                        <!-- Progress Bar -->
-                        <MudProgressLinear Color="Color.Success"
+                            @if (!jobCard.HaveRecurringTasks)
+                            {
+                                <!-- Progress Bar -->
+                                    <MudProgressLinear Color="Color.Success"
                                            Value="(double)jobCard.ProgressPercentage"
                                            Class="mb-3"
                                            Style="height: 8px; border-radius: 4px;" />
-
+                            }
                         <MudGrid>
-                            <MudItem xs="4">
-                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                    @((int)jobCard.ProgressPercentage)% Complete
-                                </MudText>
-                            </MudItem>
-                            <MudItem xs="4" Class="text-center">
-                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                    @jobCard.CompletedTaskCount of @jobCard.TotalTaskCount tasks
-                                </MudText>
-                            </MudItem>
-                            <MudItem xs="4" Class="text-right">
-                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                    @jobCard.TotalTaskCount tasks total
-                                </MudText>
-                            </MudItem>
+                            
+                            @if (!jobCard.HaveRecurringTasks)
+                            {
+                                <MudItem xs="4">
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                        @((int)jobCard.ProgressPercentage)% Complete
+                                    </MudText>
+                                </MudItem>
+                                <MudItem xs="4" Class="text-center">
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                        @jobCard.CompletedTaskCount of @jobCard.TotalTaskCount tasks
+                                    </MudText>
+                                </MudItem>
+                                <MudItem xs="4" Class="text-right">
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                        @jobCard.TotalTaskCount tasks total
+                                    </MudText>
+                                </MudItem>
+                             }
+                             else
+                             {
+                                    <MudItem xs="12">
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                        This job card has Total @(jobCard.TotalTaskCount) recurring tasks. Please manage them separately.
+                                        </MudText>
+                                    </MudItem>
+                            }
+                            
+
                         </MudGrid>
                     </MudCardContent>
-                    @if (jobCard.ApprovalHistory.Count>0)
+                    @if (jobCard.ApprovalHistory.Count>0 && jobCard.HaveRecurringTasks == false)
                     {
                         <!-- Approval Status Section -->
                         <MudCardContent Class="py-2">
@@ -271,7 +295,7 @@
                                     </MudTooltip>
                                 </MudStack>
                             </MudStack>
-                            @if (jobCard.Status == JobCardStatus.Draft)
+                            @if (jobCard.Status == JobCardStatus.Draft && !jobCard.HaveRecurringTasks)
                             {
                                 <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
                                     <MudButton Variant="Variant.Filled"
@@ -315,7 +339,7 @@
                                     }
                                 }
                             }
-                            else if (jobCard.Status == JobCardStatus.Approved)
+                            else if (jobCard.Status == JobCardStatus.Approved || (jobCard.Status == JobCardStatus.Draft && jobCard.HaveRecurringTasks))
                             {
                                 <MudStack Row Spacing="2" Class="mt-4 pt-4" Style="border-top: 1px solid var(--mud-palette-divider);">
                                     <MudButton Variant="Variant.Filled"
@@ -717,6 +741,7 @@
             { x => x.IsViewOnly, false },
             { x => x.JobCardId, jobCard.Id },
             { x => x.JobCardTitle, jobCard.Title },
+            { x =>  x.IsRecurringTask, jobCard.HaveRecurringTasks},
             { x => x.JobCardStatus, jobCard.Status}
         };
 

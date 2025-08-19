@@ -131,7 +131,7 @@ namespace ViharaFund.Infrastructure.Services
                     Id = x.Id,
                     Name = x.Title,
                     Status = EnumHelper.GetEnumDescription(x.Status),
-                    OwnedGroup = x.AssignRoleGroup.Name
+                    OwnedGroup = x.AssignGroup.Name
                 }).ToListAsync();
 
             response.RecentJobCards.AddRange(recentJobCards);

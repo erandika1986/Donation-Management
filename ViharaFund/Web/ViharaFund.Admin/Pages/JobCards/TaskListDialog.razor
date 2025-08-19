@@ -118,10 +118,13 @@
 
                         <!-- Progress Section -->
                         <MudCardContent Class="pt-1 pb-3">
-                            <MudProgressLinear Color="@(@task.ProgressPercentage > 100 ? Color.Error : Color.Success)"
+                            @if (!IsRecurringTask)
+                            {
+                                <MudProgressLinear Color="@(@task.ProgressPercentage > 100 ? Color.Error : Color.Success)"
                                                Value="(double)task.ProgressPercentage"
                                                Class="mb-3"
                                                Style="height: 8px; border-radius: 4px;" />
+                            }
 
                             <MudGrid AlignItems="Center" Justify="Justify.SpaceBetween" Class="mb-3">
                                 <MudItem>
@@ -138,7 +141,14 @@
                                     </MudText>
                                 </MudItem>
                                 <MudItem>
-                                    <MudText Typo="Typo.body2" Color="Color.Secondary">out of the estimated @task.CurrencyType  @( @task.EstimateAmount)</MudText>
+                                    @if (!task.IsRecurringTasks)
+                                    {
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">out of the estimated @task.CurrencyType  @( @task.EstimateAmount)</MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Recurring Task</MudText>
+                                    }
                                 </MudItem>
                             </MudGrid>
 
@@ -254,6 +264,9 @@
     public int JobCardId { get; set; } = new();
 
     [Parameter]
+    public bool IsRecurringTask { get; set; }
+
+    [Parameter]
     public ViharaFund.Domain.Enums.JobCardStatus JobCardStatus { get; set; }
 
     [Parameter]
@@ -335,6 +348,7 @@
             { x => x.IsEdit, false },
             { x => x.IsViewOnly, false },
             { x => x.TaskId, 0 },
+            { x => x.IsRecurringTask, IsRecurringTask },
             { x => x.Statuses, TaskStatuses.Where(x => x.Id>0).ToList() },
             { x => x.JobCardId, JobCardId }
         };
@@ -385,11 +399,12 @@
 
     private async Task ViewJobCard(JobCardTaskSummaryDTO task)
     {
-        var parameters = new DialogParameters<AddEditTaskDialog>
+        var parameters = new DialogParameters<TaskDetailDialog>
         {
             { x => x.IsEdit, true },
             { x => x.IsViewOnly, true },
             { x => x.TaskId, task.Id },
+            { x => x.IsRecurringTask, IsRecurringTask },
             { x => x.Statuses, TaskStatuses.Where(x => x.Id>0).ToList() },
             { x => x.JobCardId, JobCardId }
         };
@@ -402,7 +417,7 @@
             BackdropClick = true
         };
 
-        var dialog = await DialogService.ShowAsync<AddEditTaskDialog>("View Task", parameters, options);
+        var dialog = await DialogService.ShowAsync<TaskDetailDialog>("View Task", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is JobCardTaskDTO viewTask)
@@ -418,6 +433,7 @@
             { x => x.IsEdit, true },
             { x => x.IsViewOnly, false },
             { x => x.TaskId, task.Id },
+            { x => x.IsRecurringTask, IsRecurringTask },
             { x => x.Statuses, TaskStatuses.Where(x => x.Id>0).ToList() },
             { x => x.JobCardId, JobCardId }
         };
@@ -425,7 +441,7 @@
         var options = new DialogOptions
         {
             CloseButton = true,
-            MaxWidth = MaxWidth.ExtraLarge,
+            MaxWidth = MaxWidth.Medium,
             FullWidth = true,
             BackdropClick = true
         };

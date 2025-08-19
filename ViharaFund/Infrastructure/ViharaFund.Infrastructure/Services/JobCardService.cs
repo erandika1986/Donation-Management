@@ -75,12 +75,13 @@ namespace ViharaFund.Infrastructure.Services
                     JobCardNumber = x.JobCardNo,
                     Status = x.Status,
                     CreatedDate = x.CreatedDate,
+                    HaveRecurringTasks = x.HaveRecurringTasks,
                     CreatedBy = x.CreatedByUser.FullName,
                     AssignedCampaign = x.CampaignId.HasValue ? x.Campaign.Name : "Not Assigned",
-                    AssignedRoleGroup = x.AssignRoleGroup != null ? x.AssignRoleGroup.Name : "Not Assigned",
+                    AssignedRoleGroup = x.AssignGroup != null ? x.AssignGroup.Name : "Not Assigned",
                     EstimatedBudget = x.JobCardTasks
                         .Where(t => t.IsActive)
-                        .Sum(t => t.EstimateAmount),
+                        .Sum(t => t.EstimateAmount.HasValue ? t.EstimateAmount.Value : 0),
                     ActualCost = x.JobCardTasks.SelectMany(x => x.JobCardTaskPayments).Where(t => t.IsActive)
                         .Sum(t => t.Amount),
                     TotalTaskCount = x.JobCardTasks.Count(t => t.IsActive),
@@ -128,10 +129,11 @@ namespace ViharaFund.Infrastructure.Services
                     EstimatedTotalAmount = x.EstimatedTotalAmount,
                     ActualTotalAmount = x.ActualTotalAmount,
                     AdditionalNote = x.AdditionalNote,
+                    HaveRecurringTasks = x.HaveRecurringTasks,
                     AssignedRoleGroup = new DropDownDTO
                     {
-                        Id = x.AssignRoleGroupId,
-                        Name = x.AssignRoleGroup.Name
+                        Id = x.AssignGroupId,
+                        Name = x.AssignGroup.Name
                     },
                     AssignCampaign = x.CampaignId.HasValue
                         ? new DropDownDTO
@@ -162,16 +164,17 @@ namespace ViharaFund.Infrastructure.Services
 
             await jobCardHistoryService.SaveAsync(entity);
 
+            entity.HaveRecurringTasks = jobCard.HaveRecurringTasks;
             entity.Title = jobCard.Title;
             entity.Description = jobCard.Description;
             entity.Priority = (JobPriority)jobCard.Priority.Id;
             entity.Status = (JobCardStatus)jobCard.Status.Id;
-            entity.EstimatedTotalAmount = jobCard.EstimatedTotalAmount;
+            entity.EstimatedTotalAmount = jobCard.HaveRecurringTasks == false ? jobCard.EstimatedTotalAmount : (decimal?)null;
             entity.ActualTotalAmount = jobCard.ActualTotalAmount;
             entity.AdditionalNote = jobCard.AdditionalNote;
             entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
-            entity.AssignRoleGroupId = jobCard.AssignedRoleGroup.Id;
+            entity.AssignGroupId = jobCard.AssignedRoleGroup.Id;
             entity.CampaignId = jobCard.AssignCampaign.Id > 0 ? jobCard.AssignCampaign.Id : (int?)null;
 
             tenantDbContext.JobCards.Update(entity);
@@ -227,13 +230,13 @@ namespace ViharaFund.Infrastructure.Services
 
             var entity = new JobCard
             {
-                AssignRoleGroupId = jobCard.AssignedRoleGroup.Id,
+                AssignGroupId = jobCard.AssignedRoleGroup.Id,
                 Title = jobCard.Title,
                 JobCardNo = await GenerateJobCardNumberAsync(dateTime.UtcNow),
                 Description = jobCard.Description,
                 Priority = (JobPriority)jobCard.Priority.Id,
                 Status = Domain.Enums.JobCardStatus.Draft,
-                EstimatedTotalAmount = jobCard.EstimatedTotalAmount,
+                EstimatedTotalAmount = jobCard.HaveRecurringTasks == false ? jobCard.EstimatedTotalAmount : (decimal?)null,
                 ActualTotalAmount = jobCard.ActualTotalAmount,
                 AdditionalNote = jobCard.AdditionalNote,
                 UpdatedDate = DateTime.UtcNow,
@@ -241,6 +244,7 @@ namespace ViharaFund.Infrastructure.Services
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
                 CreatedByUserId = currentUserService.UserId,
+                HaveRecurringTasks = jobCard.HaveRecurringTasks,
                 CampaignId = jobCard.AssignCampaign.Id > 0 ? jobCard.AssignCampaign.Id : (int?)null
             };
 
@@ -267,7 +271,7 @@ namespace ViharaFund.Infrastructure.Services
 
             await jobCardHistoryService.SaveAsync(entity);
 
-            entity.AssignRoleGroupId = (int)RoleName.ChiefMonk;
+            entity.AssignGroupId = (int)RoleName.ChiefMonk;
             entity.Status = Domain.Enums.JobCardStatus.PendingApproval;
             entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
@@ -367,7 +371,7 @@ namespace ViharaFund.Infrastructure.Services
 
             await jobCardHistoryService.SaveAsync(entity);
 
-            entity.AssignRoleGroupId = (int)RoleName.TempleFinancialManagementCommittee;
+            entity.AssignGroupId = (int)RoleName.TempleFinancialManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.OnGoing;
             entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
@@ -382,6 +386,17 @@ namespace ViharaFund.Infrastructure.Services
             });
 
             tenantDbContext.JobCards.Update(entity);
+
+            if (entity.HaveRecurringTasks)
+            {
+                foreach (var task in entity.JobCardTasks)
+                {
+                    task.TaskStatus = Domain.Enums.TaskStatus.Approved;
+                    task.UpdatedByUserId = currentUserService.UserId;
+                    task.UpdatedDate = dateTime.UtcNow;
+                }
+            }
+
             await tenantDbContext.SaveChangesAsync();
 
             return ResultDto.Success("Job Card marked as OnGoing successfully.", entity.Id);
@@ -404,7 +419,7 @@ namespace ViharaFund.Infrastructure.Services
 
             await jobCardHistoryService.SaveAsync(entity);
 
-            entity.AssignRoleGroupId = (int)RoleName.TempleFinancialManagementCommittee;
+            entity.AssignGroupId = (int)RoleName.TempleFinancialManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.Completed;
             entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
@@ -441,7 +456,7 @@ namespace ViharaFund.Infrastructure.Services
 
             await jobCardHistoryService.SaveAsync(entity);
 
-            entity.AssignRoleGroupId = (int)RoleName.TempleFinancialManagementCommittee;
+            entity.AssignGroupId = (int)RoleName.TempleFinancialManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.Cancelled;
             entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
@@ -478,7 +493,7 @@ namespace ViharaFund.Infrastructure.Services
 
             await jobCardHistoryService.SaveAsync(entity);
 
-            entity.AssignRoleGroupId = (int)RoleName.TempleFinancialManagementCommittee;
+            entity.AssignGroupId = (int)RoleName.TempleFinancialManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.Rejected;
             entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
@@ -515,7 +530,7 @@ namespace ViharaFund.Infrastructure.Services
 
             await jobCardHistoryService.SaveAsync(entity);
 
-            entity.AssignRoleGroupId = (int)RoleName.TempleManagementCommittee;
+            entity.AssignGroupId = (int)RoleName.TempleManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.PendingOnHold;
             entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
@@ -552,7 +567,7 @@ namespace ViharaFund.Infrastructure.Services
 
             await jobCardHistoryService.SaveAsync(entity);
 
-            entity.AssignRoleGroupId = (int)RoleName.TempleFinancialManagementCommittee;
+            entity.AssignGroupId = (int)RoleName.TempleFinancialManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.OnHold;
             entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
@@ -589,7 +604,7 @@ namespace ViharaFund.Infrastructure.Services
 
             await jobCardHistoryService.SaveAsync(entity);
 
-            entity.AssignRoleGroupId = (int)RoleName.TempleManagementCommittee;
+            entity.AssignGroupId = (int)RoleName.TempleManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.PendingCancellation;
             entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
@@ -637,7 +652,7 @@ namespace ViharaFund.Infrastructure.Services
 
             await jobCardHistoryService.SaveAsync(entity);
 
-            entity.AssignRoleGroupId = (int)RoleName.TempleManagementCommittee;
+            entity.AssignGroupId = (int)RoleName.TempleManagementCommittee;
             entity.Status = Domain.Enums.JobCardStatus.PendingCompletion;
             entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
@@ -705,8 +720,7 @@ namespace ViharaFund.Infrastructure.Services
                 });
             }
 
-            var roles = await tenantDbContext.Roles
-                .Where(x => x.Name != RoleName.Admin.ToString())
+            var roles = await tenantDbContext.Groups
                 .Select(x => new DropDownDTO
                 {
                     Id = x.Id,
@@ -714,7 +728,7 @@ namespace ViharaFund.Infrastructure.Services
                 })
                 .ToListAsync();
 
-            masterData.AvailableRoles = roles;
+            masterData.AvailableGroups = roles;
 
             var campaigns = await campaignService.GetActiveCampaignsAsync();
             masterData.ActiveCampaigns.AddRange(campaigns);
