@@ -5,6 +5,8 @@
 @inherits MudComponentBase
 @inject HttpClient HttpClient
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IJSRuntime JSRuntime
 
 <!-- Add/Edit JobCard Dialog -->
 <MudDialog>
@@ -183,13 +185,14 @@
                         <MudTooltip Text="Edit Group Detail" Color="Color.Primary" Placement="Placement.Top">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                            Color="Color.Primary"
+                                           OnClick="@(() => OpenPaymentDialog(@context))"
                                            Variant="Variant.Filled"
                                             />
                         </MudTooltip>
 
                         <MudTooltip Text="Delete Group" Color="Color.Error" Placement="Placement.Top">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                           
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                           OnClick="@(() => DeletePayment(@context))"
                                            Color="Color.Error"
                                            Variant="Variant.Filled"
                                            />
@@ -229,6 +232,9 @@
     [Parameter]
     public string JobCardTitle { get; set; } = string.Empty;
 
+    [Parameter] 
+    public EventCallback<TaskDetailDTO> OnTaskDetailUpdated { get; set; }
+
     private string searchString = "";
 
     private TaskDetailDTO JobTask { get; set; } = new();
@@ -254,6 +260,71 @@
     private void CloseDialog()
     {
         MudDialog.Cancel();
+    }
+
+    private async Task OpenPaymentDialog(JobCardPaymentSummary payment)
+    {
+        var parameters = new DialogParameters<MakeAPaymentDialog>
+        {
+            { x => x.TaskId, payment.TaskId },
+            { x => x.PaymentId, payment.Id },
+            { x => x.TaskName, payment.TaskName }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = false,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<MakeAPaymentDialog>("Edit Payment", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is ViharaFund.Shared.DTOs.JobCardTask.TaskPaymentDTO updatePayment)
+        {
+            await LoadJobTask();
+            await OnTaskDetailUpdated.InvokeAsync(JobTask);
+        }
+    }
+
+    private async Task DeletePayment(JobCardPaymentSummary jobCardPaymentSummary)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "ContentText", $"Are you sure you want to delete task payment ('{jobCardPaymentSummary.Amount}')? This action cannot be undone." },
+            { "ButtonText", "Delete" },
+            { "Color", Color.Error }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                // Replace with your actual API endpoint
+                var response = await HttpClient.DeleteAsync($"api/JobCardTask/delete-payment/{jobCardPaymentSummary.Id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("payment deleted successfully!", Severity.Success);
+                    await LoadJobTask();
+                    await OnTaskDetailUpdated.InvokeAsync(JobTask);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete task.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting task: {ex.Message}", Severity.Error);
+            }
+        }
     }
 
 

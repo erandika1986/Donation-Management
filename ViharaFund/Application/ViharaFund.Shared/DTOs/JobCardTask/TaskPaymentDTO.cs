@@ -5,6 +5,7 @@ namespace ViharaFund.Shared.DTOs.JobCardTask
 {
     public class TaskPaymentDTO
     {
+        public int Id { get; set; }
         public int TaskId { get; set; }
         public decimal Amount { get; set; }
         public string Note { get; set; } = string.Empty;
@@ -16,6 +17,7 @@ namespace ViharaFund.Shared.DTOs.JobCardTask
 
     public class TaskPaymentJsonDTO
     {
+        public int Id { get; set; }
         public int TaskId { get; set; }
         public decimal Amount { get; set; }
         public string Note { get; set; } = string.Empty;

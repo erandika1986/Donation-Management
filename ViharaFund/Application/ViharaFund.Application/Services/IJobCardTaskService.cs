@@ -26,6 +26,8 @@ namespace ViharaFund.Application.Services
         Task<ResultDto> DeleteTask(int taskId);
         Task<ResultDto> CompleteTask(int taskId);
         Task<ResultDto> MakePayment(TaskPaymentDTO payment);
+        Task<TaskPaymentDTO> GetPaymentDetailById(int paymentId);
+        Task<ResultDto> DeletePayment(int paymentId);
         Task<List<UploadedFileDTO>> GetTaskImages(int taskId);
     }
 }

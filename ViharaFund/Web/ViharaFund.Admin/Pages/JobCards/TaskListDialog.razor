@@ -154,7 +154,7 @@
 
 
                             <!-- Card Actions -->
-                            <MudCardActions Class="pa-4 d-flex flex-wrap align-items-center" Style="background: #fafafa;">
+                            <MudCardActions Class="pa-4 d-flex flex-wrap align-items-center" Justify="Justify.Center" Style="background: #fafafa;">
                                 @if ((ViharaFund.Domain.Enums.TaskStatus)@task.TaskStatus.Id == ViharaFund.Domain.Enums.TaskStatus.OnGoing)
                                 {
                                     <MudTooltip Text="Add New Donation" Color="Color.Secondary" Placement="Placement.Top">
@@ -168,6 +168,14 @@
                                         </MudButton>
                                     </MudTooltip>                           
                                 }
+                                <MudTooltip Text="View Task Detail" Color="Color.Info" Placement="Placement.Top">
+                                    <MudButton Variant="Variant.Outlined"
+                                                   Size="Size.Small"
+                                                   StartIcon="@Icons.Material.Filled.Visibility"
+                                                   Color="Color.Info"
+                                                   OnClick="@(() => ViewJobCard(task))"
+                                                   Class="me-2 mb-2">View Detail</MudButton>
+                                </MudTooltip>
                                 <MudTooltip Text="View Comments" Color="Color.Secondary" Placement="Placement.Top">
                                     <MudButton Variant="Variant.Outlined"
   
@@ -178,63 +186,56 @@
                                         Add a Comment
                                     </MudButton>
                                 </MudTooltip>
-                                <MudSpacer />
+@*                                 <MudSpacer /> *@
                                 @if ((ViharaFund.Domain.Enums.TaskStatus)task.TaskStatus.Id == ViharaFund.Domain.Enums.TaskStatus.Pending)
                                 {
                                     <MudTooltip Text="Edit" Color="Color.Warning" Placement="Placement.Top">
-                                        <MudIconButton Variant="Variant.Filled"
-                                                       Icon="@Icons.Material.Filled.Edit"
+                                        <MudButton Variant="Variant.Outlined"
+                                                   StartIcon="@Icons.Material.Filled.Edit"
                                                        Size="Size.Small"
                                                        Color="Color.Warning"
                                                        OnClick="@(() => EditJobCard(task))"
-                                                       Class="m-1"></MudIconButton>
+                                                   Class="me-2 mb-2">Edit</MudButton>
                                     </MudTooltip>
                                     <MudTooltip Text="Delete" Color="Color.Error" Placement="Placement.Top">
-                                        <MudIconButton Variant="Variant.Filled"
-                                                       Icon="@Icons.Material.Filled.Delete"
+                                        <MudButton Variant="Variant.Outlined"
+                                                   StartIcon="@Icons.Material.Filled.Delete"
                                                        Size="Size.Small"
                                                        Color="Color.Error"
                                                        OnClick="@(() => DeleteJobCard(task))"
-                                                       Class="m-1"></MudIconButton>
+                                                   Class="me-2 mb-2">Delete</MudButton>
                                     </MudTooltip>
                                 }
                                 else if ((ViharaFund.Domain.Enums.TaskStatus)task.TaskStatus.Id == ViharaFund.Domain.Enums.TaskStatus.Approved)
                                 {
                                     <MudTooltip Text="Start Task" Color="Color.Info" Placement="Placement.Top">
-                                        <MudIconButton Variant="Variant.Filled"
-                                                       Icon="@Icons.Material.Filled.PlayArrow"
+                                        <MudButton Variant="Variant.Outlined"
+                                                   StartIcon="@Icons.Material.Filled.PlayArrow"
                                                        Size="Size.Small"
                                                        Color="Color.Success"
                                                        OnClick="@(() => StartJobCard(task))"
-                                                       Class="m-1"></MudIconButton>
+                                                   Class="me-2 mb-2">Start Task</MudButton>
                                     </MudTooltip>
                                 }
                                 else if ((ViharaFund.Domain.Enums.TaskStatus)task.TaskStatus.Id == ViharaFund.Domain.Enums.TaskStatus.OnGoing)
                                 {
                                     <MudTooltip Text="Mark As Completed" Color="Color.Secondary" Placement="Placement.Top">
-                                        <MudIconButton Variant="Variant.Filled"
-                                                       Icon="@Icons.Material.Filled.Check"
+                                        <MudButton Variant="Variant.Outlined"
+                                                   StartIcon="@Icons.Material.Filled.Check"
                                                        Size="Size.Small"
                                                        Color="Color.Secondary"
                                                        OnClick="@(() => CompleteTask(task))"
-                                                       Class="m-1"></MudIconButton>
+                                                   Class="me-2 mb-2">Complete</MudButton>
                                     </MudTooltip>
                                 }
-                                <MudTooltip Text="View Task Detail" Color="Color.Info" Placement="Placement.Top">
-                                    <MudIconButton Variant="Variant.Filled"
-                                                   Icon="@Icons.Material.Filled.Visibility"
-                                                   Size="Size.Small"
-                                                   Color="Color.Info"
-                                                   OnClick="@(() => ViewJobCard(task))"
-                                                   Class="m-1"></MudIconButton>
-                                </MudTooltip>
+
                                 <MudTooltip Text="Manage Task Images" Color="Color.Primary" Placement="Placement.Top">
-                                    <MudIconButton Variant="Variant.Filled"
-                                                   Icon="@Icons.Material.Filled.Image"
+                                    <MudButton Variant="Variant.Outlined"
+                                               StartIcon="@Icons.Material.Filled.Image"
                                                    Size="Size.Small"
                                                    Color="Color.Primary"
                                                    OnClick="@(() => ViewImages(task))"
-                                                   Class="m-1"></MudIconButton>
+                                               Class="me-2 mb-2">Task Images</MudButton>
                                 </MudTooltip>
                             </MudCardActions>
                         </MudCardContent>
@@ -271,6 +272,9 @@
 
     [Parameter]
     public string JobCardTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<bool> OnTasksUpdated { get; set; }
 
     private string searchString = "";
 
@@ -367,6 +371,7 @@
         if (!result.Canceled && result.Data is JobCardTaskDTO task)
         {
             await GetJobCardTaskAsync();
+            await OnTasksUpdated.InvokeAsync(true);
         }
     }
 
@@ -375,6 +380,7 @@
         var parameters = new DialogParameters<MakeAPaymentDialog>
         {
             { x => x.TaskId, task.Id },
+            { x => x.PaymentId, 0 },
             { x => x.TaskName, task.Title }
         };
 
@@ -394,6 +400,7 @@
 
             task.ActualAmount = task.ActualAmount + taskPayment.Amount;
             task.ProgressPercentage = task.EstimateAmount > 0 ? ((decimal)task.ActualAmount / (decimal)task.EstimateAmount) * 100 : 0;
+            await OnTasksUpdated.InvokeAsync(true);
         }
     }
 
@@ -409,6 +416,8 @@
             { x => x.JobCardId, JobCardId }
         };
 
+        parameters.Add("OnTaskDetailUpdated", EventCallback.Factory.Create<TaskDetailDTO>(this, HandleTaskDetailUpdated));
+
         var options = new DialogOptions
         {
             CloseButton = true,
@@ -422,8 +431,15 @@
 
         if (!result.Canceled && result.Data is JobCardTaskDTO viewTask)
         {
-
+            await OnTasksUpdated.InvokeAsync(true);
         }
+    }
+
+    private async Task HandleTaskDetailUpdated(TaskDetailDTO task)
+    {
+        await GetJobCardTaskAsync();
+        await OnTasksUpdated.InvokeAsync(true);
+        StateHasChanged();
     }
 
     private async Task EditJobCard(JobCardTaskSummaryDTO task)
@@ -452,6 +468,7 @@
         if (!result.Canceled && result.Data is JobCardTaskDTO updatedTask)
         {
             await GetJobCardTaskAsync();
+            await OnTasksUpdated.InvokeAsync(true);
         }
         // Open edit dialog
 
@@ -481,6 +498,7 @@
                 {
                     Snackbar.Add("Task deleted successfully!", Severity.Success);
                     await GetJobCardTaskAsync(); // Refresh the task list
+                    await OnTasksUpdated.InvokeAsync(true);
                 }
                 else
                 {
@@ -518,6 +536,7 @@
                 {
                     Snackbar.Add("Task started successfully!", Severity.Success);
                     await GetJobCardTaskAsync(); // Refresh the task list
+                    await OnTasksUpdated.InvokeAsync(true);
                 }
                 else
                 {
@@ -555,6 +574,7 @@
                 {
                     Snackbar.Add("Task mark as completed successfully!", Severity.Success);
                     await GetJobCardTaskAsync(); // Refresh the task list
+                    await OnTasksUpdated.InvokeAsync(true);
                 }
                 else
                 {
@@ -567,6 +587,7 @@
             }
         }
     }
+
     private async Task ViewImages(JobCardTaskSummaryDTO task)
     {
         var parameters = new DialogParameters<ManageTaskImageDialog>

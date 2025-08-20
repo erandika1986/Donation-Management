@@ -13,10 +13,21 @@
 <!-- Add/Edit JobCard Dialog -->
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Class="mr-3" />
-            @($"Make a Payment for Task {TaskName}")
-        </MudText>
+        @if (PaymentId > 0)
+        {
+            <MudText Typo="Typo.h6">
+                <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Class="mr-3" />
+                @($"Update existing Payment for Task {TaskName}")
+            </MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.h6">
+                <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Class="mr-3" />
+                @($"Make New Payment for Task {TaskName}")
+            </MudText>
+        }
+
     </TitleContent>
     <DialogContent>
         <MudForm @ref="form" @bind-IsValid="@isFormValid">
@@ -142,11 +153,15 @@
     private bool isProcessing = false;
     private bool isSubmitting = false;
 
+
     [Parameter] 
     public int MaxCommentLength { get; set; } = 500;
 
     [Parameter]
     public int TaskId { get; set; } = new();
+
+    [Parameter]
+    public int PaymentId { get; set; }
 
     [Parameter]
     public string TaskName { get; set; } = string.Empty;
@@ -166,7 +181,14 @@
     {
 
         await LoadMasterData();
-        Payment.TaskId = TaskId;
+        if (PaymentId > 0)
+        {
+            await LoadPaymentDetail();
+        }
+        else
+        {
+            Payment.TaskId = TaskId;
+        }
     }
 
     private async Task LoadMasterData()
@@ -174,6 +196,12 @@
         var masterData = await HttpClient.GetFromJsonAsync<TaskMasterDataDTO>($"api/JobCardTask/get-task-detail-master-data/{TaskId}") ?? new();
         PaymentUsers = masterData.AssignedGroupMembers ?? new List<DropDownDTO>();
         Payment.PaymentUser = PaymentUsers.FirstOrDefault(u => u.Id == masterData.CurrentUserId) ?? PaymentUsers.FirstOrDefault();
+    }
+
+    private async Task LoadPaymentDetail()
+    {
+        Payment = await HttpClient.GetFromJsonAsync<TaskPaymentDTO>($"api/JobCardTask/get-payment-detailBy-id/{PaymentId}") ?? new();
+        Payment.PaymentUser = PaymentUsers.FirstOrDefault(u => u.Id == Payment.PaymentUser.Id) ?? PaymentUsers.FirstOrDefault();
     }
 
     private void UploadFiles(IReadOnlyList<IBrowserFile> files)
@@ -210,8 +238,8 @@
         {
             var content = new MultipartFormDataContent();
 
-
             // add primitive fields
+            content.Add(new StringContent(Payment.Id.ToString()), nameof(TaskPaymentJsonDTO.Id));
             content.Add(new StringContent(Payment.TaskId.ToString()), nameof(TaskPaymentJsonDTO.TaskId));
             content.Add(new StringContent(Payment.Amount.ToString()), nameof(TaskPaymentJsonDTO.Amount));
             content.Add(new StringContent(Payment.Note ?? ""), nameof(TaskPaymentJsonDTO.Note));

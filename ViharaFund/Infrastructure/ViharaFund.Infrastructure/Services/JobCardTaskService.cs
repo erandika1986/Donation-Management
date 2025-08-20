@@ -196,6 +196,8 @@ namespace ViharaFund.Infrastructure.Services
                         {
                             Id = p.Id,
                             Amount = p.Amount,
+                            TaskId = p.JobCardTaskId,
+                            TaskName = p.JobCardTask.Title,
                             Note = p.Note,
                             PaymentBy = p.PaidByUser.FullName,
                             PaymentDate = p.CreatedDate.ToString("yyyy-MM-dd"),
@@ -251,37 +253,102 @@ namespace ViharaFund.Infrastructure.Services
 
         public async Task<ResultDto> MakePayment(TaskPaymentDTO payment)
         {
-            var taskPayment = new JobCardTaskPayment
+            var taskPayment = await tenantDbContext.JobCardTaskPayments
+                .Include(p => p.PaidByUser)
+                .Include(p => p.JobCardTask)
+                .Where(p => p.Id == payment.Id && p.IsActive)
+                .FirstOrDefaultAsync();
+            if (taskPayment == null)
             {
-                JobCardTaskId = payment.TaskId,
-                Amount = payment.Amount,
-                PaidById = payment.PaymentUser.Id,
-                Note = payment.Note,
-                BillingPeriod = payment.BillingPeriod,
-                CreatedDate = dateTime.UtcNow,
-                CreatedByUserId = currentUserService.UserId,
-                UpdatedDate = dateTime.UtcNow,
-                UpdatedByUserId = currentUserService.UserId,
-                IsActive = true
-            };
-
-
-            foreach (var file in payment.Files)
-            {
-                var uploadResult = await UploadFileToAzureBlob(file);
-
-                taskPayment.JobCardTaskPaymentAttachments.Add(new JobCardTaskPaymentAttachment
+                taskPayment = new JobCardTaskPayment
                 {
-                    FileName = uploadResult.Item1,
-                    FilePath = uploadResult.Item2
-                });
-            }
+                    JobCardTaskId = payment.TaskId,
+                    Amount = payment.Amount,
+                    PaidById = payment.PaymentUser.Id,
+                    Note = payment.Note,
+                    BillingPeriod = payment.BillingPeriod,
+                    CreatedDate = dateTime.UtcNow,
+                    CreatedByUserId = currentUserService.UserId,
+                    UpdatedDate = dateTime.UtcNow,
+                    UpdatedByUserId = currentUserService.UserId,
+                    IsActive = true
+                };
 
-            tenantDbContext.JobCardTaskPayments.Add(taskPayment);
+                foreach (var file in payment.Files)
+                {
+                    var uploadResult = await UploadFileToAzureBlob(file);
+
+                    taskPayment.JobCardTaskPaymentAttachments.Add(new JobCardTaskPaymentAttachment
+                    {
+                        FileName = uploadResult.Item1,
+                        FilePath = uploadResult.Item2
+                    });
+                }
+
+                tenantDbContext.JobCardTaskPayments.Add(taskPayment);
+            }
+            else
+            {
+                taskPayment.Amount = payment.Amount;
+                taskPayment.PaidById = payment.PaymentUser.Id;
+                taskPayment.Note = payment.Note;
+                taskPayment.BillingPeriod = payment.BillingPeriod;
+                taskPayment.UpdatedDate = dateTime.UtcNow;
+                taskPayment.UpdatedByUserId = currentUserService.UserId;
+
+                foreach (var file in payment.Files)
+                {
+                    var uploadResult = await UploadFileToAzureBlob(file);
+
+                    taskPayment.JobCardTaskPaymentAttachments.Add(new JobCardTaskPaymentAttachment
+                    {
+                        FileName = uploadResult.Item1,
+                        FilePath = uploadResult.Item2
+                    });
+                }
+
+                tenantDbContext.JobCardTaskPayments.Update(taskPayment);
+            }
 
             await tenantDbContext.SaveChangesAsync();
 
             return ResultDto.Success("Payment saved successfully.", payment.TaskId);
+        }
+
+        public async Task<ResultDto> DeletePayment(int paymentId)
+        {
+            var taskPayment = await tenantDbContext.JobCardTaskPayments
+                .Where(p => p.Id == paymentId && p.IsActive)
+                .FirstOrDefaultAsync();
+
+            taskPayment.IsActive = false;
+            taskPayment.UpdatedDate = dateTime.UtcNow;
+            taskPayment.UpdatedByUserId = currentUserService.UserId;
+
+            tenantDbContext.JobCardTaskPayments.Update(taskPayment);
+            await tenantDbContext.SaveChangesAsync();
+
+            return ResultDto.Success("Payment deleted successfully.", taskPayment.JobCardTaskId);
+        }
+
+        public async Task<TaskPaymentDTO> GetPaymentDetailById(int paymentId)
+        {
+            var payment = await tenantDbContext.JobCardTaskPayments
+                .Include(p => p.PaidByUser)
+                .Include(p => p.JobCardTask)
+                .Where(p => p.Id == paymentId && p.IsActive)
+                .Select(p => new TaskPaymentDTO
+                {
+                    Id = p.Id,
+                    TaskId = p.JobCardTaskId,
+                    Amount = p.Amount,
+                    PaymentUser = new DropDownDTO { Id = p.PaidByUser.Id, Name = p.PaidByUser.FullName },
+                    Note = p.Note,
+                    BillingPeriod = p.BillingPeriod,
+                    PaymentDate = p.UpdatedDate
+                })
+                .FirstOrDefaultAsync();
+            return payment;
         }
 
         public async Task<ResultDto> StartTask(int taskId)

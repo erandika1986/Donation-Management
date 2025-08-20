@@ -71,5 +71,7 @@ namespace ViharaFund.Application.DTOs.JobCardTask
         public string PaymentBy { get; set; } = string.Empty;
         public string PaymentDate { get; set; } = string.Empty;
         public string BillingPeriod { get; set; } = string.Empty;
+        public int TaskId { get; set; }
+        public string TaskName { get; set; } = string.Empty;
     }
 }

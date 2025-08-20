@@ -745,6 +745,8 @@
             { x => x.JobCardStatus, jobCard.Status}
         };
 
+        parameters.Add("OnTasksUpdated", EventCallback.Factory.Create<bool>(this, HandleTasksUpdated));
+
         var options = new DialogOptions
         {
             CloseButton = true,
@@ -761,6 +763,16 @@
         {
             await GetJobCardsSummaryAsync();
         }
+    }
+
+    private async Task HandleTasksUpdated(bool hasRefresh)
+    {
+        if(hasRefresh)
+        {
+            await GetJobCardsSummaryAsync();
+            StateHasChanged();
+        }
+
     }
 
     private async Task SubmitForApprovalAsync(JobCardSummaryDTO jobCard)

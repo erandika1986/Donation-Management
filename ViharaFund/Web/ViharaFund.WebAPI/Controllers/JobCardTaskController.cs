@@ -190,6 +190,7 @@ namespace ViharaFund.WebAPI.Controllers
 
             var payment = new TaskPaymentDTO()
             {
+                Id = request.Id,
                 TaskId = request.TaskId,
                 Amount = request.Amount,
                 Note = request.Note,
@@ -204,6 +205,20 @@ namespace ViharaFund.WebAPI.Controllers
             if (result.Succeeded)
                 return Ok(result);
             return BadRequest(result);
+        }
+
+        [HttpGet("get-payment-detailBy-id/{paymentId}")]
+        public async Task<IActionResult> GetPaymentDetailById(int paymentId)
+        {
+            var result = await _jobCardTaskService.GetPaymentDetailById(paymentId);
+            return Ok(result);
+        }
+
+        [HttpDelete("delete-payment/{paymentId}")]
+        public async Task<IActionResult> DeletePayment(int paymentId)
+        {
+            var result = await _jobCardTaskService.DeletePayment(paymentId);
+            return Ok(result);
         }
 
 
