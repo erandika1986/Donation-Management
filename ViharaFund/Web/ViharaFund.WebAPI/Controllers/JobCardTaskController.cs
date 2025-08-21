@@ -20,10 +20,10 @@ namespace ViharaFund.WebAPI.Controllers
         }
 
 
-        [HttpGet("get-all/{jobCardId}")]
-        public async Task<IActionResult> GetAllByJobCardId(int jobCardId)
+        [HttpGet("get-all")]
+        public async Task<IActionResult> GetAllByJobCardId([FromQuery] JobTaskFilterDTO filter)
         {
-            var result = await _jobCardTaskService.GetAllByJobCardId(jobCardId);
+            var result = await _jobCardTaskService.GetAllByJobCardId(filter);
             return Ok(result);
         }
 

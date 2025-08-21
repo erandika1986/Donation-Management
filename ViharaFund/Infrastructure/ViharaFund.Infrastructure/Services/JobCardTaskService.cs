@@ -114,14 +114,30 @@ namespace ViharaFund.Infrastructure.Services
             return ResultDto.Success("Task deleted successfully.", task.Id);
         }
 
-        public async Task<List<JobCardTaskSummaryDTO>> GetAllByJobCardId(int jobCardId)
+        public async Task<List<JobCardTaskSummaryDTO>> GetAllByJobCardId(JobTaskFilterDTO filter)
         {
             var defaultCurrencyTypeId = tenantDbContext.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.DefaultCurrencyId);
             var defaultCurrencyType = await tenantDbContext.CurrencyTypes
                 .FirstOrDefaultAsync(x => x.Id == Convert.ToInt32(defaultCurrencyTypeId.Value));
+            var query = tenantDbContext.JobCardTasks
+                .Include(t => t.JobCard)
+                .Include(t => t.CreatedByUser)
+                .Include(t => t.JobCardTaskPayments)
+                .ThenInclude(p => p.PaidByUser)
+                .Where(t => t.JobCardId == filter.JobCardId && t.IsActive);
 
-            var tasks = await tenantDbContext.JobCardTasks
-                .Where(t => t.JobCardId == jobCardId && t.IsActive)
+            if (filter.TaskStatus > 0)
+            {
+                query = query.Where(t => t.TaskStatus == (Domain.Enums.TaskStatus)filter.TaskStatus);
+            }
+
+            if (!string.IsNullOrEmpty(filter.SearchText))
+            {
+                query = query.Where(t => t.Title.Contains(filter.SearchText) || t.Description.Contains(filter.SearchText));
+            }
+
+            var tasks = await query
+                .Where(t => t.JobCardId == filter.JobCardId && t.IsActive)
                 .Select(t => new JobCardTaskSummaryDTO
                 {
                     Id = t.Id,

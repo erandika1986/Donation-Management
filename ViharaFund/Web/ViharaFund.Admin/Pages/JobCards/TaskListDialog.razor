@@ -208,25 +208,32 @@
                                 }
                                 else if ((ViharaFund.Domain.Enums.TaskStatus)task.TaskStatus.Id == ViharaFund.Domain.Enums.TaskStatus.Approved)
                                 {
-                                    <MudTooltip Text="Start Task" Color="Color.Info" Placement="Placement.Top">
-                                        <MudButton Variant="Variant.Outlined"
+                                    @if (JobCardStatus == Domain.Enums.JobCardStatus.OnGoing)
+                                    {
+                                        <MudTooltip Text="Start Task" Color="Color.Info" Placement="Placement.Top">
+                                            <MudButton Variant="Variant.Outlined"
                                                    StartIcon="@Icons.Material.Filled.PlayArrow"
                                                        Size="Size.Small"
                                                        Color="Color.Success"
                                                        OnClick="@(() => StartJobCard(task))"
                                                    Class="me-2 mb-2">Start Task</MudButton>
-                                    </MudTooltip>
+                                        </MudTooltip>
+                                    }
                                 }
                                 else if ((ViharaFund.Domain.Enums.TaskStatus)task.TaskStatus.Id == ViharaFund.Domain.Enums.TaskStatus.OnGoing)
                                 {
-                                    <MudTooltip Text="Mark As Completed" Color="Color.Secondary" Placement="Placement.Top">
-                                        <MudButton Variant="Variant.Outlined"
-                                                   StartIcon="@Icons.Material.Filled.Check"
+                                    @if (JobCardStatus == Domain.Enums.JobCardStatus.OnGoing)
+                                    {
+                                        <MudTooltip Text="Mark As Completed" Color="Color.Secondary" Placement="Placement.Top">
+                                            <MudButton Variant="Variant.Outlined"
+                                                       StartIcon="@Icons.Material.Filled.Check"
                                                        Size="Size.Small"
                                                        Color="Color.Secondary"
                                                        OnClick="@(() => CompleteTask(task))"
-                                                   Class="me-2 mb-2">Complete</MudButton>
-                                    </MudTooltip>
+                                                       Class="me-2 mb-2">Complete</MudButton>
+                                        </MudTooltip>
+                                    }
+
                                 }
 
                                 <MudTooltip Text="Manage Task Images" Color="Color.Primary" Placement="Placement.Top">
@@ -304,7 +311,17 @@
 
     private async Task GetJobCardTaskAsync()
     {
-        Tasks = await HttpClient.GetFromJsonAsync<List<JobCardTaskSummaryDTO>>($"api/JobCardTask/get-all/{JobCardId}") ?? new();
+        var parameters = new JobTaskFilterDTO
+        {
+            JobCardId = JobCardId,
+            SearchText = searchString,
+            TaskStatus = SelectedTaskStatus?.Id ?? 0,
+        };
+
+        var queryString = QueryStringHelper.ToQueryString(parameters);
+
+        var url = $"api/JobCardTask/get-all/?{queryString}";
+        Tasks = await HttpClient.GetFromJsonAsync<List<JobCardTaskSummaryDTO>>(url) ?? new();
 
         StateHasChanged();
     }
@@ -426,7 +443,7 @@
             BackdropClick = true
         };
 
-        var dialog = await DialogService.ShowAsync<TaskDetailDialog>("View Task", parameters, options);
+        var dialog = await DialogService.ShowAsync<TaskDetailDialog>(string.Empty, parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is JobCardTaskDTO viewTask)

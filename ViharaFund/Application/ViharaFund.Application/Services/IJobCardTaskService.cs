@@ -12,7 +12,7 @@ namespace ViharaFund.Application.Services
         Task<ResultDto> Delete(int id);
         Task<JobCardTaskDTO> GetById(int id);
         Task<TaskDetailDTO> GetDetailById(int id);
-        Task<List<JobCardTaskSummaryDTO>> GetAllByJobCardId(int jobCardId);
+        Task<List<JobCardTaskSummaryDTO>> GetAllByJobCardId(JobTaskFilterDTO filter);
         Task<ResultDto> UploadJobCardTaskAttachment(UploadFileDTO upload);
         Task<ResultDto> DeleteJobCardTaskAttachment(int jobCardTaskId, string fileName);
         Task<ResultDto> AddJobCardTaskComment(TaskCommentDTO taskComment);

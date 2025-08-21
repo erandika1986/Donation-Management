@@ -271,7 +271,7 @@ namespace ViharaFund.Infrastructure.Services
 
             await jobCardHistoryService.SaveAsync(entity);
 
-            entity.AssignGroupId = (int)RoleName.ChiefMonk;
+            //entity.AssignGroupId = (int)RoleName.ChiefMonk;
             entity.Status = Domain.Enums.JobCardStatus.PendingApproval;
             entity.UpdatedDate = DateTime.UtcNow;
             entity.UpdatedByUserId = currentUserService.UserId;
@@ -696,11 +696,12 @@ namespace ViharaFund.Infrastructure.Services
                     Id = NumberConstant.Zero,
                     Name = "All"
                 },
-                new DropDownDTO
-                {
-                    Id = NumberConstant.MinusOne,
-                    Name = "Not Assigned"
-                }});
+                //new DropDownDTO
+                //{
+                //    Id = NumberConstant.MinusOne,
+                //    Name = "Not Assigned"
+                //}
+            });
 
             foreach (JobPriority jobPriority in Enum.GetValues(typeof(JobPriority)))
             {

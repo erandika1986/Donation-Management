@@ -13,11 +13,11 @@
     <TitleContent>
         <MudText Typo="Typo.h6">
             <MudIcon Icon="@Icons.Material.Filled.Visibility" Class="mr-3" />
-            @("Task Detail")
+            Task Detail For : @JobTask.Title
         </MudText>
     </TitleContent>
     <DialogContent>
-<MudPaper Class="pa-0" Elevation="1">
+<MudPaper Class="p-2" Elevation="1">
         <MudGrid>
             <!-- Description -->
             <MudItem xs="12">
@@ -124,10 +124,15 @@
                               ReadOnly="IsViewOnly"
                               Lines="3"
                               Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              HelperText="Optional additional notes..." />
+                              Margin="Margin.Dense" />
             </MudItem>
         </MudGrid>
+        </MudPaper>
+        <MudSpacer />
+        <MudPaper Class="pt-1">
+            <MudItem xs="12" sm="12" md="12" lg="12">
+                <MudText Typo="Typo.h6">Task Payment Details</MudText>
+            </MudItem>
         </MudPaper>
         <MudPaper Class="pa-0" Elevation="1">
             <!-- Groups Table -->
@@ -200,7 +205,7 @@
                     </MudTd>
                 </RowTemplate>
                 <NoRecordsContent>
-                    <MudText>No groups found. Click "Add New Group" to create your first group.</MudText>
+                    <MudText>No payment records found.</MudText>
                 </NoRecordsContent>
             </MudTable>
         </MudPaper>
@@ -255,6 +260,7 @@
     private async Task LoadJobTask()
     {
         JobTask = await HttpClient.GetFromJsonAsync<TaskDetailDTO>($"api/JobCardTask/get-detail-by-id/{TaskId}") ?? new();
+        StateHasChanged();
     }
 
     private void CloseDialog()
