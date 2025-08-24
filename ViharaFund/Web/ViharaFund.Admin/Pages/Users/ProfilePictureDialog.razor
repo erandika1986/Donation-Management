@@ -1,0 +1,117 @@
+﻿@using MudBlazor
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Image" Class="mr-3" />
+            @("Upload Profile Picture For ") @Username
+        </MudText>
+    </TitleContent>
+    <DialogContent>        
+        <InputFile OnChange="OnInputFileChange" class="mb-2" />
+        
+        @if (!string.IsNullOrEmpty(previewUrl))
+        {
+            <div style="width:100%; max-height:400px; overflow:hidden">
+                <img id="cropperImage" src="@previewUrl" style="max-width:100%" />
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CropAndUpload" Disabled="@string.IsNullOrEmpty(previewUrl)" Color="Color.Primary" Variant="Variant.Filled">Upload</MudButton>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public int UserId { get; set; } = new();
+
+    [Parameter]
+    public string Username { get; set; }
+
+    private IBrowserFile selectedFile;
+    private string previewUrl;
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        var buffer = new byte[file.Size];
+        await file.OpenReadStream().ReadAsync(buffer);
+        previewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+
+        shouldInitCropper = true;
+        StateHasChanged();
+        // await Task.Delay(50); // give time for image to render
+        // await JS.InvokeVoidAsync("cropperFunctions.init", await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "cropperImage"));
+    }
+
+    private bool shouldInitCropper;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (shouldInitCropper && !string.IsNullOrEmpty(previewUrl))
+        {
+            shouldInitCropper = false; // prevent repeat calls
+            await JS.InvokeVoidAsync("cropperFunctions.init",
+                await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "cropperImage"));
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+
+    // private async Task UploadFile()
+    // {
+    //     if (selectedFile is null)
+    //         return;
+
+    //     using var content = new MultipartFormDataContent();
+    //     var fileContent = new StreamContent(selectedFile.OpenReadStream(maxAllowedSize: 10_000_000)); // 10 MB limit
+    //     fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(selectedFile.ContentType);
+
+    //     content.Add(fileContent, "file", selectedFile.Name);
+
+    //     var response = await Http.PostAsync("https://localhost:5001/api/profile/upload-profile-picture", content);
+    //     if (response.IsSuccessStatusCode)
+    //     {
+    //         var result = await response.Content.ReadFromJsonAsync<UploadResult>();
+    //         Snackbar.Add("Profile picture uploaded!", Severity.Success);
+    //         MudDialog.Close(DialogResult.Ok(result.FilePath));
+    //     }
+    //     else
+    //     {
+    //         Snackbar.Add("Upload failed!", Severity.Error);
+    //     }
+    // }
+
+    private async Task CropAndUpload()
+    {
+        var croppedBase64 = await JS.InvokeAsync<string>("cropperFunctions.getCroppedImage");
+        if (string.IsNullOrEmpty(croppedBase64))
+            return;
+
+        // Convert Base64 to byte[] for API
+        var imageBytes = Convert.FromBase64String(croppedBase64.Replace("data:image/png;base64,", ""));
+
+        using var content = new MultipartFormDataContent();
+        content.Add(new ByteArrayContent(imageBytes), "file", "profile.png");
+
+        var response = await Http.PostAsync($"api/User/upload-profile-picture/{UserId}", content);
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<UploadResult>();
+            MudDialog.Close(DialogResult.Ok(result.FilePath));
+        }
+    }
+
+    public class UploadResult
+    {
+        public string FilePath { get; set; }
+    }
+}

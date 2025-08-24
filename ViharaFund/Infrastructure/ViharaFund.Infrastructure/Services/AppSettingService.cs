@@ -20,7 +20,7 @@ namespace ViharaFund.Infrastructure.Services
 
             var companyName = context.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.CompanyName);
 
-            var leaveRequestCCList = context.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.LeaveRequestCCList);
+            var defaultUserProfileImageUrl = context.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.DefaultUserImagePath);
 
             var isPasswordLoginEnable = context.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.IsPasswordLoginEnable);
 
@@ -36,7 +36,7 @@ namespace ViharaFund.Infrastructure.Services
                 CompanyAddress = companyAddress.Value,
                 CompanyLogoUrl = companyLogoUrl.Value,
                 CompanyName = companyName.Value,
-                LeaveRequestCCList = leaveRequestCCList.Value,
+                DefaultUserProfileImageUrl = defaultUserProfileImageUrl.Value,
                 CompanyWebSiteUrl = companyWebSiteUrl.Value,
                 CompanyEmail = companyEmail.Value,
                 CompanyPhone = companyPhone.Value,
@@ -85,13 +85,13 @@ namespace ViharaFund.Infrastructure.Services
                 var companyName = await context.AppSettings.FirstOrDefaultAsync(x => x.Name == CompanySettingConstants.CompanyName);
                 companyName.Value = companyDetail.CompanyName;
 
-                var leaveRequestCCList = await context.AppSettings.FirstOrDefaultAsync(x => x.Name == CompanySettingConstants.LeaveRequestCCList);
-                leaveRequestCCList.Value = companyDetail.LeaveRequestCCList;
+                var defaultUserImagePath = await context.AppSettings.FirstOrDefaultAsync(x => x.Name == CompanySettingConstants.DefaultUserImagePath);
+                defaultUserImagePath.Value = companyDetail.DefaultUserProfileImageUrl;
 
                 var companyWebSiteUrl = await context.AppSettings.FirstOrDefaultAsync(x => x.Name == CompanySettingConstants.CompanyWebsiteUrl);
                 companyWebSiteUrl.Value = companyDetail.CompanyWebSiteUrl;
 
-                context.AppSettings.UpdateRange(new List<AppSetting> { applicationUrl, companyAddress, companyLogoUrl, companyName, leaveRequestCCList, companyWebSiteUrl });
+                context.AppSettings.UpdateRange(new List<AppSetting> { applicationUrl, companyAddress, companyLogoUrl, companyName, defaultUserImagePath, companyWebSiteUrl });
 
                 await context.SaveChangesAsync(CancellationToken.None);
 

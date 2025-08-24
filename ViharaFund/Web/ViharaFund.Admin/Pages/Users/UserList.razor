@@ -112,7 +112,22 @@
                 </ToolBarContent>
 
                 <Columns>
-                    <PropertyColumn Property="x => x.Id" Title="ID" />
+                    <TemplateColumn Title="" Sortable="false">
+                        <CellTemplate>
+                            <div class="cursor-pointer" 
+             @onclick="@(() => UploadProfileImage(context.Item))">
+                                <MudAvatar Size="Size.Large" Class="avatar-stretch" >
+                                    <MudImage Src="@context.Item.ProfilePictureURL"></MudImage>
+                                </MudAvatar>
+         </div>
+
+@*                             <MudChip Color="@(context.Item.IsActive? Color.Success: Color.Error)"
+                                     Size="Size.Small"
+                                     Variant="Variant.Filled">
+                                @(context.Item.IsActive ? "Active" : "Inactive")
+                            </MudChip> *@
+                        </CellTemplate>
+                    </TemplateColumn>
 
                     <PropertyColumn Property="x => x.FullName" Title="Full Name" />
 
@@ -157,6 +172,13 @@
                                                    Variant="Variant.Filled"
                                                    Title="Edit User"
                                                    OnClick="@(() => EditUser(user.Item))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Change Profile Image" Color="Color.Surface" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.UploadFile"
+                                                   Color="Color.Surface"
+                                                   Variant="Variant.Filled"
+                                                   Title="Upload Profile Image"
+                                                   OnClick="@(() => UploadProfileImage(user.Item))" />
                                 </MudTooltip>
                                 <MudTooltip Text="Update User Password" Color="Color.Warning" Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.Key"
@@ -215,7 +237,17 @@
 
     }
 </MudContainer>
+<style>
+    .avatar-container {
+        width: 200px;
+        height: 200px;
+    }
 
+    .full-avatar {
+        width: 100% !important;
+        height: 100% !important;
+    }
+</style>
 @code {
     private List<UserDTO> users = new();
     private List<UserDTO> filteredUsers = new();
@@ -240,7 +272,7 @@
         try
         {
             // Load your master data
-            Roles = await HttpClient.GetFromJsonAsync<List<DropDownDTO>>("api/User/getAvailableRoles") ?? new();
+            Roles = await HttpClient.GetFromJsonAsync<List<DropDownDTO>>("api/User/get-available-roles") ?? new();
             SelectedRole = Roles.FirstOrDefault();
 
             _isMasterDataLoaded = true;
@@ -291,7 +323,7 @@
             };
 
             var queryString = QueryStringHelper.ToQueryString(parameters);
-            var url = $"api/user/getAll?{queryString}";
+            var url = $"api/user/get-all?{queryString}";
 
             var response = await HttpClient.GetFromJsonAsync<PaginatedResultDTO<UserDTO>>(url) ?? new();
             TotalRecords = response.TotalItems;
@@ -331,6 +363,30 @@
         if (!result.Canceled && result.Data is UserDTO newUser)
         {
             await CreateUser(newUser);
+        }
+    }
+
+    private async Task UploadProfileImage(UserDTO user)
+    {
+        var parameters = new DialogParameters<ProfilePictureDialog>
+        {
+            { x => x.UserId, user.Id },
+            { x => x.Username, user.FullName }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = false
+        };
+
+        var dialog = await DialogService.ShowAsync<ProfilePictureDialog>("Edit Profile Picture", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Canceled && result.Data is string url)
+        {
+            //ProfilePictureUrl = url;
         }
     }
 

@@ -65,6 +65,7 @@
                             <div class="d-flex flex-wrap gap-2 mb-3">
                                 @foreach (var user in Group.Users)
                                 {
+                                    <img src="@user.ImageUrl" height="32" class="mr-1" />
                                     <MudChip T="string" Color="Color.Primary"
                                              OnClose="@(() => RemoveUser(user))">
                                         @user.Name
@@ -86,9 +87,12 @@
                                    Variant="Variant.Outlined"
                                    Margin="Margin.Dense"
                                    Clearable="true">
-                            @foreach (var user in AvailableUsers.Where(u => !Group.Users.Any(gu => gu.Id == u.Id)))
+
+                           @foreach (var user in AvailableUsers.Where(u => !Group.Users.Any(gu => gu.Id == u.Id)))
                             {
-                                <MudSelectItem T="DropDownDTO" Value="@user">@user.Name</MudSelectItem>
+                                <MudSelectItem T="DropDownDTO" Value="@user">
+                                    <img src="@user.ImageUrl" height="32" class="mr-1" /> @user.Name
+                                </MudSelectItem>
                             }
                         </MudSelect>
 

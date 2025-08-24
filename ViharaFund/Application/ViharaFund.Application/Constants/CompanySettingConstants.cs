@@ -22,6 +22,7 @@
         public const string SalarySlipFolderPath = "SalarySlipFolderPath";
         public const string InvoiceFolderPath = "InvoiceFolderPath";
         public const string DefaultCurrencyId = "DefaultCurrencyId";
+        public const string DefaultUserImagePath = "DefaultUserImagePath";
 
     }
 }

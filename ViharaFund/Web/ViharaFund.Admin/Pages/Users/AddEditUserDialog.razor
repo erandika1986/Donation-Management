@@ -122,12 +122,14 @@
         await LoadMasterDataAsync();
     }
 
+
+
     private async Task LoadMasterDataAsync()
     {
         try
         {
             // Load your master data
-            Roles = await HttpClient.GetFromJsonAsync<List<DropDownDTO>>("api/User/getAvailableRoles") ?? new();
+            Roles = await HttpClient.GetFromJsonAsync<List<DropDownDTO>>("api/User/get-available-roles") ?? new();
             if(IsEdit && User != null)
             {
                 SelectedRoles = Roles.Where(x => User.AssignedRoles.Contains(x.Id)).ToHashSet();

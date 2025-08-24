@@ -12,6 +12,7 @@ namespace ViharaFund.Domain.Entities.Tenant
         public DateTime? DOB { get; set; }
         public DateTime? LastLoggedIn { get; set; }
         public bool IsDeleted { get; set; }
+        public string? ProfilePictureURL { get; set; }
 
         public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
         public virtual ICollection<GroupUser> GroupUsers { get; set; } = new HashSet<GroupUser>();

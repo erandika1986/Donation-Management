@@ -8,26 +8,26 @@
 @inject IDialogService DialogService
 
 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-    <MudTabPanel Text="Company Details" Icon="@Icons.Material.Filled.Home">
+    <MudTabPanel Text="Organization Details" Icon="@Icons.Material.Filled.Home">
         <MudGrid>
             <MudItem xs="12" sm="12">
                 <MudPaper Class="pa-2">
                     <MudForm @ref="formCompanyDetail" @bind-IsValid="@companyDetailSuccess" @bind-Errors="@companyDetailErrors">
                         <MudGrid>
                             <MudItem xs="12" sm="6" md="6" lg="6">
-                                <MudTextField T="string" Label="Company Name" @bind-Value="CompanyDetail.CompanyName" Required="true" RequiredError="Company name is required!" />
+                                <MudTextField T="string" Label="Company Name" @bind-Value="CompanyDetail.CompanyName" Required="true" RequiredError="Organization name is required!" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="6" lg="6">
-                                <MudTextField T="string" Label="Company Address" @bind-Value="CompanyDetail.CompanyAddress" Required="true" RequiredError="Company address is required!" />
+                                <MudTextField T="string" Label="Company Address" @bind-Value="CompanyDetail.CompanyAddress" Required="true" RequiredError="Organization address is required!" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="6" lg="6">
-                                <MudTextField T="string" Label="Company Logo Url" @bind-Value="CompanyDetail.CompanyLogoUrl" Required="true" RequiredError="Company Logo Url is required!" />
+                                <MudTextField T="string" Label="Company Logo Url" @bind-Value="CompanyDetail.CompanyLogoUrl" Required="true" RequiredError="Organization Logo Url is required!" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="6" lg="6">
                                 <MudTextField T="string" Label="Application Url" @bind-Value="CompanyDetail.ApplicationUrl" Required="true" RequiredError="Application Url is required!" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="6" lg="6">
-                                <MudTextField T="string" Label="Leave Request CC List" @bind-Value="CompanyDetail.LeaveRequestCCList" Required="true" RequiredError="Leave Request CC is required!" />
+                                <MudTextField T="string" Label="Default User Image Url" @bind-Value="CompanyDetail.DefaultUserProfileImageUrl" Required="true" RequiredError="Leave Request CC is required!" />
                             </MudItem>
                         </MudGrid>
                     </MudForm>

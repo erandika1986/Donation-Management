@@ -87,7 +87,7 @@
                             <div class="d-flex flex-wrap gap-1">
                                 @foreach (var user in context.Users.Take(3))
                                 {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@user.Name</MudChip>
+                                                                        <img src="@user.ImageUrl" height="32" class="mr-1" /><MudChip T="string" Size="Size.Small" Color="Color.Secondary">@user.Name</MudChip>
                                 }
                                 @if (context.Users.Count > 3)
                                 {

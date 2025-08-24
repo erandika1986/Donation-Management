@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.DTOs.User;
 using ViharaFund.Application.Services;
 using ViharaFund.Shared.DTOs.User;
@@ -20,7 +21,7 @@ namespace ViharaFund.WebAPI.Controllers
         }
 
 
-        [HttpGet("getAll")]
+        [HttpGet("get-all")]
         public async Task<IActionResult> GetAll([FromQuery] UserFilterDTO filter)
         {
             var result = await userService.GetAllAsync(filter);
@@ -28,7 +29,7 @@ namespace ViharaFund.WebAPI.Controllers
         }
 
 
-        [HttpGet("getById/{id:int}")]
+        [HttpGet("get-by-id/{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var user = await userService.GetByIdAsync(id);
@@ -64,6 +65,30 @@ namespace ViharaFund.WebAPI.Controllers
                 return BadRequest(result);
 
             return Ok(result);
+        }
+
+        [HttpPost]
+        [RequestSizeLimit(long.MaxValue)]
+        [Route("upload-profile-picture/{userId}")]
+        public async Task<IActionResult> UploadProfilePicture(int userId)
+        {
+            var request = await Request.ReadFormAsync();
+
+            if (request.Files.Any())
+            {
+                var file = request.Files[0];
+
+                var imageUrl = await userService.UploadProfilePicture(userId, file);
+
+                return Ok(new { FilePath = imageUrl });
+            }
+            else
+            {
+                return BadRequest(ResultDto.Failure(new List<string>()
+                    {
+                        "Bad Request"
+                    }));
+            }
         }
 
 

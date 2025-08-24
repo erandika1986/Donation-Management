@@ -39,19 +39,20 @@
         Reports
     </MudNavLink>
 
-    <MudNavLink Href="/notifications"
+@*     <MudNavLink Href="/notifications"
                 Icon="@Icons.Material.Filled.Notifications"
                 IconColor="Color.Warning"
                 Badge="3"
                 BadgeColor="Color.Error">
         Notifications
-    </MudNavLink>
+    </MudNavLink> *@
 
     <MudDivider Class="my-2" />
 
     <MudNavGroup Title="Admin" Expanded="true" Icon="@Icons.Material.Filled.AdminPanelSettings" IconColor="Color.Error">
         <MudNavLink Href="users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person" IconColor="Color.Info">Users</MudNavLink>
         <MudNavLink Href="group-management" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Groups" IconColor="Color.Info">Group</MudNavLink>
+        <MudNavLink Href="data-upload" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.UploadFile" IconColor="Color.Info">Data Upload</MudNavLink>
 @*         <MudNavLink Href="Users/MonthlySalaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Redeem" IconColor="Color.Warning">Donor Purpose</MudNavLink> *@
         <MudNavLink Href="setting" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings" IconColor="Color.Dark">Setting</MudNavLink>
     </MudNavGroup>

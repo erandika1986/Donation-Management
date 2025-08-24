@@ -74,7 +74,8 @@ namespace ViharaFund.Infrastructure.Data
                     new AppSetting() { Name = CompanySettingConstants.IsPasswordLoginEnable, Value = "False"},
                     new AppSetting() { Name = CompanySettingConstants.SalarySlipFolderPath, Value = "C:\\WordDocuments\\"},
                     new AppSetting() { Name = CompanySettingConstants.InvoiceFolderPath, Value = "C:\\InvoiceFolderPath\\"},
-                    new AppSetting() { Name = CompanySettingConstants.DefaultCurrencyId, Value = "1"}
+                    new AppSetting() { Name = CompanySettingConstants.DefaultCurrencyId, Value = "1"},
+                    new AppSetting() { Name = CompanySettingConstants.DefaultUserImagePath, Value = "https://schoolmanagement.blob.core.windows.net/viharafund/default-user.png"}
                 };
                 await _context.AppSettings.AddRangeAsync(appSettings);
 

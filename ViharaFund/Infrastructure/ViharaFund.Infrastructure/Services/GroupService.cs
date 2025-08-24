@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ViharaFund.Application.Constants;
 using ViharaFund.Application.Contracts;
 using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.Services;
@@ -55,6 +56,8 @@ namespace ViharaFund.Infrastructure.Services
 
         public async Task<List<GroupDTO>> GetAllGroups()
         {
+            var defaultUserImage = await tenantDbContext.AppSettings.FirstOrDefaultAsync(x => x.Name == CompanySettingConstants.DefaultUserImagePath);
+
             var groups = await tenantDbContext.Groups
                 .Select(g => new GroupDTO
                 {
@@ -66,7 +69,8 @@ namespace ViharaFund.Infrastructure.Services
                     Users = g.GroupUsers.Select(gu => new DropDownDTO
                     {
                         Id = gu.UserId,
-                        Name = gu.User.FullName
+                        Name = gu.User.FullName,
+                        ImageUrl = string.IsNullOrEmpty(gu.User.ProfilePictureURL) ? defaultUserImage.Value : gu.User.ProfilePictureURL
                     }).ToList()
                 })
                 .ToListAsync();

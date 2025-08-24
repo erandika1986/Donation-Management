@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using ViharaFund.Application.Constants;
 using ViharaFund.Application.Contracts;
 using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.DTOs.User;
@@ -12,6 +15,8 @@ namespace ViharaFund.Infrastructure.Services
     public class UserService(
         TenantDbContext tenantDbContext,
         IDateTime dateTime,
+        IConfiguration configuration,
+        IAzureBlobService azureBlobService,
         ICurrentUserService currentUserService) : IUserService
     {
         public async Task<ResultDto> DeleteAsync(int userId)
@@ -50,6 +55,8 @@ namespace ViharaFund.Infrastructure.Services
             var query = tenantDbContext.Users.Where(u => !u.IsDeleted)
                 .Include(u => u.UserRoles)
                 .AsQueryable();
+
+            var defaultUserImage = await tenantDbContext.AppSettings.FirstOrDefaultAsync(x => x.Name == CompanySettingConstants.DefaultUserImagePath);
 
             // Filter by search term (username, email, phone, fullname)
             if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
@@ -93,6 +100,7 @@ namespace ViharaFund.Infrastructure.Services
                 // If UserDto has AssignedRoles, map them as well
                 AssignedRoles = u.UserRoles?.Select(ur => ur.RoleId).ToList(),
                 CreatedOn = u.CreatedDate,
+                ProfilePictureURL = string.IsNullOrEmpty(u.ProfilePictureURL) ? defaultUserImage.Value : u.ProfilePictureURL
             }).ToList();
 
             return new PaginatedResultDTO<UserDTO>
@@ -275,12 +283,15 @@ namespace ViharaFund.Infrastructure.Services
 
         public async Task<List<DropDownDTO>> GetAvailableUsers()
         {
+            var defaultUserImage = await tenantDbContext.AppSettings.FirstOrDefaultAsync(x => x.Name == CompanySettingConstants.DefaultUserImagePath);
+
             var users = await tenantDbContext.Users
                 .Where(u => !u.IsDeleted)
                 .Select(u => new DropDownDTO
                 {
                     Id = u.Id,
-                    Name = u.FullName ?? u.Username // Fallback to username if fullname is null
+                    Name = u.FullName ?? u.Username, // Fallback to username if fullname is null
+                    ImageUrl = string.IsNullOrEmpty(u.ProfilePictureURL) ? defaultUserImage.Value : u.ProfilePictureURL,
                 })
                 .ToListAsync();
             return users;
@@ -318,6 +329,46 @@ namespace ViharaFund.Infrastructure.Services
                 // Log exception (not implemented)
                 return ResultDto.Failure(new[] { "An error occurred while updating the password." });
             }
+        }
+
+        public async Task<string> UploadProfilePicture(int userId, IFormFile file)
+        {
+            var user = await tenantDbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            var uploadResult = await UploadFileToAzureBlob(file);
+
+            user.ProfilePictureURL = uploadResult.Item2;
+            user.UpdatedByUserId = currentUserService.UserId;
+            user.UpdatedDate = dateTime.UtcNow;
+
+            tenantDbContext.Users.Update(user);
+            await tenantDbContext.SaveChangesAsync();
+
+            return uploadResult.Item1;
+        }
+
+        private async Task<Tuple<string, string>> UploadFileToAzureBlob(IFormFile formFile)
+        {
+            string imagesSavingPath = configuration["FileSavePaths:TaskImageSavingPathPath"];
+            if (!Directory.Exists(imagesSavingPath))
+            {
+                Directory.CreateDirectory(imagesSavingPath);
+            }
+
+            var extension = Path.GetExtension(formFile.FileName);
+
+            var fileName = formFile.FileName;
+            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(imagesSavingPath, uniqueFileName);
+
+            await using var stream = formFile.OpenReadStream();
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
+
+            var uploadedFileUrl = await azureBlobService
+                .UploadFileAsync(memoryStream, uniqueFileName, formFile.ContentType, ApplicationConstants.AzureBlobStorageName);
+
+            return new Tuple<string, string>(fileName, uploadedFileUrl);
         }
     }
 }

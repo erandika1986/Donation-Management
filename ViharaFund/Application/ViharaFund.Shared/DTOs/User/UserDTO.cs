@@ -11,6 +11,7 @@
         public string Password { get; set; } = string.Empty;
         public string ConfirmPassword { get; set; } = string.Empty;
         public DateTime CreatedOn { get; set; }
+        public string ProfilePictureURL { get; set; }
         public bool IsActive { get; set; }
 
         public List<int> AssignedRoles { get; set; } = new List<int>();

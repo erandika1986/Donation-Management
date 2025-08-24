@@ -1,4 +1,5 @@
-﻿using ViharaFund.Application.DTOs.Common;
+﻿using Microsoft.AspNetCore.Http;
+using ViharaFund.Application.DTOs.Common;
 using ViharaFund.Application.DTOs.User;
 using ViharaFund.Shared.DTOs.User;
 
@@ -14,5 +15,6 @@ namespace ViharaFund.Application.Services
         Task<UserDTO> GetByIdAsync(int userId);
         Task<List<DropDownDTO>> GetAvailableRoles();
         Task<List<DropDownDTO>> GetAvailableUsers();
+        Task<string> UploadProfilePicture(int userId, IFormFile file);
     }
 }
